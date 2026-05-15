@@ -36,6 +36,7 @@ model Client {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
   knowledgeEntries   KnowledgeEntry[]
+  promptProfiles     PromptProfile[]
   conversations      Conversation[]
   tickets            Ticket[]
   authChallenges     ClientAuthChallenge[]
@@ -91,6 +92,49 @@ model KnowledgeEntryVersion {
   entry           KnowledgeEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
   @@index([entryId])
+  @@index([clientId])
+  @@index([action])
+}
+
+model PromptProfile {
+  id                 String   @id
+  clientId           String
+  name               String
+  systemInstructions String
+  toneRules          String
+  escalationRules    String
+  forbiddenClaims    String
+  fallbackBehavior   String
+  status             String   @default("draft")
+  version            Int      @default(1)
+  archivedAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  client             Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  versions           PromptProfileVersion[]
+
+  @@index([clientId])
+  @@index([clientId, status])
+}
+
+model PromptProfileVersion {
+  id                 String   @id
+  profileId          String
+  clientId           String
+  version            Int
+  name               String
+  systemInstructions String
+  toneRules          String
+  escalationRules    String
+  forbiddenClaims    String
+  fallbackBehavior   String
+  status             String
+  action             String
+  actorId            String
+  createdAt          DateTime @default(now())
+  profile            PromptProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
   @@index([clientId])
   @@index([action])
 }

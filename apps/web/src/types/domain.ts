@@ -8,6 +8,8 @@ export type {
   InternalUser,
   KnowledgeEntry,
   KnowledgeEntryVersion,
+  PromptProfile,
+  PromptProfileVersion,
   Ticket,
   TicketComment,
   TicketDetail,

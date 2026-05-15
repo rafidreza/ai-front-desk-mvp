@@ -9,6 +9,8 @@ export type {
   IncomingMessage,
   KnowledgeEntry,
   KnowledgeEntryVersion,
+  PromptProfile,
+  PromptProfileVersion,
   Ticket,
   TicketComment,
   TicketDetail,

@@ -7,6 +7,8 @@ import {
   InternalUser,
   KnowledgeEntry,
   KnowledgeEntryVersion,
+  PromptProfile,
+  PromptProfileVersion,
   Ticket,
   TicketComment,
   TicketDetail,
@@ -162,6 +164,67 @@ export async function rollbackKnowledgeEntry(
     body: JSON.stringify({ versionId, actorId: 'internal-console' }),
   });
   return data.entry;
+}
+
+export async function getPromptProfiles(clientId: string, status = 'all'): Promise<PromptProfile[]> {
+  const data = await apiFetch<{ profiles: PromptProfile[] }>(`/clients/${clientId}/prompts?status=${status}`);
+  return data.profiles;
+}
+
+export async function createPromptProfile(
+  clientId: string,
+  input: Omit<PromptProfile, 'id' | 'clientId' | 'status' | 'version' | 'archivedAt' | 'createdAt' | 'updatedAt'> & {
+    actorId?: string;
+  },
+): Promise<PromptProfile> {
+  const data = await apiFetch<{ profile: PromptProfile }>(`/clients/${clientId}/prompts`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.profile;
+}
+
+export async function updatePromptProfile(
+  clientId: string,
+  profileId: string,
+  input: Partial<Omit<PromptProfile, 'id' | 'clientId' | 'status' | 'version' | 'archivedAt' | 'createdAt' | 'updatedAt'>> & {
+    actorId?: string;
+  },
+): Promise<PromptProfile> {
+  const data = await apiFetch<{ profile: PromptProfile }>(`/clients/${clientId}/prompts/${profileId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+  return data.profile;
+}
+
+export async function setPromptProfileStatus(
+  clientId: string,
+  profileId: string,
+  status: PromptProfile['status'],
+): Promise<PromptProfile> {
+  const data = await apiFetch<{ profile: PromptProfile }>(`/clients/${clientId}/prompts/${profileId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, actorId: 'internal-console' }),
+  });
+  return data.profile;
+}
+
+export async function getPromptProfileVersions(clientId: string, profileId: string): Promise<PromptProfileVersion[]> {
+  const data = await apiFetch<{ versions: PromptProfileVersion[] }>(`/clients/${clientId}/prompts/${profileId}/versions`);
+  return data.versions;
+}
+
+export async function rollbackPromptProfile(
+  clientId: string,
+  profileId: string,
+  versionId: string,
+): Promise<PromptProfile> {
+  const data = await apiFetch<{ profile: PromptProfile }>(`/clients/${clientId}/prompts/${profileId}/rollback`, {
+    method: 'POST',
+    body: JSON.stringify({ versionId, actorId: 'internal-console' }),
+  });
+  return data.profile;
 }
 
 export async function getTicketDetail(ticketId: string): Promise<TicketDetail> {

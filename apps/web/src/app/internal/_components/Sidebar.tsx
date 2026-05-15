@@ -1,4 +1,4 @@
-import { BotMessageSquare, DatabaseZap, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
+import { BotMessageSquare, DatabaseZap, LayoutDashboard, LogOut, Settings2, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { ApiHealth } from '@/types/domain';
 
@@ -47,6 +47,10 @@ export function Sidebar({ activeView, onChangeView, health, healthError, onLogou
         <Link className="side-link" href="/internal/knowledge">
           <DatabaseZap size={17} />
           Knowledge
+        </Link>
+        <Link className="side-link" href="/internal/agent-config">
+          <Settings2 size={17} />
+          Agent Config
         </Link>
       </nav>
 

@@ -18,6 +18,8 @@ import { ClientDashboardService } from './clients/client-dashboard.service';
 import { KnowledgeService } from './knowledge/knowledge.service';
 import { KnowledgeController } from './knowledge/knowledge.controller';
 import { StructuredLoggerService } from './observability/structured-logger.service';
+import { PromptProfileController } from './prompts/prompt-profile.controller';
+import { PromptProfileService } from './prompts/prompt-profile.service';
 import { TicketController } from './tickets/ticket.controller';
 import { TicketService } from './tickets/ticket.service';
 import { ApiAuthGuard } from './security/api-auth.guard';
@@ -32,6 +34,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     InternalUsersController,
     KnowledgeController,
     MessengerController,
+    PromptProfileController,
     TicketController,
   ],
   providers: [
@@ -44,6 +47,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     MessengerSendService,
     MessengerSignatureService,
     PilotClientService,
+    PromptProfileService,
     PrismaService,
     StructuredLoggerService,
     TicketService,

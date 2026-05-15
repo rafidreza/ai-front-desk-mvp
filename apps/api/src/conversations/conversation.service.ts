@@ -3,6 +3,7 @@ import { AiService } from '../ai/ai.service';
 import { PilotClientService } from '../clients/pilot-client.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { StructuredLoggerService } from '../observability/structured-logger.service';
+import { PromptProfileService } from '../prompts/prompt-profile.service';
 import { TicketService } from '../tickets/ticket.service';
 import { AgentReply, ConversationLog, ConversationQaGrade, IncomingMessage, Ticket } from '../types/domain';
 import { ConversationRepository } from './conversation.repository';
@@ -22,6 +23,7 @@ export class ConversationService {
     private readonly knowledge: KnowledgeService,
     private readonly repository: ConversationRepository,
     private readonly tickets: TicketService,
+    private readonly prompts?: PromptProfileService,
     private readonly logger?: StructuredLoggerService,
   ) {}
 
@@ -57,10 +59,12 @@ export class ConversationService {
 
     const client = await this.clients.findById(message.clientId);
     const match = await this.knowledge.findRelevant(client.id, message.text);
+    const promptProfile = await this.prompts?.getActiveForClient(client);
     const reply = await this.aiService.generateReply({
       client,
       customerText: message.text,
       knowledgeEntries: match.entries,
+      promptProfile,
       retrievalConfidence: match.confidence,
     });
 

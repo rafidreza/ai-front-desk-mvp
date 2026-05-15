@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { Injectable } from '@nestjs/common';
-import { AgentReply, ClientProfile, KnowledgeEntry } from '../types/domain';
+import { AgentReply, ClientProfile, KnowledgeEntry, PromptProfile } from '../types/domain';
 
 @Injectable()
 export class AiService {
@@ -8,6 +8,7 @@ export class AiService {
     client: ClientProfile;
     customerText: string;
     knowledgeEntries: KnowledgeEntry[];
+    promptProfile?: PromptProfile;
     retrievalConfidence: number;
   }): Promise<AgentReply> {
     const escalationReason = this.detectEscalation(input.client, input.customerText, input.retrievalConfidence);
@@ -24,7 +25,7 @@ export class AiService {
       };
     }
 
-    const fallback = this.generateLocalFallback(input.knowledgeEntries, escalationReason);
+    const fallback = this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile);
     return {
       text: fallback,
       confidence: input.retrievalConfidence,
@@ -39,6 +40,7 @@ export class AiService {
       client: ClientProfile;
       customerText: string;
       knowledgeEntries: KnowledgeEntry[];
+      promptProfile?: PromptProfile;
     },
     anthropic: Anthropic,
   ): Promise<string> {
@@ -52,8 +54,11 @@ export class AiService {
       max_tokens: 220,
       temperature: 0.2,
       system: [
-        `You are the AI front desk agent for ${input.client.businessName}.`,
-        `Tone: ${input.client.tone}.`,
+        input.promptProfile?.systemInstructions ?? `You are the AI front desk agent for ${input.client.businessName}.`,
+        `Tone rules: ${input.promptProfile?.toneRules ?? input.client.tone}.`,
+        `Escalation rules: ${input.promptProfile?.escalationRules ?? 'Escalate when confidence is low or the customer needs a human.'}.`,
+        `Forbidden claims: ${input.promptProfile?.forbiddenClaims ?? 'Do not invent prices, stock, delivery promises, discounts, or policy details.'}.`,
+        `Fallback behavior: ${input.promptProfile?.fallbackBehavior ?? 'If the answer is missing, politely say a team member will check.'}.`,
         'Only answer from the supplied knowledge. If the answer is missing, politely say a team member will check.',
         'Reply naturally in Bangla/Banglish/English based on the customer message.',
         'Keep replies short enough for Messenger commerce.',
@@ -74,9 +79,13 @@ export class AiService {
     return 'Thanks for your message. Our team will check and get back to you shortly.';
   }
 
-  private generateLocalFallback(entries: KnowledgeEntry[], escalationReason: string | null): string {
+  private generateLocalFallback(
+    entries: KnowledgeEntry[],
+    escalationReason: string | null,
+    promptProfile?: PromptProfile,
+  ): string {
     if (entries.length === 0) {
-      return 'Thanks for your message. Ami team ke check korte dicchi, tara shortly update debe.';
+      return promptProfile?.fallbackBehavior ?? 'Thanks for your message. Ami team ke check korte dicchi, tara shortly update debe.';
     }
 
     const answer = entries[0].answer;

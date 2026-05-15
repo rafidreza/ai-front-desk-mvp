@@ -46,6 +46,8 @@ The first working slice is intentionally thin:
   - daily/weekly digest preview API;
   - internal per-client KB workspace at `/internal/knowledge` with entry list, detail editor, draft creation, publish/archive actions, version history, and rollback;
   - KB status/version/history fields with audit rows for baseline, create, update, publish, archive, and rollback actions;
+  - internal prompt profile workspace at `/internal/agent-config` with prompt draft/edit/publish/archive/version/rollback;
+  - active client prompt profiles are now loaded into AI reply generation with fallback to the client's legacy tone when no stored profile exists;
   - sales recovered estimate calculation and backfill.
 
 ## Verified
@@ -107,6 +109,12 @@ Manual HTTP checks passed:
 - `PATCH /clients/pilot-client/knowledge/:entryId/status`
 - `GET /clients/pilot-client/knowledge/:entryId/versions`
 - `POST /clients/pilot-client/knowledge/:entryId/rollback`
+- `GET /clients/pilot-client/prompts`
+- `POST /clients/pilot-client/prompts`
+- `PATCH /clients/pilot-client/prompts/:profileId`
+- `PATCH /clients/pilot-client/prompts/:profileId/status`
+- `GET /clients/pilot-client/prompts/:profileId/versions`
+- `POST /clients/pilot-client/prompts/:profileId/rollback`
 
 Database verification:
 
@@ -122,6 +130,9 @@ Database verification:
 - Client profile metadata columns migrated successfully.
 - Knowledge entry status/version columns migrated successfully.
 - Knowledge entry version history table migrated and existing entries backfilled successfully.
+- Prompt profile table migrated successfully.
+- Existing clients received a default active prompt profile during migration.
+- Prompt profile version history table migrated and existing default profiles were backfilled successfully.
 - Conversation CSAT columns migrated successfully.
 - Ticket sales recovered estimate column migrated and backfilled successfully.
 - Client auth challenge table migrated successfully.
@@ -163,6 +174,7 @@ Operational hardening verification:
 - No WhatsApp adapter yet.
 - No real KB import pipeline yet.
 - Internal KB editor now supports rich entry editing, version history, and rollback. It still needs real seller content/import pipelines before alpha use.
+- Prompt profile versioning is now available, but prompt quality still needs real seller QA review and production Anthropic testing once `ANTHROPIC_API_KEY` is configured.
 - Daily/weekly digest preview APIs exist, but real email delivery needs Postmark/SES, domain DNS, and cron configuration.
 - CSAT capture exists on the web dashboard only; Messenger reaction capture is still pending.
 - Client auth code delivery is local/dev only. Real magic-link email and WhatsApp OTP delivery need provider decisions and credentials.
@@ -180,6 +192,7 @@ Latest verified run used:
 - Client dashboard: `http://localhost:3002/client/dashboard?clientId=pilot-client`
 - Client tickets: `http://localhost:3002/client/tickets?clientId=pilot-client`
 - Internal KB editor: `http://localhost:3002/internal/knowledge`
+- Internal agent config: `http://localhost:3002/internal/agent-config`
 
 ## Recommended Next Build Step
 
@@ -191,6 +204,6 @@ Close the Phase 0 kernel:
 4. Continue Tier 3/4 foundation work while external access is pending:
    - choose email/WhatsApp providers and wire real auth code delivery;
    - add KB rollback/detail editing;
-   - add prompt versioning;
    - choose Postmark/SES and wire digest delivery;
+   - add vector retrieval via pgvector;
    - choose WhatsApp provider and wire P1 urgent pings.

@@ -51,6 +51,39 @@ export interface KnowledgeEntryVersion {
   createdAt: string;
 }
 
+export interface PromptProfile {
+  id: string;
+  clientId: string;
+  name: string;
+  systemInstructions: string;
+  toneRules: string;
+  escalationRules: string;
+  forbiddenClaims: string;
+  fallbackBehavior: string;
+  status: 'draft' | 'active' | 'archived';
+  version: number;
+  archivedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PromptProfileVersion {
+  id: string;
+  profileId: string;
+  clientId: string;
+  version: number;
+  name: string;
+  systemInstructions: string;
+  toneRules: string;
+  escalationRules: string;
+  forbiddenClaims: string;
+  fallbackBehavior: string;
+  status: PromptProfile['status'];
+  action: 'baseline' | 'created' | 'updated' | 'published' | 'archived' | 'rollback';
+  actorId: string;
+  createdAt: string;
+}
+
 export interface IncomingMessage {
   id: string;
   clientId: string;
