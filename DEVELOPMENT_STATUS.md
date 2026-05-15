@@ -1,6 +1,6 @@
 # Development Status
 
-**Last updated:** 2026-05-15
+**Last updated:** 2026-05-16
 
 ## Current Milestone
 
@@ -49,7 +49,8 @@ The first working slice is intentionally thin:
   - pgvector-backed KB embeddings with deterministic local embedding fallback, reindex endpoint, and hybrid keyword/vector retrieval;
   - internal prompt profile workspace at `/internal/agent-config` with prompt draft/edit/publish/archive/version/rollback;
   - active client prompt profiles are now loaded into AI reply generation with fallback to the client's legacy tone when no stored profile exists;
-  - sales recovered estimate calculation and backfill.
+  - sales recovered estimate calculation and backfill;
+  - P1 urgent-ticket WhatsApp ping to the client's configured POC, with dry-run mode when WhatsApp Cloud API credentials are missing and ticket timeline events for ping outcomes.
 
 ## Verified
 
@@ -64,6 +65,7 @@ npm run db:push -w @ai-front-desk/api
 npm run db:seed -w @ai-front-desk/api
 npm run db:migrate -w @ai-front-desk/api
 npm audit --omit=dev --audit-level=high
+npm run lint
 ```
 
 Manual HTTP checks passed:
@@ -118,6 +120,7 @@ Manual HTTP checks passed:
 - `PATCH /clients/pilot-client/prompts/:profileId/status`
 - `GET /clients/pilot-client/prompts/:profileId/versions`
 - `POST /clients/pilot-client/prompts/:profileId/rollback`
+- P1 refund-style escalation creates an urgent ticket and records a `ticket.p1_whatsapp_ping` timeline event in dry-run mode when WhatsApp credentials are absent.
 
 Database verification:
 

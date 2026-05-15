@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { AiService } from '../ai/ai.service';
 import { PilotClientService } from '../clients/pilot-client.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
+import { UrgentTicketNotificationService } from '../notifications/urgent-ticket-notification.service';
 import { StructuredLoggerService } from '../observability/structured-logger.service';
 import { PromptProfileService } from '../prompts/prompt-profile.service';
 import { TicketService } from '../tickets/ticket.service';
-import { AgentReply, ConversationLog, ConversationQaGrade, IncomingMessage, Ticket } from '../types/domain';
+import { AgentReply, ClientProfile, ConversationLog, ConversationQaGrade, IncomingMessage, Ticket } from '../types/domain';
 import { ConversationRepository } from './conversation.repository';
 
 interface HandleMessageResult {
@@ -13,6 +14,11 @@ interface HandleMessageResult {
   reply: AgentReply;
   ticket?: Ticket;
   alreadyProcessed?: boolean;
+}
+
+function maskRecipient(recipient?: string) {
+  if (recipient === undefined || recipient.length <= 4) return recipient;
+  return `${recipient.slice(0, 4)}***${recipient.slice(-4)}`;
 }
 
 @Injectable()
@@ -25,6 +31,7 @@ export class ConversationService {
     private readonly tickets: TicketService,
     private readonly prompts?: PromptProfileService,
     private readonly logger?: StructuredLoggerService,
+    private readonly urgentNotifications?: UrgentTicketNotificationService,
   ) {}
 
   async handleIncomingMessage(message: IncomingMessage): Promise<HandleMessageResult> {
@@ -87,6 +94,7 @@ export class ConversationService {
         priority: ticket.priority,
         reason: ticket.reason,
       });
+      await this.notifyPocForUrgentTicket(client, ticket);
     }
 
     await this.repository.setConversationResult(conversationId, {
@@ -99,6 +107,46 @@ export class ConversationService {
       reply,
       ticket,
     };
+  }
+
+  private async notifyPocForUrgentTicket(client: ClientProfile, ticket: Ticket): Promise<void> {
+    if (ticket.priority !== 'P1' || this.urgentNotifications === undefined) return;
+
+    try {
+      const result = await this.urgentNotifications.notifyP1({ client, ticket });
+      await this.repository.recordTicketEvent({
+        ticketId: ticket.id,
+        eventType: 'ticket.p1_whatsapp_ping',
+        payload: {
+          mode: result.mode,
+          channel: result.channel,
+          recipient: maskRecipient(result.recipient),
+          reason: result.reason,
+        },
+      });
+      this.logger?.event('ticket.p1_whatsapp_ping', {
+        ticketId: ticket.id,
+        clientId: ticket.clientId,
+        mode: result.mode,
+        reason: result.reason,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown P1 notification failure';
+      await this.repository.recordTicketEvent({
+        ticketId: ticket.id,
+        eventType: 'ticket.p1_whatsapp_ping_failed',
+        payload: { message },
+      });
+      this.logger?.event(
+        'ticket.p1_whatsapp_ping_failed',
+        {
+          ticketId: ticket.id,
+          clientId: ticket.clientId,
+          error: message,
+        },
+        'error',
+      );
+    }
   }
 
   listConversations(): Promise<ConversationLog[]> {

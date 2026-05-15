@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AiService } from '../ai/ai.service';
 import { PilotClientService } from '../clients/pilot-client.service';
 import { PrismaService } from '../database/prisma.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
+import { UrgentTicketNotificationService } from '../notifications/urgent-ticket-notification.service';
 import { TicketService } from '../tickets/ticket.service';
 import { ClientProfile } from '../types/domain';
 import { ConversationRepository } from './conversation.repository';
@@ -18,7 +19,7 @@ const pilotClient: ClientProfile = {
   escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
 };
 
-function createService() {
+function createService(urgentNotifications?: UrgentTicketNotificationService) {
   const disabledPrisma = { enabled: false } as unknown as PrismaService;
   const clients = { findById: async () => pilotClient } as unknown as PilotClientService;
   const repository = new ConversationRepository();
@@ -28,6 +29,9 @@ function createService() {
     new KnowledgeService(disabledPrisma),
     repository,
     new TicketService(repository),
+    undefined,
+    undefined,
+    urgentNotifications,
   );
 
   return { repository, service };
@@ -68,6 +72,32 @@ describe('ConversationService', () => {
 
     expect(result.reply.shouldEscalate).toBe(true);
     expect(result.ticket?.priority).toBe('P2');
+  });
+
+  it('records a P1 WhatsApp ping event when an urgent ticket is created', async () => {
+    const notifications = {
+      notifyP1: vi.fn(async () => ({
+        mode: 'dry-run' as const,
+        channel: 'whatsapp' as const,
+        recipient: '8801712345678',
+      })),
+    } as unknown as UrgentTicketNotificationService;
+    const { service, repository } = createService(notifications);
+
+    const result = await service.handleIncomingMessage({
+      id: 'message-p1',
+      clientId: 'pilot-client',
+      channel: 'messenger',
+      externalConversationId: 'customer-p1',
+      externalSenderId: 'customer-p1',
+      text: 'I want refund for wrong product',
+      receivedAt: new Date().toISOString(),
+    });
+    const detail = await repository.getTicketDetail(result.ticket!.id);
+
+    expect(result.ticket?.priority).toBe('P1');
+    expect(notifications.notifyP1).toHaveBeenCalledOnce();
+    expect(detail?.events.map((event) => event.eventType)).toContain('ticket.p1_whatsapp_ping');
   });
 
   it('updates ticket status', async () => {

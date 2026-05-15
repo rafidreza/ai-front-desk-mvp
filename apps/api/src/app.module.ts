@@ -18,6 +18,7 @@ import { ClientDashboardService } from './clients/client-dashboard.service';
 import { KnowledgeService } from './knowledge/knowledge.service';
 import { KnowledgeController } from './knowledge/knowledge.controller';
 import { EmbeddingService } from './knowledge/embedding.service';
+import { UrgentTicketNotificationService } from './notifications/urgent-ticket-notification.service';
 import { StructuredLoggerService } from './observability/structured-logger.service';
 import { PromptProfileController } from './prompts/prompt-profile.controller';
 import { PromptProfileService } from './prompts/prompt-profile.service';
@@ -53,6 +54,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     PrismaService,
     StructuredLoggerService,
     TicketService,
+    UrgentTicketNotificationService,
     {
       provide: APP_GUARD,
       useClass: RateLimitGuard,

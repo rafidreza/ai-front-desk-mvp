@@ -526,6 +526,43 @@ export class ConversationRepository {
     return comment;
   }
 
+  async recordTicketEvent(input: {
+    ticketId: string;
+    eventType: string;
+    payload: Record<string, unknown>;
+  }): Promise<TicketEvent> {
+    const event: TicketEvent = {
+      id: `${input.ticketId}:${input.eventType}:${randomUUID()}`,
+      ticketId: input.ticketId,
+      eventType: input.eventType,
+      payload: input.payload,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (this.prisma?.enabled === true) {
+      const saved = await this.prisma.ticketEvent.create({
+        data: {
+          id: event.id,
+          ticketId: event.ticketId,
+          eventType: event.eventType,
+          payload: event.payload as Prisma.InputJsonValue,
+          createdAt: new Date(event.createdAt),
+        },
+      });
+
+      return {
+        id: saved.id,
+        ticketId: saved.ticketId,
+        eventType: saved.eventType,
+        payload: saved.payload as Record<string, unknown>,
+        createdAt: saved.createdAt.toISOString(),
+      };
+    }
+
+    this.ticketEvents.set(input.ticketId, [...(this.ticketEvents.get(input.ticketId) ?? []), event]);
+    return event;
+  }
+
   async updateConversationQa(input: {
     conversationId: string;
     qaGrade?: ConversationQaGrade;
