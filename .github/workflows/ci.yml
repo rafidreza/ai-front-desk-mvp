@@ -9,6 +9,10 @@ on:
 jobs:
   build-test-audit:
     runs-on: ubuntu-latest
+    env:
+      # Placeholder so prisma.config.ts can resolve env('DATABASE_URL') during
+      # `prisma generate`. Generate only reads the schema; it does NOT connect.
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,6 +21,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run db:generate -w @ai-front-desk/api
+      - run: npm run lint
       - run: npm run build
       - run: npm run build:web
       - run: npm test
