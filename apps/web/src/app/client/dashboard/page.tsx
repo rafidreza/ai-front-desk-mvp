@@ -36,6 +36,11 @@ export default function ClientDashboardPage() {
     await loadDashboard();
   }
 
+  async function logout() {
+    await fetch('/api/client-auth/logout', { method: 'POST' });
+    window.location.href = '/client/login';
+  }
+
   return (
     <main className="client-shell">
       <header className="client-topbar">
@@ -43,10 +48,15 @@ export default function ClientDashboardPage() {
           <p className="eyebrow">Client dashboard</p>
           <h1>{dashboard?.client.businessName ?? 'AI Front Desk'}</h1>
         </div>
-        <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadDashboard()}>
-          <RefreshCw size={16} />
-          Refresh
-        </button>
+        <div className="panel-actions">
+          <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadDashboard()}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+          <button className="icon-button" type="button" onClick={() => void logout()}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       {error !== null && <div className="inline-alert">{error}</div>}

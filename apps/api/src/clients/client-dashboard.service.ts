@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { ClientDashboardSummary, ConversationLog, Ticket, TicketStatus } from '../types/domain';
 import { PilotClientService } from './pilot-client.service';
@@ -129,6 +129,61 @@ export class ClientDashboardService {
         text: message.text,
         createdAt: message.createdAt.toISOString(),
       })),
+    };
+  }
+
+  async updateClientTicketStatus(input: {
+    clientId: string;
+    ticketId: string;
+    status: TicketStatus;
+    expectedVersion?: number;
+  }): Promise<Ticket> {
+    const now = new Date();
+    const result = await this.prisma.ticket.updateMany({
+      where: {
+        id: input.ticketId,
+        clientId: input.clientId,
+        ...(input.expectedVersion === undefined ? {} : { version: input.expectedVersion }),
+      },
+      data: {
+        status: input.status,
+        version: { increment: 1 },
+        updatedAt: now,
+      },
+    });
+
+    if (result.count === 0) {
+      throw new ConflictException(`Ticket update conflict: ${input.ticketId}`);
+    }
+
+    await this.prisma.ticketEvent.create({
+      data: {
+        id: `${input.ticketId}:client-status:${input.status}:${Date.now()}`,
+        ticketId: input.ticketId,
+        eventType: 'ticket.status_updated',
+        payload: {
+          status: input.status,
+          actorId: `client:${input.clientId}`,
+        },
+        createdAt: now,
+      },
+    });
+
+    const ticket = await this.prisma.ticket.findUniqueOrThrow({ where: { id: input.ticketId } });
+    return {
+      id: ticket.id,
+      clientId: ticket.clientId,
+      conversationId: ticket.conversationId,
+      assigneeId: ticket.assigneeId ?? undefined,
+      version: ticket.version,
+      priority: ticket.priority,
+      status: ticket.status,
+      reason: ticket.reason,
+      customerMessage: ticket.customerMessage,
+      suggestedReply: ticket.suggestedReply,
+      salesRecoveredEstimate: ticket.salesRecoveredEstimate,
+      createdAt: ticket.createdAt.toISOString(),
+      updatedAt: ticket.updatedAt.toISOString(),
     };
   }
 

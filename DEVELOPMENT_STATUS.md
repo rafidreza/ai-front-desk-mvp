@@ -41,6 +41,7 @@ The first working slice is intentionally thin:
   - DB-backed client profile metadata;
   - client dashboard API and `/client/dashboard` page;
   - client ticket delegation API and `/client/tickets` page;
+  - client auth foundation with OTP challenge persistence, signed client sessions, `/client/login`, protected client pages, and client-scoped API proxy access;
   - web CSAT capture API and score buttons;
   - daily/weekly digest preview API;
   - internal per-client KB draft/list/publish/archive screen at `/internal/knowledge`;
@@ -94,6 +95,13 @@ Manual HTTP checks passed:
 - `GET /clients/pilot-client/knowledge`
 - `GET /clients/pilot-client/digests/daily/preview`
 - `GET /signup` in the web app
+- `GET /client/login`
+- Unauthenticated `GET /client/dashboard?clientId=pilot-client` redirects to `/client/login`
+- `POST /api/client-auth/request` returns a development login code
+- `POST /api/client-auth/verify` sets the signed client session cookie
+- Authenticated `GET /client/dashboard?clientId=pilot-client` returns `200`
+- Authenticated client proxy `GET /api/backend/clients/pilot-client/dashboard` returns `200`
+- Authenticated client proxy `GET /api/backend/tickets` returns `401`
 
 Database verification:
 
@@ -110,6 +118,7 @@ Database verification:
 - Knowledge entry status/version columns migrated successfully.
 - Conversation CSAT columns migrated successfully.
 - Ticket sales recovered estimate column migrated and backfilled successfully.
+- Client auth challenge table migrated successfully.
 - Data remained available after API restart.
 
 Audit note:
@@ -144,12 +153,13 @@ Operational hardening verification:
 - `ANTHROPIC_API_KEY` is still missing, so the fallback answer path is still active.
 - Public HTTPS deployment is still pending account/project access.
 - Meta App setup and live Page traffic are still pending Meta credentials/access.
-- Client-facing dashboard and delegation screens exist, but client auth is not production-ready yet.
+- Client-facing dashboard and delegation screens are protected by signed client sessions, but production auth delivery is not complete yet.
 - No WhatsApp adapter yet.
 - No real KB import pipeline yet.
 - Internal KB editor is still MVP-level: it supports draft/list/publish/archive, but not tree navigation, rollback, or rich entry editing yet.
 - Daily/weekly digest preview APIs exist, but real email delivery needs Postmark/SES, domain DNS, and cron configuration.
 - CSAT capture exists on the web dashboard only; Messenger reaction capture is still pending.
+- Client auth code delivery is local/dev only. Real magic-link email and WhatsApp OTP delivery need provider decisions and credentials.
 - Moderate npm audit advisories remain unresolved because the available automatic fixes are not safe for this stack.
 
 ## Local URLs
@@ -160,6 +170,7 @@ Latest verified run used:
 - Web: `http://localhost:3002/internal`
 - Internal login: `http://localhost:3002/internal/login`
 - Client signup: `http://localhost:3002/signup`
+- Client login: `http://localhost:3002/client/login`
 - Client dashboard: `http://localhost:3002/client/dashboard?clientId=pilot-client`
 - Client tickets: `http://localhost:3002/client/tickets?clientId=pilot-client`
 - Internal KB editor: `http://localhost:3002/internal/knowledge`
@@ -172,7 +183,7 @@ Close the Phase 0 kernel:
 2. Provide `ANTHROPIC_API_KEY` and `MESSENGER_PAGE_ACCESS_TOKEN` so `TODO.md` T3/T4 can be completed.
 3. Provide deployment and Meta developer/business access for `TODO.md` T5/T6/T7.
 4. Continue Tier 3/4 foundation work while external access is pending:
-   - add production client auth via magic link + WhatsApp OTP;
+   - choose email/WhatsApp providers and wire real auth code delivery;
    - add KB rollback/detail editing;
    - add prompt versioning;
    - choose Postmark/SES and wire digest delivery;

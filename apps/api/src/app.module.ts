@@ -11,6 +11,8 @@ import { ConversationService } from './conversations/conversation.service';
 import { PrismaService } from './database/prisma.service';
 import { HealthController } from './health/health.controller';
 import { InternalUsersController } from './internal-users/internal-users.controller';
+import { ClientAuthController } from './clients/client-auth.controller';
+import { ClientAuthService } from './clients/client-auth.service';
 import { ClientController } from './clients/client.controller';
 import { ClientDashboardService } from './clients/client-dashboard.service';
 import { KnowledgeService } from './knowledge/knowledge.service';
@@ -24,6 +26,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
 @Module({
   controllers: [
     ClientController,
+    ClientAuthController,
     ConversationController,
     HealthController,
     InternalUsersController,
@@ -35,6 +38,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     AiService,
     ConversationRepository,
     ConversationService,
+    ClientAuthService,
     ClientDashboardService,
     KnowledgeService,
     MessengerSendService,

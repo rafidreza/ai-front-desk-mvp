@@ -106,7 +106,7 @@
 - [x] **T15** Remove hardcoded `pilot-client`; route every request by `Client` row — **DONE (2026-05-15): DB-backed client lookup/signup is now the source for client profiles; pilot data remains only as seed/demo content**
 - [x] **T16** Client sign-up page (`/signup`, per PRD 01) — **DONE (2026-05-15)**
 - [ ] **T17** Meta OAuth flow for `pages_messaging` (replace manual token) — **BLOCKED (2026-05-15): needs Meta app/business access and OAuth decisions**
-- [ ] **T18** Magic-link + WhatsApp OTP auth (PRD 01 §8.4)
+- [ ] **T18** Magic-link + WhatsApp OTP auth (PRD 01 §8.4) — **PARTIAL (2026-05-15): client session, OTP challenge table, request/verify endpoints, protected client pages, and local/dev code flow shipped; real magic-link delivery and WhatsApp OTP provider pending**
 - [ ] **T19** Conversational onboarding bot via Messenger (PRD 03 §8.1) — **BLOCKED (2026-05-15): depends on Meta live channel access**
 - [ ] **T20** Internal KB editor UI (per-client tree + entry panel) — **PARTIAL (2026-05-15): per-client draft/list/publish/archive UI shipped; tree/detail editing still pending**
 - [ ] **T21** KB versioning (`draft` / `active` / `archived`) with rollback — **PARTIAL (2026-05-15): draft/active/archived states and version increments shipped; rollback UI/API still pending**

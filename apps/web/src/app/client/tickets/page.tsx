@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Clock3, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { getClientTickets, updateTicketStatus } from '@/lib/api';
+import { getClientTickets, updateClientTicketStatus } from '@/lib/api';
 import { Ticket, TicketStatus } from '@/types/domain';
 
 const statuses: TicketStatus[] = ['assigned', 'waiting_client', 'resolved'];
@@ -34,8 +34,13 @@ export default function ClientTicketsPage() {
   }, []);
 
   async function delegate(ticket: Ticket, status: TicketStatus) {
-    await updateTicketStatus(ticket.id, status, ticket.version);
+    await updateClientTicketStatus(clientId, ticket.id, status, ticket.version);
     await loadTickets();
+  }
+
+  async function logout() {
+    await fetch('/api/client-auth/logout', { method: 'POST' });
+    window.location.href = '/client/login';
   }
 
   return (
@@ -45,10 +50,15 @@ export default function ClientTicketsPage() {
           <p className="eyebrow">Client delegation</p>
           <h1>Tickets</h1>
         </div>
-        <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadTickets()}>
-          <RefreshCw size={16} />
-          Refresh
-        </button>
+        <div className="panel-actions">
+          <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadTickets()}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+          <button className="icon-button" type="button" onClick={() => void logout()}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       <div className="filter-row">

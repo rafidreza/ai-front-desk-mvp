@@ -1,5 +1,7 @@
 node_modules
 dist
+.next
+apps/web/.next
 .env
 .env.local
 .DS_Store

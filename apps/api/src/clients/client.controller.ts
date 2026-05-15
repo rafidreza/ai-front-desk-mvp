@@ -21,6 +21,11 @@ const CsatSchema = z.object({
   comment: z.string().trim().max(500).optional(),
 });
 
+const TicketStatusSchema = z.object({
+  status: z.enum(['open', 'assigned', 'waiting_client', 'resolved']),
+  expectedVersion: z.number().int().nonnegative().optional(),
+});
+
 @Controller('clients')
 export class ClientController {
   constructor(
@@ -69,5 +74,22 @@ export class ClientController {
   @Get(':clientId/tickets')
   async listClientTickets(@Param('clientId') clientId: string, @Query('status') status?: string) {
     return { tickets: await this.dashboard.listClientTickets(clientId, status) };
+  }
+
+  @Patch(':clientId/tickets/:ticketId/status')
+  async updateClientTicketStatus(
+    @Param('clientId') clientId: string,
+    @Param('ticketId') ticketId: string,
+    @Body() body: unknown,
+  ) {
+    const parsed = TicketStatusSchema.parse(body);
+    return {
+      ticket: await this.dashboard.updateClientTicketStatus({
+        clientId,
+        ticketId,
+        status: parsed.status,
+        expectedVersion: parsed.expectedVersion,
+      }),
+    };
   }
 }

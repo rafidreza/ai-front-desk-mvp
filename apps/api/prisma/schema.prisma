@@ -38,6 +38,23 @@ model Client {
   knowledgeEntries   KnowledgeEntry[]
   conversations      Conversation[]
   tickets            Ticket[]
+  authChallenges     ClientAuthChallenge[]
+}
+
+model ClientAuthChallenge {
+  id         String    @id
+  clientId   String
+  channel    String
+  destination String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  client     Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([destination])
+  @@index([expiresAt])
 }
 
 model KnowledgeEntry {

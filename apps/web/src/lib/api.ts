@@ -58,10 +58,17 @@ export async function signupClient(input: {
   businessCategory?: string;
   pageId?: string;
 }): Promise<ClientProfile> {
-  const data = await apiFetch<{ client: ClientProfile }>('/clients/signup', {
+  const response = await fetch('/api/client-auth/signup', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
+
+  if (!response.ok) {
+    throw new Error(`Signup failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as { client: ClientProfile };
   return data.client;
 }
 
@@ -72,6 +79,19 @@ export async function getClientDashboard(clientId: string): Promise<ClientDashbo
 export async function getClientTickets(clientId: string, status = 'all'): Promise<Ticket[]> {
   const data = await apiFetch<{ tickets: Ticket[] }>(`/clients/${clientId}/tickets?status=${status}`);
   return data.tickets;
+}
+
+export async function updateClientTicketStatus(
+  clientId: string,
+  ticketId: string,
+  status: TicketStatus,
+  expectedVersion?: number,
+): Promise<Ticket> {
+  const data = await apiFetch<{ ticket: Ticket }>(`/clients/${clientId}/tickets/${ticketId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, expectedVersion }),
+  });
+  return data.ticket;
 }
 
 export async function captureCsat(
