@@ -1,0 +1,22 @@
+{
+  "name": "ai-front-desk-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MVP implementation for AI Front Desk managed F-Commerce support service.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @ai-front-desk/api",
+    "dev:web": "npm run dev -w @ai-front-desk/web",
+    "build": "npm run build -w @ai-front-desk/api",
+    "build:web": "npm run build -w @ai-front-desk/web",
+    "test": "npm run test -w @ai-front-desk/api",
+    "lint": "npm run lint -w @ai-front-desk/api && npm run lint -w @ai-front-desk/web",
+    "db:migrate": "npm run db:migrate -w @ai-front-desk/api"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

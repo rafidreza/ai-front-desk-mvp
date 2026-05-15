@@ -1,0 +1,17 @@
+export type {
+  AgentReply,
+  Channel,
+  ClientProfile,
+  ClientDashboardSummary,
+  ConversationLog,
+  ConversationMessage,
+  ConversationQaGrade,
+  IncomingMessage,
+  KnowledgeEntry,
+  Ticket,
+  TicketComment,
+  TicketDetail,
+  TicketEvent,
+  TicketPriority,
+  TicketStatus,
+} from '@ai-front-desk/shared';

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "delivery-charge",
+    "clientId": "pilot-client",
+    "title": "Delivery charge",
+    "answer": "Dhaka city delivery charge is BDT 80. Outside Dhaka delivery charge is BDT 130.",
+    "keywords": ["delivery", "charge", "shipping", "courier", "ডেলিভারি", "ডেলিভারি চার্জ", "koto", "কত"],
+    "confidenceBoost": 0.1
+  },
+  {
+    "id": "cash-on-delivery",
+    "clientId": "pilot-client",
+    "title": "Cash on delivery",
+    "answer": "Yes, cash on delivery is available across Bangladesh.",
+    "keywords": ["cod", "cash on delivery", "payment", "advance", "ক্যাশ", "পেমেন্ট"],
+    "confidenceBoost": 0.1
+  },
+  {
+    "id": "return-policy",
+    "clientId": "pilot-client",
+    "title": "Return policy",
+    "answer": "Customers can request an exchange within 3 days if the product is damaged or the wrong item was delivered.",
+    "keywords": ["return", "exchange", "refund", "damaged", "wrong", "রিটার্ন", "এক্সচেঞ্জ", "রিফান্ড"],
+    "confidenceBoost": 0.05
+  },
+  {
+    "id": "order-time",
+    "clientId": "pilot-client",
+    "title": "Delivery time",
+    "answer": "Inside Dhaka delivery usually takes 1-2 days. Outside Dhaka usually takes 2-4 days.",
+    "keywords": ["time", "days", "when", "arrive", "কবে", "কতদিন", "delivery time"],
+    "confidenceBoost": null
+  }
+]

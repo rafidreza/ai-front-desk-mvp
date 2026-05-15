@@ -1,0 +1,13 @@
+{
+  "/api/internal-logout/route": "app/api/internal-logout/route.js",
+  "/api/backend/[...path]/route": "app/api/backend/[...path]/route.js",
+  "/api/internal-login/route": "app/api/internal-login/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/client/tickets/page": "app/client/tickets/page.js",
+  "/internal/knowledge/page": "app/internal/knowledge/page.js",
+  "/internal/page": "app/internal/page.js",
+  "/client/dashboard/page": "app/client/dashboard/page.js",
+  "/internal/login/page": "app/internal/login/page.js",
+  "/signup/page": "app/signup/page.js",
+  "/page": "app/page.js"
+}

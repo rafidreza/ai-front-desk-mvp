@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TicketPriority {
+  P1
+  P2
+  P3
+}
+
+enum TicketStatus {
+  open
+  assigned
+  waiting_client
+  resolved
+}
+
+model Client {
+  id                 String           @id
+  businessName       String
+  pageId             String           @unique
+  ownerName          String?
+  ownerEmail         String?
+  ownerPhone         String?
+  businessCategory   String?
+  onboardingStatus   String           @default("draft")
+  defaultLanguage    String
+  tone               String
+  escalationKeywords String[]
+  whatsappPoc        String?
+  digestEmail        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  knowledgeEntries   KnowledgeEntry[]
+  conversations      Conversation[]
+  tickets            Ticket[]
+}
+
+model KnowledgeEntry {
+  id              String   @id
+  clientId        String
+  title           String
+  answer          String
+  keywords        String[]
+  confidenceBoost Float?
+  status          String   @default("active")
+  version         Int      @default(1)
+  archivedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+}
+
+model Conversation {
+  id                     String    @id
+  clientId               String
+  channel                String
+  externalConversationId String
+  externalSenderId       String
+  lastConfidence         Float?
+  ticketId               String?
+  csatScore              Int?
+  csatComment            String?
+  csatAt                 DateTime?
+  qaGrade                String?
+  hallucinationFlag      Boolean   @default(false)
+  gradedBy               String?
+  gradedAt               DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  client                 Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  messages               Message[]
+  tickets                Ticket[]
+
+  @@index([clientId])
+  @@unique([clientId, channel, externalConversationId])
+}
+
+model Message {
+  id             String       @id
+  conversationId String
+  direction      String
+  text           String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model Ticket {
+  id              String        @id
+  clientId        String
+  conversationId  String
+  assigneeId      String?
+  version         Int           @default(0)
+  priority        TicketPriority
+  status          TicketStatus
+  reason          String
+  customerMessage String
+  suggestedReply  String
+  salesRecoveredEstimate Float     @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  events          TicketEvent[]
+  comments        TicketComment[]
+
+  @@index([clientId])
+  @@index([conversationId])
+  @@index([assigneeId])
+  @@index([priority, status])
+}
+
+model TicketEvent {
+  id        String   @id
+  ticketId  String
+  eventType String
+  payload   Json
+  createdAt DateTime @default(now())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}
+
+model TicketComment {
+  id        String   @id
+  ticketId  String
+  body      String
+  authorId  String
+  createdAt DateTime @default(now())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}

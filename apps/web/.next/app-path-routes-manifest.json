@@ -1,0 +1,13 @@
+{
+  "/api/internal-logout/route": "/api/internal-logout",
+  "/api/backend/[...path]/route": "/api/backend/[...path]",
+  "/api/internal-login/route": "/api/internal-login",
+  "/_not-found/page": "/_not-found",
+  "/client/tickets/page": "/client/tickets",
+  "/internal/knowledge/page": "/internal/knowledge",
+  "/internal/page": "/internal",
+  "/client/dashboard/page": "/client/dashboard",
+  "/internal/login/page": "/internal/login",
+  "/signup/page": "/signup",
+  "/page": "/"
+}
