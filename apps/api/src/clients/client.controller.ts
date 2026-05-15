@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { z } from 'zod';
 import { PilotClientService } from './pilot-client.service';
 import { ClientDashboardService } from './client-dashboard.service';
+import { DigestDeliveryService } from './digest-delivery.service';
 
 const SignupSchema = z.object({
   businessName: z.string().trim().min(2),
@@ -31,6 +32,7 @@ export class ClientController {
   constructor(
     private readonly clients: PilotClientService,
     private readonly dashboard: ClientDashboardService,
+    private readonly digests: DigestDeliveryService,
   ) {}
 
   @Get()
@@ -52,6 +54,13 @@ export class ClientController {
   @Get(':clientId/digests/:cadence/preview')
   async getDigestPreview(@Param('clientId') clientId: string, @Param('cadence') cadence: string) {
     return this.dashboard.getDigestPreview(clientId, cadence === 'weekly' ? 'weekly' : 'daily');
+  }
+
+  @Post(':clientId/digests/:cadence/send')
+  async sendDigest(@Param('clientId') clientId: string, @Param('cadence') cadence: string) {
+    return {
+      digest: await this.digests.sendDigest(clientId, cadence === 'weekly' ? 'weekly' : 'daily'),
+    };
   }
 
   @Patch(':clientId/conversations/:conversationId/csat')

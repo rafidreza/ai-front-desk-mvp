@@ -11,6 +11,7 @@ interface ChallengeResponse {
     channel: 'email' | 'whatsapp';
     destination: string;
     expiresAt: string;
+    deliveryMode?: 'dry-run' | 'sent' | 'skipped';
     devCode?: string;
   };
 }

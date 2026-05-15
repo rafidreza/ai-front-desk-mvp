@@ -61,6 +61,7 @@ Copy `.env.example` to `.env` when credentials are available.
 - `MESSENGER_APP_SECRET` enables signed-webhook verification.
 - `ENABLE_P1_WHATSAPP_PINGS=false` disables urgent-ticket WhatsApp alerts. By default, P1 alerts dry-run when WhatsApp credentials are missing.
 - `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` enable real WhatsApp Cloud API P1 alerts to the client's `whatsappPoc` or `ownerPhone`.
+- `EMAIL_FROM_ADDRESS`, `POSTMARK_SERVER_TOKEN`, and `POSTMARK_MESSAGE_STREAM` enable Postmark delivery for client auth codes and daily/weekly digests. Without Postmark credentials, delivery endpoints return dry-run mode.
 - `ANTHROPIC_API_KEY` enables Claude responses.
 - `INTERNAL_CONSOLE_PASSWORD` and `INTERNAL_CONSOLE_SESSION_SECRET` gate `/internal` and the backend proxy. In production the password must be at least 12 characters.
 - `WEB_APP_URL` is the allowlisted origin for API CORS.

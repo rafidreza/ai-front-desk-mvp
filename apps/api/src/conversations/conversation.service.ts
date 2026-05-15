@@ -157,6 +157,24 @@ export class ConversationService {
     return this.repository.listTickets();
   }
 
+  async captureCsatFromChannel(input: {
+    clientId: string;
+    channel: IncomingMessage['channel'];
+    externalConversationId: string;
+    score: number;
+    comment?: string;
+  }): Promise<ConversationLog | null> {
+    const conversation = await this.repository.captureCsatByExternalConversation(input);
+    this.logger?.event('conversation.csat_captured', {
+      clientId: input.clientId,
+      channel: input.channel,
+      externalConversationId: input.externalConversationId,
+      score: input.score,
+      found: conversation !== null,
+    });
+    return conversation;
+  }
+
   gradeConversation(input: {
     conversationId: string;
     qaGrade?: ConversationQaGrade;

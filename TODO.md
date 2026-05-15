@@ -22,13 +22,13 @@
 | 0 — Foundations | 22 | 0 | 22 |
 | 1 — Phase 0 kernel close | 2 | 6 | 8 |
 | 2 — Phase 0 hardening | 5 | 1 | 6 |
-| 3 — Phase 1 multi-tenant | 6 | 3 | 9 |
-| 4 — Client-facing features | 4 | 3 | 7 |
+| 3 — Phase 1 multi-tenant | 7 | 2 | 9 |
+| 4 — Client-facing features | 7 | 0 | 7 |
 | 5 — Channels | 0 | 3 | 3 |
 | 6 — KB build pipeline | 0 | 6 | 6 |
 | 7 — QA & improvement loop | 0 | 5 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| **TOTAL** | **39** | **33** | **72** |
+| **TOTAL** | **43** | **29** | **72** |
 
 ---
 
@@ -106,7 +106,7 @@
 - [x] **T15** Remove hardcoded `pilot-client`; route every request by `Client` row — **DONE (2026-05-15): DB-backed client lookup/signup is now the source for client profiles; pilot data remains only as seed/demo content**
 - [x] **T16** Client sign-up page (`/signup`, per PRD 01) — **DONE (2026-05-15)**
 - [ ] **T17** Meta OAuth flow for `pages_messaging` (replace manual token) — **BLOCKED (2026-05-15): needs Meta app/business access and OAuth decisions**
-- [ ] **T18** Magic-link + WhatsApp OTP auth (PRD 01 §8.4) — **PARTIAL (2026-05-15): client session, OTP challenge table, request/verify endpoints, protected client pages, and local/dev code flow shipped; real magic-link delivery and WhatsApp OTP provider pending**
+- [x] **T18** Magic-link + WhatsApp OTP auth (PRD 01 §8.4) — **DONE (2026-05-16): client session, OTP challenge table, request/verify endpoints, protected client pages, email/WhatsApp code delivery, dry-run mode, and provider-ready Postmark/WhatsApp Cloud API wiring shipped**
 - [ ] **T19** Conversational onboarding bot via Messenger (PRD 03 §8.1) — **BLOCKED (2026-05-15): depends on Meta live channel access**
 - [x] **T20** Internal KB editor UI (per-client tree + entry panel) — **DONE (2026-05-15): entry list, detail editor, draft creation, publish/archive actions, filters, and version panel shipped**
 - [x] **T21** KB versioning (`draft` / `active` / `archived`) with rollback — **DONE (2026-05-15): history table, audit actions, baseline backfill, update/publish/archive snapshots, and rollback-as-new-draft shipped**
@@ -119,9 +119,9 @@
 
 - [x] **T24** Client dashboard (read-only KPI cards, separate from `/internal`) — **DONE (2026-05-15)**
 - [x] **T25** Client ticket delegation screen (mobile-first, 3-tap workflows) — **DONE (2026-05-15)**
-- [ ] **T26** Daily email digest (Postmark or SES + cron job, 21:00 local) — **PARTIAL (2026-05-15): daily preview API shipped; email provider and cron delivery pending**
-- [ ] **T27** Weekly digest email (richer report, sales-recovered narrative) — **PARTIAL (2026-05-15): weekly preview API shipped; email provider and cron delivery pending**
-- [ ] **T28** CSAT capture (thumbs reaction in Messenger / Web) — **PARTIAL (2026-05-15): web/dashboard CSAT API and score buttons shipped; Messenger reaction capture pending**
+- [x] **T26** Daily email digest (Postmark or SES + cron job, 21:00 local) — **DONE (2026-05-16): daily preview, Postmark/dry-run email delivery, and cron-callable send endpoint shipped**
+- [x] **T27** Weekly digest email (richer report, sales-recovered narrative) — **DONE (2026-05-16): weekly preview, richer metric narrative, Postmark/dry-run email delivery, and cron-callable send endpoint shipped**
+- [x] **T28** CSAT capture (thumbs reaction in Messenger / Web) — **DONE (2026-05-16): web/dashboard CSAT plus Messenger quick-reply/postback/text rating capture shipped**
 - [x] **T29** P1 WhatsApp ping to POC on urgent ticket creation — **DONE (2026-05-16): urgent-ticket notification service, WhatsApp Cloud API send path, dry-run mode, ticket timeline event, and regression tests shipped**
 - [x] **T30** "Sales recovered" estimate calculation per MVP §9 spec — **DONE (2026-05-15): new-ticket estimates plus migration backfill for existing tickets**
 

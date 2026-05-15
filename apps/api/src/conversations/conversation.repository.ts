@@ -563,6 +563,63 @@ export class ConversationRepository {
     return event;
   }
 
+  async captureCsatByExternalConversation(input: {
+    clientId: string;
+    channel: ConversationLog['channel'];
+    externalConversationId: string;
+    score: number;
+    comment?: string;
+  }): Promise<ConversationLog | null> {
+    const now = new Date();
+
+    if (this.prisma?.enabled === true) {
+      const result = await this.prisma.conversation.updateMany({
+        where: {
+          clientId: input.clientId,
+          channel: input.channel,
+          externalConversationId: input.externalConversationId,
+        },
+        data: {
+          csatScore: input.score,
+          csatComment: input.comment,
+          csatAt: now,
+        },
+      });
+
+      if (result.count === 0) return null;
+
+      const conversation = await this.prisma.conversation.findUnique({
+        where: {
+          clientId_channel_externalConversationId: {
+            clientId: input.clientId,
+            channel: input.channel,
+            externalConversationId: input.externalConversationId,
+          },
+        },
+        include: { messages: { orderBy: { createdAt: 'asc' } } },
+      });
+
+      return conversation === null ? null : this.mapConversation(conversation);
+    }
+
+    const conversation = [...this.conversations.values()].find(
+      (item) =>
+        item.clientId === input.clientId &&
+        item.channel === input.channel &&
+        item.externalConversationId === input.externalConversationId,
+    );
+    if (conversation === undefined) return null;
+
+    const updated: ConversationLog = {
+      ...conversation,
+      csatScore: input.score,
+      csatComment: input.comment,
+      csatAt: now.toISOString(),
+    };
+    this.conversations.set(updated.id, updated);
+    return updated;
+  }
+
   async updateConversationQa(input: {
     conversationId: string;
     qaGrade?: ConversationQaGrade;

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { createHmac, randomInt, randomUUID, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
+import { AuthCodeDeliveryService } from '../notifications/auth-code-delivery.service';
 import { ClientProfile } from '../types/domain';
 import { PilotClientService } from './pilot-client.service';
 
@@ -66,6 +67,7 @@ export class ClientAuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly clients: PilotClientService,
+    private readonly delivery?: AuthCodeDeliveryService,
   ) {
     shouldReturnDevCode();
     getAuthSecret();
@@ -94,6 +96,7 @@ export class ClientAuthService {
         channel: requestedChannel,
         destination: maskRequestedIdentifier(input.identifier.trim(), requestedChannel),
         expiresAt: expiresAt.toISOString(),
+        deliveryMode: 'dry-run',
       };
     }
 
@@ -118,6 +121,13 @@ export class ClientAuthService {
         expiresAt,
       },
     });
+    const deliveryResult = await this.delivery?.sendCode({
+      businessName: client.businessName,
+      channel,
+      destination,
+      code,
+      expiresInMinutes: 10,
+    });
 
     return {
       sent: true,
@@ -125,6 +135,7 @@ export class ClientAuthService {
       channel,
       destination: maskDestination(destination, channel),
       expiresAt: expiresAt.toISOString(),
+      deliveryMode: deliveryResult?.mode ?? 'dry-run',
       devCode: shouldReturnDevCode() ? code : undefined,
     };
   }

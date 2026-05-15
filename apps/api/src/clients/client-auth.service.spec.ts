@@ -1,6 +1,7 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { PrismaService } from '../database/prisma.service';
+import { AuthCodeDeliveryService } from '../notifications/auth-code-delivery.service';
 import { ClientProfile } from '../types/domain';
 import { PilotClientService } from './pilot-client.service';
 import { ClientAuthService } from './client-auth.service';
@@ -34,7 +35,7 @@ type StoredChallenge = {
   consumedAt: Date | null;
 };
 
-function createService() {
+function createService(delivery?: AuthCodeDeliveryService) {
   const challenges = new Map<string, StoredChallenge>();
   const prisma = {
     client: {
@@ -63,7 +64,7 @@ function createService() {
     findById: vi.fn(async () => client),
   } as unknown as PilotClientService;
 
-  return { challenges, service: new ClientAuthService(prisma, clients) };
+  return { challenges, service: new ClientAuthService(prisma, clients, delivery) };
 }
 
 describe('ClientAuthService', () => {
@@ -79,14 +80,25 @@ describe('ClientAuthService', () => {
   });
 
   it('returns a masked destination and verifies the dev code when explicitly enabled', async () => {
-    const { service } = createService();
+    const delivery = {
+      sendCode: vi.fn(async () => ({ mode: 'dry-run' as const, channel: 'email' as const, destination: 'owner@example.com' })),
+    } as unknown as AuthCodeDeliveryService;
+    const { service } = createService(delivery);
 
     const challenge = await service.requestCode({ identifier: 'owner@example.com', channel: 'email' });
     const profile = await service.verifyCode({ challengeId: challenge.challengeId, code: challenge.devCode ?? '' });
 
     expect(challenge.sent).toBe(true);
     expect(challenge.destination).toBe('o***@example.com');
+    expect(challenge.deliveryMode).toBe('dry-run');
     expect(challenge).not.toHaveProperty('clientId');
+    expect(delivery.sendCode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: 'email',
+        destination: 'owner@example.com',
+        code: challenge.devCode,
+      }),
+    );
     expect(profile.id).toBe('pilot-client');
   });
 

@@ -22,13 +22,28 @@ const MessengerWebhookSchema = z.object({
             .object({
               mid: z.string().optional(),
               text: z.string().optional(),
+              quick_reply: z.object({ payload: z.string().optional() }).optional(),
             })
             .optional(),
+          postback: z.object({ payload: z.string().optional(), title: z.string().optional() }).optional(),
         }),
       ),
     }),
   ),
 });
+
+function parseCsatScore(payload?: string, text?: string): number | null {
+  const normalizedPayload = payload?.trim().toLowerCase();
+  const payloadMatch = normalizedPayload?.match(/(?:csat|rating|score)[_: -]?([1-5])/) ?? normalizedPayload?.match(/^([1-5])$/);
+  if (payloadMatch?.[1] !== undefined) return Number(payloadMatch[1]);
+
+  const normalizedText = text?.trim().toLowerCase();
+  const textMatch = normalizedText?.match(/(?:csat|rating|score)[_: -]?([1-5])/);
+  if (textMatch?.[1] !== undefined) return Number(textMatch[1]);
+  if (normalizedText === '👍') return 5;
+  if (normalizedText === '👎') return 1;
+  return null;
+}
 
 @Controller('webhooks/messenger')
 export class MessengerController {
@@ -81,6 +96,24 @@ export class MessengerController {
       const client = await this.clients.findByPageId(entry.id);
 
       for (const event of entry.messaging) {
+        const csatScore = parseCsatScore(event.message?.quick_reply?.payload ?? event.postback?.payload, event.message?.text ?? event.postback?.title);
+        if (csatScore !== null) {
+          const conversation = await this.conversations.captureCsatFromChannel({
+            clientId: client.id,
+            channel: 'messenger',
+            externalConversationId: event.sender.id,
+            score: csatScore,
+            comment: event.message?.text ?? event.postback?.title,
+          });
+          processed.push({
+            type: 'csat',
+            externalConversationId: event.sender.id,
+            score: csatScore,
+            conversationId: conversation?.id,
+          });
+          continue;
+        }
+
         if (event.message?.text === undefined) {
           continue;
         }

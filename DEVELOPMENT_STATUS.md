@@ -41,9 +41,9 @@ The first working slice is intentionally thin:
   - DB-backed client profile metadata;
   - client dashboard API and `/client/dashboard` page;
   - client ticket delegation API and `/client/tickets` page;
-  - client auth foundation with OTP challenge persistence, signed client sessions, `/client/login`, protected client pages, and client-scoped API proxy access;
-  - web CSAT capture API and score buttons;
-  - daily/weekly digest preview API;
+  - client auth foundation with OTP challenge persistence, signed client sessions, `/client/login`, protected client pages, client-scoped API proxy access, and email/WhatsApp code delivery in dry-run/provider-ready modes;
+  - web CSAT capture API and score buttons, plus Messenger quick-reply/postback/text rating capture;
+  - daily/weekly digest preview API plus Postmark/dry-run email delivery and cron-callable send endpoint;
   - internal per-client KB workspace at `/internal/knowledge` with entry list, detail editor, draft creation, publish/archive actions, version history, and rollback;
   - KB status/version/history fields with audit rows for baseline, create, update, publish, archive, and rollback actions;
   - pgvector-backed KB embeddings with deterministic local embedding fallback, reindex endpoint, and hybrid keyword/vector retrieval;
@@ -104,6 +104,9 @@ Manual HTTP checks passed:
 - Unauthenticated `GET /client/dashboard?clientId=pilot-client` redirects to `/client/login`
 - `POST /api/client-auth/request` returns a masked challenge response; development login code is returned only when `DEV_RETURN_AUTH_CODE=true`
 - `POST /api/client-auth/verify` sets the signed client session cookie
+- `POST /clients/pilot-client/digests/daily/send` can produce a dry-run or Postmark delivery result
+- `POST /clients/pilot-client/digests/weekly/send` can produce a dry-run or Postmark delivery result
+- Messenger CSAT quick-reply/postback payloads such as `CSAT_5` update the existing conversation rating
 - Authenticated `GET /client/dashboard?clientId=pilot-client` returns `200`
 - Authenticated client proxy `GET /api/backend/clients/pilot-client/dashboard` returns `200`
 - Authenticated client proxy `GET /api/backend/tickets` returns `401`
@@ -179,15 +182,13 @@ Operational hardening verification:
 - `ANTHROPIC_API_KEY` is still missing, so the fallback answer path is still active.
 - Public HTTPS deployment is still pending account/project access.
 - Meta App setup and live Page traffic are still pending Meta credentials/access.
-- Client-facing dashboard and delegation screens are protected by signed client sessions, but production auth delivery is not complete yet.
+- Client-facing dashboard and delegation screens are protected by signed client sessions. Production auth delivery now has provider-ready email/WhatsApp paths, but real sends still require Postmark/WhatsApp credentials.
 - No WhatsApp adapter yet.
 - No real KB import pipeline yet.
 - Internal KB editor now supports rich entry editing, version history, and rollback. It still needs real seller content/import pipelines before alpha use.
 - KB retrieval now uses hybrid keyword/vector scoring, but the current embedding provider is deterministic/local. A production embedding provider can replace it later without changing the retrieval contract.
 - Prompt profile versioning is now available, but prompt quality still needs real seller QA review and production Anthropic testing once `ANTHROPIC_API_KEY` is configured.
-- Daily/weekly digest preview APIs exist, but real email delivery needs Postmark/SES, domain DNS, and cron configuration.
-- CSAT capture exists on the web dashboard only; Messenger reaction capture is still pending.
-- Client auth code delivery is local/dev only. Real magic-link email and WhatsApp OTP delivery need provider decisions and credentials.
+- Daily/weekly digest delivery has Postmark/dry-run wiring and cron-callable send endpoints, but production scheduling and domain DNS are still deployment tasks.
 - Moderate npm audit advisories remain unresolved because the available automatic fixes are not safe for this stack.
 
 ## Local URLs
@@ -211,9 +212,8 @@ Close the Phase 0 kernel:
 1. Provide alpha seller Q&A/source material so `TODO.md` T2 can be completed.
 2. Provide `ANTHROPIC_API_KEY` and `MESSENGER_PAGE_ACCESS_TOKEN` so `TODO.md` T3/T4 can be completed.
 3. Provide deployment and Meta developer/business access for `TODO.md` T5/T6/T7.
-4. Continue Tier 3/4 foundation work while external access is pending:
-   - choose email/WhatsApp providers and wire real auth code delivery;
-   - add KB rollback/detail editing;
-   - choose Postmark/SES and wire digest delivery;
-   - provide real alpha seller Q&A/source content;
-   - choose WhatsApp provider and wire P1 urgent pings.
+4. Continue non-blocked foundation work while external access is pending:
+   - generalise channel send abstraction;
+   - start the KB import pipeline;
+   - add production observability;
+   - provide real alpha seller Q&A/source content.

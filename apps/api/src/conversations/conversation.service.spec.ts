@@ -143,4 +143,28 @@ describe('ConversationService', () => {
     expect(second.alreadyProcessed).toBe(true);
     expect(conversation?.messages.filter((item) => item.direction === 'outbound')).toHaveLength(1);
   });
+
+  it('captures CSAT against an existing Messenger conversation', async () => {
+    const { service } = createService();
+    await service.handleIncomingMessage({
+      id: 'message-csat',
+      clientId: 'pilot-client',
+      channel: 'messenger',
+      externalConversationId: 'customer-csat',
+      externalSenderId: 'customer-csat',
+      text: 'delivery charge koto?',
+      receivedAt: new Date().toISOString(),
+    });
+
+    const conversation = await service.captureCsatFromChannel({
+      clientId: 'pilot-client',
+      channel: 'messenger',
+      externalConversationId: 'customer-csat',
+      score: 5,
+      comment: 'csat_5',
+    });
+
+    expect(conversation?.csatScore).toBe(5);
+    expect(conversation?.csatComment).toBe('csat_5');
+  });
 });
