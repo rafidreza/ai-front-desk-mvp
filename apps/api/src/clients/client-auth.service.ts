@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { createHmac, randomInt, randomUUID } from 'crypto';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { createHmac, randomInt, randomUUID, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import { ClientProfile } from '../types/domain';
 import { PilotClientService } from './pilot-client.service';
@@ -10,8 +10,15 @@ function normalizeIdentifier(identifier: string) {
   return identifier.trim().toLowerCase();
 }
 
+function shouldReturnDevCode() {
+  if (process.env.NODE_ENV === 'production' && process.env.DEV_RETURN_AUTH_CODE === 'true') {
+    throw new Error('DEV_RETURN_AUTH_CODE must not be enabled in production.');
+  }
+  return process.env.DEV_RETURN_AUTH_CODE === 'true';
+}
+
 function getAuthSecret() {
-  const secret = process.env.CLIENT_AUTH_CODE_SECRET ?? process.env.INTERNAL_API_TOKEN;
+  const secret = process.env.CLIENT_AUTH_CODE_SECRET;
   if (process.env.NODE_ENV === 'production' && (secret === undefined || secret.length < 32)) {
     throw new Error('CLIENT_AUTH_CODE_SECRET must be set to at least 32 characters in production.');
   }
@@ -26,15 +33,47 @@ function createCode() {
   return String(randomInt(0, 1_000_000)).padStart(6, '0');
 }
 
+function hashesMatch(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function maskEmail(email: string) {
+  const [name, domain] = email.split('@');
+  if (name === undefined || domain === undefined || name.length === 0) return 'configured email address';
+  return `${name[0]}***@${domain}`;
+}
+
+function maskPhone(phone: string) {
+  const trimmed = phone.trim();
+  if (trimmed.length <= 4) return 'configured WhatsApp number';
+  return `${trimmed.slice(0, 4)}***${trimmed.slice(-4)}`;
+}
+
+function maskDestination(destination: string, channel: AuthChannel) {
+  return channel === 'email' ? maskEmail(destination) : maskPhone(destination);
+}
+
+function maskRequestedIdentifier(identifier: string, channel: AuthChannel) {
+  if (channel === 'email' && identifier.includes('@')) return maskEmail(identifier);
+  if (channel === 'whatsapp' && /\d/.test(identifier)) return maskPhone(identifier);
+  return channel === 'email' ? 'configured email address' : 'configured WhatsApp number';
+}
+
 @Injectable()
 export class ClientAuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly clients: PilotClientService,
-  ) {}
+  ) {
+    shouldReturnDevCode();
+    getAuthSecret();
+  }
 
   async requestCode(input: { identifier: string; channel?: AuthChannel }) {
     const identifier = normalizeIdentifier(input.identifier);
+    const requestedChannel = input.channel ?? 'email';
     const client = await this.prisma.client.findFirst({
       where: {
         OR: [
@@ -48,7 +87,14 @@ export class ClientAuthService {
     });
 
     if (client === null) {
-      throw new NotFoundException('No client workspace found for this login.');
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      return {
+        sent: true,
+        challengeId: randomUUID(),
+        channel: requestedChannel,
+        destination: maskRequestedIdentifier(input.identifier.trim(), requestedChannel),
+        expiresAt: expiresAt.toISOString(),
+      };
     }
 
     const channel = input.channel ?? (client.ownerEmail !== null || client.digestEmail !== null ? 'email' : 'whatsapp');
@@ -74,12 +120,12 @@ export class ClientAuthService {
     });
 
     return {
+      sent: true,
       challengeId,
-      clientId: client.id,
       channel,
-      destination,
+      destination: maskDestination(destination, channel),
       expiresAt: expiresAt.toISOString(),
-      devCode: process.env.NODE_ENV === 'production' ? undefined : code,
+      devCode: shouldReturnDevCode() ? code : undefined,
     };
   }
 
@@ -90,7 +136,7 @@ export class ClientAuthService {
       throw new UnauthorizedException('Login code is invalid or expired.');
     }
 
-    if (challenge.codeHash !== hashCode(challenge.id, input.code.trim())) {
+    if (!hashesMatch(challenge.codeHash, hashCode(challenge.id, input.code.trim()))) {
       throw new UnauthorizedException('Login code is invalid or expired.');
     }
 

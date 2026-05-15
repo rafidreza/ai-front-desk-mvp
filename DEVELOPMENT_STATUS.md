@@ -100,7 +100,7 @@ Manual HTTP checks passed:
 - `GET /signup` in the web app
 - `GET /client/login`
 - Unauthenticated `GET /client/dashboard?clientId=pilot-client` redirects to `/client/login`
-- `POST /api/client-auth/request` returns a development login code
+- `POST /api/client-auth/request` returns a masked challenge response; development login code is returned only when `DEV_RETURN_AUTH_CODE=true`
 - `POST /api/client-auth/verify` sets the signed client session cookie
 - Authenticated `GET /client/dashboard?clientId=pilot-client` returns `200`
 - Authenticated client proxy `GET /api/backend/clients/pilot-client/dashboard` returns `200`

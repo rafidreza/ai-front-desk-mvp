@@ -1,15 +1,15 @@
 # Quality Assurance Report — AI Front Desk MVP
 
-**Date:** 2026-05-15 (revised after second fix pass)
-**Reviewer:** Code-review pass (read every source file, ran build + tests + audit)
-**Scope:** All built code in `ai-front-desk-mvp/` per `TODO.md` Tier 0–2
+**Date:** 2026-05-16 (round 4 — fixes round-3 client-auth, guard, rate-limit, test-coverage, and CI-config findings)
+**Reviewer:** Code-review pass (read every source file, ran build + lint + tests + audit)
+**Scope:** All built code in `ai-front-desk-mvp/` per `TODO.md` plus the new Tier-3 features shipped after round 2
 **Companion docs:** [`TODO.md`](TODO.md), [`DEVELOPMENT_STATUS.md`](DEVELOPMENT_STATUS.md)
 
 ---
 
-## Verdict in one line
+## Verdict in one line (round 4)
 
-Kernel is production-acceptable from a security standpoint and the biggest maintainability item (M3) is resolved. All actionable open items from the previous report round are now closed in code. The only remaining items are externally constrained (T10 upstream advisories) or environment-dependent (H4 distributed rate-limit when multi-instance deployment lands).
+Round-3 security/readiness findings are now largely closed: client-auth responses no longer enumerate workspaces, login destinations are masked, dev login codes require explicit opt-in, auth-code comparison is timing-safe, rate-limit buckets include tenant/customer scope where available, prompt-profile/versioning and guards have regression tests, and the CI Prisma fallback is more portable. All build / lint / test checks are green.
 
 ## Build / test / audit status
 
@@ -17,16 +17,88 @@ Kernel is production-acceptable from a security standpoint and the biggest maint
 |---|---|
 | `npm run build` (API, NestJS + tsc) | ✅ pass |
 | `npm run build:web` (Next.js production build) | ✅ pass |
-| `npm test` (Vitest) | ✅ 16 tests across 5 spec files pass |
+| `npm test` (Vitest) | ✅ 28 tests across 10 spec files pass |
 | `npm run lint` (API + web, ESLint flat config) | ✅ pass |
 | `npm audit --omit=dev --audit-level=high` | ✅ pass; 5 moderate upstream advisories remain blocked by unsafe/breaking fixes |
-| Migrations | ✅ 6 migration files committed |
-| `.github/workflows/` | ✅ CI configured |
+| Migrations | ✅ 11 migration files committed |
+| `.github/workflows/ci.yml` | ✅ green after `DATABASE_URL` placeholder + `prisma.config.ts` tolerant fallback |
 | `LICENSE` | ✅ committed |
 
 ---
 
-## Open findings (still to address)
+## Round-3 findings fixed in round 4
+
+### H7. Client auth code compared with non-timing-safe `!==` — ✅ closed
+
+**File:** [apps/api/src/clients/client-auth.service.ts:93](apps/api/src/clients/client-auth.service.ts)
+
+**Resolution:** `verifyCode` now compares the stored HMAC and candidate HMAC through `timingSafeEqual` after checking equal buffer length. Regression coverage added in `client-auth.service.spec.ts`.
+
+### H8. `CLIENT_AUTH_CODE_SECRET` falls back to `INTERNAL_API_TOKEN` — ✅ closed
+
+**File:** [apps/api/src/clients/client-auth.service.ts:14](apps/api/src/clients/client-auth.service.ts)
+
+**Resolution:** `CLIENT_AUTH_CODE_SECRET` is now independent. The `INTERNAL_API_TOKEN` fallback was removed, and production still fails closed when the client-auth secret is missing or short.
+
+### H9. `/client-auth/request` enumerates registered identifiers — ✅ closed
+
+**File:** [apps/api/src/clients/client-auth.service.ts:50-52](apps/api/src/clients/client-auth.service.ts)
+
+**Resolution:** Unknown identifiers now receive a uniform `sent: true` challenge-shaped response with no database challenge stored and no `devCode`. The UI remains on the same verification flow, while fake challenge IDs fail normally at verification time.
+
+---
+
+### M13. `devCode` returned in HTTP response when `NODE_ENV !== 'production'` — ✅ closed
+
+**File:** [apps/api/src/clients/client-auth.service.ts:76-83](apps/api/src/clients/client-auth.service.ts)
+
+**Resolution:** `devCode` is returned only when `DEV_RETURN_AUTH_CODE=true`. The service throws if that flag is enabled with `NODE_ENV=production`. `.env.example` now documents the flag as disabled by default.
+
+### M14. `requestCode` returns the full destination (email / phone) unmasked — ✅ closed
+
+**File:** [apps/api/src/clients/client-auth.service.ts:80](apps/api/src/clients/client-auth.service.ts)
+
+**Resolution:** API responses now return masked destinations only, for example `o***@example.com` or `+880***5678`. Full destination values remain server-side for challenge storage and future outbound delivery.
+
+### M15. No tests for any of the new Tier-3 code — ✅ substantially closed
+
+**Files:** `client-auth.service.ts`, `prompt-profile.service.ts`, KB versioning workflow, `ApiAuthGuard`, `RateLimitGuard`, client-session middleware
+
+**Resolution:** Test coverage increased from 16 tests / 5 spec files to 28 tests / 10 spec files. New specs cover client-auth happy path, unknown identifier response shape, wrong/expired/replayed codes, production dev-code guard, prompt-profile publish/update/rollback version behavior, API auth bypass/reject behavior, and rate-limit reset/tenant scoping. Remaining gap: client-session middleware and UI route smoke tests are still deferred.
+
+### M16. Client session secret has no key-rotation story
+
+**File:** [apps/web/src/lib/client-auth.ts:12-18](apps/web/src/lib/client-auth.ts)
+
+Sessions sign with a single `CLIENT_SESSION_SECRET`. Rotating it invalidates every active session immediately. For a managed-service product that wants to ship a "kick all sessions" feature OR rotate keys on schedule, you need a JWKS-style two-key scheme (current + previous, accept either for verification, sign only with current).
+
+**Fix:** Defer. Document. Add a `CLIENT_SESSION_PREVIOUS_SECRET` slot in `client-auth.ts` when the first rotation is needed.
+
+### M17. `KnowledgeEntryVersion` and `PromptProfileVersion` are written but never read by tests or UI helpers — ✅ partially closed
+
+Both tables now persist a full snapshot per change (`action` = `created` / `updated` / `published` / `archived` / `rollback`). Good for auditability. But there is no view, no endpoint test, and no UI showing the history yet.
+
+**Resolution:** Read endpoints already exist at `GET /clients/:clientId/prompts/:profileId/versions` and `GET /clients/:clientId/knowledge/:entryId/versions`. Round 4 added prompt-profile version behavior tests. Remaining gap: internal console still needs a visible History tab for operators.
+
+### M18. Rate-limit bucket key is `(ip, path)` — coarse for multi-tenant abuse — ✅ closed for tenant-aware routes
+
+**File:** [apps/api/src/security/rate-limit.guard.ts:20](apps/api/src/security/rate-limit.guard.ts)
+
+**Resolution:** Rate-limit keys now include `clientId` from route params/query/body where available, and Messenger webhook scope can include page/customer identifiers from the webhook body. Unauthenticated endpoints intentionally remain IP/path scoped.
+
+---
+
+### L7. `prisma.config.ts` placeholder fallback is gated on `CI=true` — ✅ closed
+
+**File:** [apps/api/prisma.config.ts:8](apps/api/prisma.config.ts)
+
+**Resolution:** The Prisma placeholder fallback now accepts either `CI=true` or `GITHUB_ACTIONS=true`.
+
+### L8. Three new directories under `apps/web/src/app/` (`signup/`, `client/`, `client/dashboard/`, `client/tickets/`) added without tests
+
+Same theme as M15. Page-level smoke tests (e.g., Playwright) become valuable once these screens are real.
+
+---
 
 ### H4. No distributed rate limiting (deferred)
 
@@ -87,6 +159,19 @@ Items already closed in this pass are listed under "What went well" above and cr
 
 ---
 
+## What went well in round 3 (Tier-3 build)
+
+- **Client auth is real.** Magic-code over email/WhatsApp with hashed challenges, 10-minute expiry, single-use consumption flag, signed session cookies with 14-day expiry, prod fail-closed on secret length. The fundamentals are correct.
+- **NestJS global guards.** `ApiAuthGuard` (bearer token, `timingSafeEqual`) and `RateLimitGuard` (per-path per-IP bucket) wired via `APP_GUARD` — every controller is gated by default, with `/health` and `/webhooks/messenger` explicitly exempted. This is the right shape for an API surface.
+- **Prompt profile versioning is transactional.** `setStatus('active')` archives prior active and writes the new version inside a single `prisma.$transaction`. No race window where two profiles could both be active.
+- **Knowledge entry versioning is consistent.** `KnowledgeEntryVersion` mirrors the `PromptProfileVersion` schema and the same action taxonomy is reused.
+- **Migrations are forward-only and committed.** 11 files, each named with timestamp + change summary. Includes backfills and the pgvector knowledge-retrieval migration.
+- **Client console routes are surfaced cleanly.** `middleware.ts` now handles three auth families (internal session, client session, backend proxy) with deterministic redirects. The `getBackendClientId` regex limits client-session access to scope-correct paths only.
+- **CI is no longer trivially breakable.** `prisma.config.ts` tolerates missing `DATABASE_URL` when running in CI, and the workflow injects a placeholder anyway as belt-and-suspenders.
+- **AI runtime now consumes the active prompt profile.** `conversation.service.ts` calls `prompts?.getActiveForClient(client)` and passes the profile through to `ai.service.ts`, which uses `systemInstructions` / `toneRules` / `fallbackBehavior` in the Claude system prompt. The plumbing is in place even before per-client tone work begins in earnest.
+
+---
+
 ## Resolved in this fix pass (2026-05-15 round 2)
 
 | Item | Title | How |
@@ -126,8 +211,8 @@ No misleading claims remain.
 
 | Field | Value |
 |---|---|
-| Version | 3.0 |
-| Status | Revised after second fix pass |
-| Last updated | 2026-05-15 |
+| Version | 4.0 |
+| Status | Revised after Tier-3 build (client auth, prompt-profile versioning, KB versioning) |
+| Last updated | 2026-05-16 |
 | Author | Code-review pass |
-| Next review | Before T5 production deploy and before starting Tier 4 |
+| Next review | Before T5 production deploy and before opening signup to real F-Commerce sellers |

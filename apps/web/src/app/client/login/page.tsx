@@ -6,8 +6,8 @@ import { ClientProfile } from '@/types/domain';
 
 interface ChallengeResponse {
   challenge: {
+    sent: true;
     challengeId: string;
-    clientId: string;
     channel: 'email' | 'whatsapp';
     destination: string;
     expiresAt: string;
