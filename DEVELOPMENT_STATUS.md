@@ -46,6 +46,7 @@ The first working slice is intentionally thin:
   - daily/weekly digest preview API;
   - internal per-client KB workspace at `/internal/knowledge` with entry list, detail editor, draft creation, publish/archive actions, version history, and rollback;
   - KB status/version/history fields with audit rows for baseline, create, update, publish, archive, and rollback actions;
+  - pgvector-backed KB embeddings with deterministic local embedding fallback, reindex endpoint, and hybrid keyword/vector retrieval;
   - internal prompt profile workspace at `/internal/agent-config` with prompt draft/edit/publish/archive/version/rollback;
   - active client prompt profiles are now loaded into AI reply generation with fallback to the client's legacy tone when no stored profile exists;
   - sales recovered estimate calculation and backfill.
@@ -109,6 +110,8 @@ Manual HTTP checks passed:
 - `PATCH /clients/pilot-client/knowledge/:entryId/status`
 - `GET /clients/pilot-client/knowledge/:entryId/versions`
 - `POST /clients/pilot-client/knowledge/:entryId/rollback`
+- `POST /clients/pilot-client/knowledge/reindex`
+- Messenger-style delivery-cost question after reindex returned the delivery-charge KB answer through hybrid retrieval.
 - `GET /clients/pilot-client/prompts`
 - `POST /clients/pilot-client/prompts`
 - `PATCH /clients/pilot-client/prompts/:profileId`
@@ -130,6 +133,9 @@ Database verification:
 - Client profile metadata columns migrated successfully.
 - Knowledge entry status/version columns migrated successfully.
 - Knowledge entry version history table migrated and existing entries backfilled successfully.
+- `pgvector` extension enabled successfully in Neon.
+- Knowledge entry embedding columns and ivfflat index migrated successfully.
+- Existing pilot KB entries were reindexed successfully.
 - Prompt profile table migrated successfully.
 - Existing clients received a default active prompt profile during migration.
 - Prompt profile version history table migrated and existing default profiles were backfilled successfully.
@@ -174,6 +180,7 @@ Operational hardening verification:
 - No WhatsApp adapter yet.
 - No real KB import pipeline yet.
 - Internal KB editor now supports rich entry editing, version history, and rollback. It still needs real seller content/import pipelines before alpha use.
+- KB retrieval now uses hybrid keyword/vector scoring, but the current embedding provider is deterministic/local. A production embedding provider can replace it later without changing the retrieval contract.
 - Prompt profile versioning is now available, but prompt quality still needs real seller QA review and production Anthropic testing once `ANTHROPIC_API_KEY` is configured.
 - Daily/weekly digest preview APIs exist, but real email delivery needs Postmark/SES, domain DNS, and cron configuration.
 - CSAT capture exists on the web dashboard only; Messenger reaction capture is still pending.
@@ -205,5 +212,5 @@ Close the Phase 0 kernel:
    - choose email/WhatsApp providers and wire real auth code delivery;
    - add KB rollback/detail editing;
    - choose Postmark/SES and wire digest delivery;
-   - add vector retrieval via pgvector;
+   - provide real alpha seller Q&A/source content;
    - choose WhatsApp provider and wire P1 urgent pings.

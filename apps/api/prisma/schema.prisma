@@ -67,6 +67,9 @@ model KnowledgeEntry {
   confidenceBoost Float?
   status          String   @default("active")
   version         Int      @default(1)
+  embedding       Unsupported("vector")?
+  embeddingText   String?
+  embeddedAt      DateTime?
   archivedAt      DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import { KnowledgeEntry, KnowledgeEntryVersion } from '../types/domain';
+import { EmbeddingService } from './embedding.service';
 import pilotKnowledge from './pilot-knowledge.json';
 
 interface KnowledgeMatch {
@@ -21,6 +22,8 @@ function mapEntry(entry: {
   status: string;
   version: number;
   archivedAt: Date | null;
+  embeddingText?: string | null;
+  embeddedAt?: Date | null;
 }): KnowledgeEntry {
   return {
     id: entry.id,
@@ -31,6 +34,8 @@ function mapEntry(entry: {
     confidenceBoost: entry.confidenceBoost ?? undefined,
     status: entry.status as KnowledgeEntry['status'],
     version: entry.version,
+    embeddingText: entry.embeddingText ?? undefined,
+    embeddedAt: entry.embeddedAt?.toISOString(),
     archivedAt: entry.archivedAt?.toISOString(),
   };
 }
@@ -67,7 +72,10 @@ function mapVersion(version: {
 
 @Injectable()
 export class KnowledgeService {
-  constructor(private readonly prisma?: PrismaService) {}
+  constructor(
+    private readonly prisma?: PrismaService,
+    private readonly embeddings?: EmbeddingService,
+  ) {}
 
   private readonly entries: KnowledgeEntry[] = pilotKnowledge.map((entry) => ({
     ...entry,
@@ -83,20 +91,41 @@ export class KnowledgeService {
     return this.prisma;
   }
 
+  private embedder() {
+    return this.embeddings ?? new EmbeddingService();
+  }
+
+  private createEmbeddingText(entry: Pick<KnowledgeEntry, 'title' | 'answer' | 'keywords'>) {
+    return [entry.title, entry.answer, entry.keywords.join(' ')].join('\n');
+  }
+
+  private normalizeForRetrieval(text: string) {
+    return text
+      .toLowerCase()
+      .replace(/\b(cost|price|rate|fee)\b/g, 'charge')
+      .replace(/\bshipping\b/g, 'delivery');
+  }
+
   async findRelevant(clientId: string, text: string): Promise<KnowledgeMatch> {
     const candidateEntries: KnowledgeEntry[] =
       this.prisma?.enabled === true
         ? (await this.requirePrisma().knowledgeEntry.findMany({ where: { clientId, status: 'active' } })).map(mapEntry)
         : this.entries.filter((entry) => entry.clientId === clientId);
+    const retrievalText = this.normalizeForRetrieval(text);
+    const vectorScores = this.prisma?.enabled === true ? await this.findVectorScores(clientId, retrievalText) : new Map<string, number>();
 
-    const normalizedText = text.toLowerCase();
     const scored = candidateEntries
       .map((entry) => {
-        const hits = entry.keywords.filter((keyword) => normalizedText.includes(keyword.toLowerCase())).length;
-        const score = hits / Math.max(entry.keywords.length, 1) + (entry.confidenceBoost ?? 0);
-        return { entry, hits, score };
+        const hits = entry.keywords.filter((keyword) => retrievalText.includes(this.normalizeForRetrieval(keyword))).length;
+        const keywordScore = hits / Math.max(entry.keywords.length, 1);
+        const vectorScore = vectorScores.get(entry.id) ?? 0;
+        const score =
+          keywordScore > 0
+            ? keywordScore + Math.min(vectorScore, 0.75) * 0.25 + (entry.confidenceBoost ?? 0)
+            : vectorScore * 0.35 + (entry.confidenceBoost ?? 0);
+        return { entry, hits, vectorScore, score };
       })
-      .filter((item) => item.hits > 0)
+      .filter((item) => item.hits > 0 || item.vectorScore >= 0.35)
       .sort((a, b) => b.score - a.score);
 
     const matchedEntries = scored.slice(0, 3).map((item) => item.entry);
@@ -137,6 +166,7 @@ export class KnowledgeService {
           version: 1,
         },
       });
+      await this.writeEmbedding(tx, created);
       await this.recordVersion(tx, created, 'created', input.actorId);
       return created;
     });
@@ -166,6 +196,7 @@ export class KnowledgeService {
           archivedAt: null,
         },
       });
+      await this.writeEmbedding(tx, updated);
       await this.recordVersion(tx, updated, 'updated', actorId);
       return updated;
     });
@@ -193,6 +224,9 @@ export class KnowledgeService {
           archivedAt: status === 'archived' ? new Date() : null,
         },
       });
+      if (status === 'active') {
+        await this.writeEmbedding(tx, updated);
+      }
       await this.recordVersion(tx, updated, status === 'active' ? 'published' : status === 'archived' ? 'archived' : 'updated', actorId);
       return updated;
     });
@@ -235,11 +269,69 @@ export class KnowledgeService {
           version: { increment: 1 },
         },
       });
+      await this.writeEmbedding(tx, updated);
       await this.recordVersion(tx, updated, 'rollback', input.actorId);
       return updated;
     });
 
     return mapEntry(entry);
+  }
+
+  async reindex(clientId: string): Promise<{ updated: number }> {
+    const prisma = this.requirePrisma();
+    const entries = await prisma.knowledgeEntry.findMany({
+      where: { clientId, status: { not: 'archived' } },
+    });
+
+    for (const entry of entries) {
+      await this.writeEmbedding(prisma, entry);
+    }
+
+    return { updated: entries.length };
+  }
+
+  private async findVectorScores(clientId: string, text: string): Promise<Map<string, number>> {
+    const vector = this.embedder().toSqlVector(this.embedder().embedText(text));
+    try {
+      const rows = await this.requirePrisma().$queryRawUnsafe<{ id: string; vectorScore: number }[]>(
+        `
+          SELECT "id", GREATEST(0, 1 - ("embedding" <=> $1::vector)) AS "vectorScore"
+          FROM "KnowledgeEntry"
+          WHERE "clientId" = $2
+            AND "status" = 'active'
+            AND "embedding" IS NOT NULL
+          ORDER BY "embedding" <=> $1::vector
+          LIMIT 8
+        `,
+        vector,
+        clientId,
+      );
+      return new Map(rows.map((row) => [row.id, Number(row.vectorScore)]));
+    } catch {
+      return new Map();
+    }
+  }
+
+  private async writeEmbedding(
+    tx: {
+      $executeRawUnsafe: (query: string, ...values: unknown[]) => Promise<unknown>;
+    },
+    entry: Pick<KnowledgeEntry, 'id' | 'title' | 'answer' | 'keywords'>,
+  ) {
+    const embeddingText = this.createEmbeddingText(entry);
+    const vector = this.embedder().toSqlVector(this.embedder().embedText(embeddingText));
+    await tx.$executeRawUnsafe(
+      `
+        UPDATE "KnowledgeEntry"
+        SET "embedding" = $1::vector,
+            "embeddingText" = $2,
+            "embeddedAt" = CURRENT_TIMESTAMP
+        WHERE "id" = $3
+      `,
+      vector,
+      embeddingText,
+      entry.id,
+    );
   }
 
   private async recordVersion(

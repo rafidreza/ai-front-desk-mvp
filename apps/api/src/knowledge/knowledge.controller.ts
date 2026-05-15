@@ -37,6 +37,11 @@ export class KnowledgeController {
     return { entry: await this.knowledge.createDraft({ clientId, ...parsed }) };
   }
 
+  @Post('reindex')
+  async reindex(@Param('clientId') clientId: string) {
+    return this.knowledge.reindex(clientId);
+  }
+
   @Patch(':entryId')
   async update(@Param('clientId') clientId: string, @Param('entryId') entryId: string, @Body() body: unknown) {
     const parsed = KnowledgePatchSchema.parse(body);

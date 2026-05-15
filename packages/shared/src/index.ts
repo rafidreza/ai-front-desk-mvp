@@ -33,6 +33,8 @@ export interface KnowledgeEntry {
   confidenceBoost?: number;
   status: 'draft' | 'active' | 'archived';
   version: number;
+  embeddingText?: string;
+  embeddedAt?: string;
   archivedAt?: string;
 }
 
