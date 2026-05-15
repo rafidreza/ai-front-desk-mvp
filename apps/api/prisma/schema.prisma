@@ -70,8 +70,29 @@ model KnowledgeEntry {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  versions        KnowledgeEntryVersion[]
 
   @@index([clientId])
+}
+
+model KnowledgeEntryVersion {
+  id              String   @id
+  entryId         String
+  clientId        String
+  version         Int
+  title           String
+  answer          String
+  keywords        String[]
+  confidenceBoost Float?
+  status          String
+  action          String
+  actorId         String
+  createdAt       DateTime @default(now())
+  entry           KnowledgeEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([entryId])
+  @@index([clientId])
+  @@index([action])
 }
 
 model Conversation {

@@ -7,6 +7,7 @@ export type {
   ConversationQaGrade,
   InternalUser,
   KnowledgeEntry,
+  KnowledgeEntryVersion,
   Ticket,
   TicketComment,
   TicketDetail,

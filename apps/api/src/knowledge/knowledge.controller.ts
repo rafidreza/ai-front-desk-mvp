@@ -7,12 +7,19 @@ const KnowledgeEntrySchema = z.object({
   answer: z.string().trim().min(2),
   keywords: z.array(z.string().trim().min(1)).min(1),
   confidenceBoost: z.number().min(0).max(0.5).optional(),
+  actorId: z.string().trim().min(2).optional(),
 });
 
 const KnowledgePatchSchema = KnowledgeEntrySchema.partial();
 
 const StatusSchema = z.object({
   status: z.enum(['draft', 'active', 'archived']),
+  actorId: z.string().trim().min(2).optional(),
+});
+
+const RollbackSchema = z.object({
+  versionId: z.string().trim().min(2),
+  actorId: z.string().trim().min(2).optional(),
 });
 
 @Controller('clients/:clientId/knowledge')
@@ -31,14 +38,25 @@ export class KnowledgeController {
   }
 
   @Patch(':entryId')
-  async update(@Param('entryId') entryId: string, @Body() body: unknown) {
+  async update(@Param('clientId') clientId: string, @Param('entryId') entryId: string, @Body() body: unknown) {
     const parsed = KnowledgePatchSchema.parse(body);
-    return { entry: await this.knowledge.update(entryId, parsed) };
+    return { entry: await this.knowledge.update(clientId, entryId, parsed) };
   }
 
   @Patch(':entryId/status')
-  async setStatus(@Param('entryId') entryId: string, @Body() body: unknown) {
+  async setStatus(@Param('clientId') clientId: string, @Param('entryId') entryId: string, @Body() body: unknown) {
     const parsed = StatusSchema.parse(body);
-    return { entry: await this.knowledge.setStatus(entryId, parsed.status) };
+    return { entry: await this.knowledge.setStatus(clientId, entryId, parsed.status, parsed.actorId) };
+  }
+
+  @Get(':entryId/versions')
+  async listVersions(@Param('clientId') clientId: string, @Param('entryId') entryId: string) {
+    return { versions: await this.knowledge.listVersions(clientId, entryId) };
+  }
+
+  @Post(':entryId/rollback')
+  async rollback(@Param('clientId') clientId: string, @Param('entryId') entryId: string, @Body() body: unknown) {
+    const parsed = RollbackSchema.parse(body);
+    return { entry: await this.knowledge.rollback({ clientId, entryId, versionId: parsed.versionId, actorId: parsed.actorId }) };
   }
 }

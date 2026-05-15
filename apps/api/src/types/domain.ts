@@ -8,6 +8,7 @@ export type {
   ConversationQaGrade,
   IncomingMessage,
   KnowledgeEntry,
+  KnowledgeEntryVersion,
   Ticket,
   TicketComment,
   TicketDetail,

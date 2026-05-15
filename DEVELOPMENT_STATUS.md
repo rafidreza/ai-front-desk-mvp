@@ -44,8 +44,8 @@ The first working slice is intentionally thin:
   - client auth foundation with OTP challenge persistence, signed client sessions, `/client/login`, protected client pages, and client-scoped API proxy access;
   - web CSAT capture API and score buttons;
   - daily/weekly digest preview API;
-  - internal per-client KB draft/list/publish/archive screen at `/internal/knowledge`;
-  - KB status/version fields;
+  - internal per-client KB workspace at `/internal/knowledge` with entry list, detail editor, draft creation, publish/archive actions, version history, and rollback;
+  - KB status/version/history fields with audit rows for baseline, create, update, publish, archive, and rollback actions;
   - sales recovered estimate calculation and backfill.
 
 ## Verified
@@ -102,6 +102,11 @@ Manual HTTP checks passed:
 - Authenticated `GET /client/dashboard?clientId=pilot-client` returns `200`
 - Authenticated client proxy `GET /api/backend/clients/pilot-client/dashboard` returns `200`
 - Authenticated client proxy `GET /api/backend/tickets` returns `401`
+- `POST /clients/pilot-client/knowledge`
+- `PATCH /clients/pilot-client/knowledge/:entryId`
+- `PATCH /clients/pilot-client/knowledge/:entryId/status`
+- `GET /clients/pilot-client/knowledge/:entryId/versions`
+- `POST /clients/pilot-client/knowledge/:entryId/rollback`
 
 Database verification:
 
@@ -116,6 +121,7 @@ Database verification:
 - Conversation QA grade persisted to Neon.
 - Client profile metadata columns migrated successfully.
 - Knowledge entry status/version columns migrated successfully.
+- Knowledge entry version history table migrated and existing entries backfilled successfully.
 - Conversation CSAT columns migrated successfully.
 - Ticket sales recovered estimate column migrated and backfilled successfully.
 - Client auth challenge table migrated successfully.
@@ -156,7 +162,7 @@ Operational hardening verification:
 - Client-facing dashboard and delegation screens are protected by signed client sessions, but production auth delivery is not complete yet.
 - No WhatsApp adapter yet.
 - No real KB import pipeline yet.
-- Internal KB editor is still MVP-level: it supports draft/list/publish/archive, but not tree navigation, rollback, or rich entry editing yet.
+- Internal KB editor now supports rich entry editing, version history, and rollback. It still needs real seller content/import pipelines before alpha use.
 - Daily/weekly digest preview APIs exist, but real email delivery needs Postmark/SES, domain DNS, and cron configuration.
 - CSAT capture exists on the web dashboard only; Messenger reaction capture is still pending.
 - Client auth code delivery is local/dev only. Real magic-link email and WhatsApp OTP delivery need provider decisions and credentials.

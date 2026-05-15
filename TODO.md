@@ -22,13 +22,13 @@
 | 0 — Foundations | 22 | 0 | 22 |
 | 1 — Phase 0 kernel close | 2 | 6 | 8 |
 | 2 — Phase 0 hardening | 5 | 1 | 6 |
-| 3 — Phase 1 multi-tenant | 2 | 7 | 9 |
+| 3 — Phase 1 multi-tenant | 4 | 5 | 9 |
 | 4 — Client-facing features | 3 | 4 | 7 |
 | 5 — Channels | 0 | 3 | 3 |
 | 6 — KB build pipeline | 0 | 6 | 6 |
 | 7 — QA & improvement loop | 0 | 5 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| **TOTAL** | **34** | **38** | **72** |
+| **TOTAL** | **36** | **36** | **72** |
 
 ---
 
@@ -108,8 +108,8 @@
 - [ ] **T17** Meta OAuth flow for `pages_messaging` (replace manual token) — **BLOCKED (2026-05-15): needs Meta app/business access and OAuth decisions**
 - [ ] **T18** Magic-link + WhatsApp OTP auth (PRD 01 §8.4) — **PARTIAL (2026-05-15): client session, OTP challenge table, request/verify endpoints, protected client pages, and local/dev code flow shipped; real magic-link delivery and WhatsApp OTP provider pending**
 - [ ] **T19** Conversational onboarding bot via Messenger (PRD 03 §8.1) — **BLOCKED (2026-05-15): depends on Meta live channel access**
-- [ ] **T20** Internal KB editor UI (per-client tree + entry panel) — **PARTIAL (2026-05-15): per-client draft/list/publish/archive UI shipped; tree/detail editing still pending**
-- [ ] **T21** KB versioning (`draft` / `active` / `archived`) with rollback — **PARTIAL (2026-05-15): draft/active/archived states and version increments shipped; rollback UI/API still pending**
+- [x] **T20** Internal KB editor UI (per-client tree + entry panel) — **DONE (2026-05-15): entry list, detail editor, draft creation, publish/archive actions, filters, and version panel shipped**
+- [x] **T21** KB versioning (`draft` / `active` / `archived`) with rollback — **DONE (2026-05-15): history table, audit actions, baseline backfill, update/publish/archive snapshots, and rollback-as-new-draft shipped**
 - [ ] **T22** Vector embeddings via pgvector (replace keyword-only retrieval)
 - [ ] **T23** Prompt versioning per client (PRD 02)
 

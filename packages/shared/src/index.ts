@@ -36,6 +36,21 @@ export interface KnowledgeEntry {
   archivedAt?: string;
 }
 
+export interface KnowledgeEntryVersion {
+  id: string;
+  entryId: string;
+  clientId: string;
+  version: number;
+  title: string;
+  answer: string;
+  keywords: string[];
+  confidenceBoost?: number;
+  status: KnowledgeEntry['status'];
+  action: 'baseline' | 'created' | 'updated' | 'published' | 'archived' | 'rollback';
+  actorId: string;
+  createdAt: string;
+}
+
 export interface IncomingMessage {
   id: string;
   clientId: string;

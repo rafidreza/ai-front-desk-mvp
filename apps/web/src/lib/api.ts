@@ -6,6 +6,7 @@ import {
   ConversationQaGrade,
   InternalUser,
   KnowledgeEntry,
+  KnowledgeEntryVersion,
   Ticket,
   TicketComment,
   TicketDetail,
@@ -122,6 +123,18 @@ export async function createKnowledgeDraft(
   return data.entry;
 }
 
+export async function updateKnowledgeEntry(
+  clientId: string,
+  entryId: string,
+  input: { title?: string; answer?: string; keywords?: string[]; confidenceBoost?: number; actorId?: string },
+): Promise<KnowledgeEntry> {
+  const data = await apiFetch<{ entry: KnowledgeEntry }>(`/clients/${clientId}/knowledge/${entryId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+  return data.entry;
+}
+
 export async function setKnowledgeStatus(
   clientId: string,
   entryId: string,
@@ -129,7 +142,24 @@ export async function setKnowledgeStatus(
 ): Promise<KnowledgeEntry> {
   const data = await apiFetch<{ entry: KnowledgeEntry }>(`/clients/${clientId}/knowledge/${entryId}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, actorId: 'internal-console' }),
+  });
+  return data.entry;
+}
+
+export async function getKnowledgeVersions(clientId: string, entryId: string): Promise<KnowledgeEntryVersion[]> {
+  const data = await apiFetch<{ versions: KnowledgeEntryVersion[] }>(`/clients/${clientId}/knowledge/${entryId}/versions`);
+  return data.versions;
+}
+
+export async function rollbackKnowledgeEntry(
+  clientId: string,
+  entryId: string,
+  versionId: string,
+): Promise<KnowledgeEntry> {
+  const data = await apiFetch<{ entry: KnowledgeEntry }>(`/clients/${clientId}/knowledge/${entryId}/rollback`, {
+    method: 'POST',
+    body: JSON.stringify({ versionId, actorId: 'internal-console' }),
   });
   return data.entry;
 }

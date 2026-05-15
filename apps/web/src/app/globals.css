@@ -1261,6 +1261,93 @@ button {
   gap: 8px;
 }
 
+.knowledge-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.76fr) minmax(420px, 1.25fr) minmax(320px, 0.95fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.knowledge-row {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: inherit;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.knowledge-row:hover,
+.knowledge-row[data-selected="true"] {
+  border-color: #8bb9aa;
+  background: var(--green-soft);
+}
+
+.knowledge-row strong,
+.knowledge-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowledge-row strong {
+  font-size: 13px;
+}
+
+.knowledge-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.knowledge-editor,
+.knowledge-create {
+  padding: 16px;
+}
+
+.knowledge-create {
+  grid-column: 1 / -1;
+}
+
+.version-list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.version-card {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.version-card div {
+  display: grid;
+  gap: 3px;
+}
+
+.version-card strong,
+.version-card small {
+  font-size: 12px;
+}
+
+.version-card small {
+  color: var(--muted);
+}
+
+.version-card p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 @media (max-width: 1280px) {
   .app-frame {
     grid-template-columns: 80px minmax(0, 1fr);
@@ -1282,6 +1369,7 @@ button {
   }
 
   .client-grid,
+  .knowledge-layout,
   .delegation-card {
     grid-template-columns: 1fr;
   }
