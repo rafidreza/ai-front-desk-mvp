@@ -5,6 +5,7 @@ import { ChannelSendService } from './channels/channel-send.service';
 import { MessengerController } from './channels/messenger.controller';
 import { MessengerSendService } from './channels/messenger-send.service';
 import { MessengerSignatureService } from './channels/messenger-signature.service';
+import { WebChatController } from './channels/web-chat.controller';
 import { WhatsAppController } from './channels/whatsapp.controller';
 import { WhatsAppSignatureService } from './channels/whatsapp-signature.service';
 import { PilotClientService } from './clients/pilot-client.service';
@@ -42,6 +43,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     InternalUsersController,
     KnowledgeController,
     MessengerController,
+    WebChatController,
     WhatsAppController,
     PromptProfileController,
     TicketController,

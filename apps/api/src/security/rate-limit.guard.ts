@@ -29,10 +29,19 @@ function getWebhookScope(body: unknown) {
   return undefined;
 }
 
+function getWhatsAppWebhookScope(body: unknown) {
+  const phoneNumberId = getNestedString(body, ['entry', '0', 'changes', '0', 'value', 'metadata', 'phone_number_id']);
+  const senderId = getNestedString(body, ['entry', '0', 'changes', '0', 'value', 'messages', '0', 'from']);
+  if (phoneNumberId !== undefined && senderId !== undefined) return `webhook:${phoneNumberId}:${senderId}`;
+  if (phoneNumberId !== undefined) return `webhook:${phoneNumberId}`;
+  return undefined;
+}
+
 function getTenantScope(request: Request) {
   const clientId = getStringField(request.params, 'clientId') ?? getStringField(request.query, 'clientId') ?? getStringField(request.body, 'clientId');
   if (clientId !== undefined) return `client:${clientId}`;
   if (request.path.startsWith('/webhooks/messenger')) return getWebhookScope(request.body);
+  if (request.path.startsWith('/webhooks/whatsapp')) return getWhatsAppWebhookScope(request.body);
   return undefined;
 }
 
@@ -44,7 +53,7 @@ export class RateLimitGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const path = request.path;
     const ip = request.ip ?? request.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
-    const isWebhook = path.startsWith('/webhooks/messenger');
+    const isWebhook = path.startsWith('/webhooks/messenger') || path.startsWith('/webhooks/whatsapp');
     const limit = isWebhook ? 300 : 120;
     const windowMs = 60_000;
     const tenantScope = getTenantScope(request);

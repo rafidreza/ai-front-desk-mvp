@@ -30,6 +30,7 @@ describe('ApiAuthGuard', () => {
     expect(guard.canActivate(contextFor('/health'))).toBe(true);
     expect(guard.canActivate(contextFor('/webhooks/messenger'))).toBe(true);
     expect(guard.canActivate(contextFor('/webhooks/whatsapp'))).toBe(true);
+    expect(guard.canActivate(contextFor('/web-chat/messages'))).toBe(true);
   });
 
   it('requires a valid bearer token for protected routes', () => {

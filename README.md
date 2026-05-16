@@ -50,6 +50,16 @@ curl -X POST http://localhost:4000/webhooks/messenger \
   }'
 ```
 
+Web chat widget:
+
+```html
+<iframe
+  src="https://your-web-domain.example/widget?clientId=pilot-client"
+  title="AI Front Desk chat"
+  style="width: 360px; height: 560px; border: 0;"
+></iframe>
+```
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` when credentials are available.

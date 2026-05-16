@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Request } from 'express';
 import { timingSafeEqual } from 'crypto';
 
-const publicPrefixes = ['/health', '/webhooks/messenger', '/webhooks/whatsapp'];
+const publicPrefixes = ['/health', '/webhooks/messenger', '/webhooks/whatsapp', '/web-chat'];
 
 function getExpectedToken() {
   const token = process.env.INTERNAL_API_TOKEN;

@@ -52,7 +52,8 @@ The first working slice is intentionally thin:
   - sales recovered estimate calculation and backfill;
   - P1 urgent-ticket WhatsApp ping to the client's configured POC, with dry-run mode when WhatsApp Cloud API credentials are missing and ticket timeline events for ping outcomes;
   - shared channel-send abstraction for Messenger and WhatsApp text delivery, reused by Messenger replies, auth-code WhatsApp delivery, and P1 urgent alerts;
-  - WhatsApp Cloud API webhook adapter for inbound text, CSAT capture, conversation routing, and outbound replies via the shared channel sender.
+  - WhatsApp Cloud API webhook adapter for inbound text, CSAT capture, conversation routing, and outbound replies via the shared channel sender;
+  - public web chat widget at `/widget?clientId=...` backed by the same conversation engine.
 
 ## Verified
 
@@ -81,6 +82,8 @@ Manual HTTP checks passed:
 - `GET /webhooks/whatsapp` verification challenge with `WHATSAPP_VERIFY_TOKEN`
 - `POST /webhooks/whatsapp` with WhatsApp Cloud API text payload routed into the conversation engine
 - `POST /webhooks/whatsapp` with `CSAT_5` payload updates the existing conversation rating
+- `POST /web-chat/messages` routes public web chat messages into the conversation engine
+- `GET /widget?clientId=pilot-client` builds as the iframe-friendly web chat surface
 - `PATCH /tickets/:id/status`
 - `GET /tickets/:id`
 - `GET /conversations`
@@ -218,7 +221,7 @@ Close the Phase 0 kernel:
 2. Provide `ANTHROPIC_API_KEY` and `MESSENGER_PAGE_ACCESS_TOKEN` so `TODO.md` T3/T4 can be completed.
 3. Provide deployment and Meta developer/business access for `TODO.md` T5/T6/T7.
 4. Continue non-blocked foundation work while external access is pending:
-   - build the web chat widget;
    - start the KB import pipeline;
+   - add production observability;
    - add production observability;
    - provide real alpha seller Q&A/source content.
