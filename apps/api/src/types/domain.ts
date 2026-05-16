@@ -1,5 +1,8 @@
 export type {
   AgentReply,
+  CalibrationQueueFilter,
+  CalibrationQueueResult,
+  CalibrationQueueSummary,
   Channel,
   ClientProfile,
   ClientDashboardSummary,

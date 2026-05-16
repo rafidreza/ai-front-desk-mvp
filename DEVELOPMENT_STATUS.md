@@ -56,6 +56,7 @@ The first working slice is intentionally thin:
   - public web chat widget at `/widget?clientId=...` backed by the same conversation engine.
   - knowledge file importer on `/internal/knowledge` and `POST /clients/:clientId/knowledge/import`, creating reviewable draft KB entries from text, CSV, Markdown, JSON, PDF, and Excel files, with Google Vision OCR wiring for image uploads when configured.
   - automatic conversation QA scoring with stored auto grade, score, reason, version, and defect tags, visible in the internal QA review view.
+  - calibration queue for human QA review, with backend queue filtering and internal QA filters for needs review, failed auto QA, hallucination risk, escalation issues, ungraded, and all conversations.
 
 ## Verified
 
@@ -101,6 +102,7 @@ Manual HTTP checks passed:
 - Stale-version `PATCH /tickets/:id/status` returns `409`
 - `POST /tickets/:id/comments`
 - `PATCH /conversations/:id/grade`
+- `GET /conversations/calibration-queue`
 - Anonymous `GET /tickets` returns `401`
 - Authenticated same-origin web proxy `GET /api/backend/tickets` returns `200`
 - `GET /tickets/:id` returns comments and expanded event history
@@ -184,6 +186,7 @@ Operational hardening verification:
 - Internal console is protected by a lightweight passcode gate for local/alpha use.
 - Internal console supports assignee filtering, assignee updates, ticket notes, and manual QA grading.
 - Internal QA review now shows auto-QA score/grade and defect tags next to manual reviewer controls.
+- Internal QA review now loads a ranked calibration queue instead of forcing operators to scan the entire conversation list.
 - Internal console now reaches the API through a same-origin Next.js proxy; direct API data/mutation endpoints require an internal bearer token.
 - `sslmode=verify-full` was tested successfully against Neon and applied locally.
 - Redesigned internal console production build completed successfully and local route returned HTTP 200 after dev-server restart.
@@ -202,6 +205,7 @@ Operational hardening verification:
 - KB retrieval now uses hybrid keyword/vector scoring, but the current embedding provider is deterministic/local. A production embedding provider can replace it later without changing the retrieval contract.
 - Prompt profile versioning is now available, but prompt quality still needs real seller QA review and production Anthropic testing once `ANTHROPIC_API_KEY` is configured.
 - Auto QA currently uses deterministic launch rules. It should be calibrated against real human reviews before being used as a client-facing quality metric.
+- Calibration queue ranking is rule-based and should be tuned once there are enough human-reviewed samples from real seller traffic.
 - Daily/weekly digest delivery has Postmark/dry-run wiring and cron-callable send endpoints, but production scheduling and domain DNS are still deployment tasks.
 - Moderate npm audit advisories remain unresolved because the available automatic fixes are not safe for this stack.
 

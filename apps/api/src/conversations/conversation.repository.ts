@@ -3,6 +3,9 @@ import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import {
+  CalibrationQueueFilter,
+  CalibrationQueueResult,
+  CalibrationQueueSummary,
   ConversationLog,
   ConversationAutoQaGrade,
   ConversationMessage,
@@ -257,6 +260,33 @@ export class ConversationRepository {
     }
 
     return [...this.conversations.values()];
+  }
+
+  async listCalibrationQueue(input: {
+    filter: CalibrationQueueFilter;
+    limit: number;
+  }): Promise<CalibrationQueueResult> {
+    const conversations =
+      this.prisma?.enabled === true
+        ? (
+            await this.prisma.conversation.findMany({
+              include: { messages: { orderBy: { createdAt: 'asc' } } },
+              orderBy: { updatedAt: 'desc' },
+              take: Math.max(input.limit * 3, 100),
+            })
+          ).map((conversation) => this.mapConversation(conversation))
+        : [...this.conversations.values()];
+
+    const ranked = conversations
+      .filter((conversation) => this.matchesCalibrationFilter(conversation, input.filter))
+      .sort((a, b) => this.calibrationPriority(b) - this.calibrationPriority(a))
+      .slice(0, input.limit);
+
+    return {
+      filter: input.filter,
+      conversations: ranked,
+      summary: this.buildCalibrationSummary(conversations),
+    };
   }
 
   async listTickets(): Promise<Ticket[]> {
@@ -723,6 +753,56 @@ export class ConversationRepository {
     };
     this.conversations.set(input.conversationId, updatedConversation);
     return updatedConversation;
+  }
+
+  private matchesCalibrationFilter(conversation: ConversationLog, filter: CalibrationQueueFilter) {
+    const ungraded = conversation.qaGrade === undefined;
+    const defects = conversation.autoQaDefects;
+    const failed = conversation.autoQaGrade === 'fail';
+    const needsReview =
+      ungraded &&
+      (failed ||
+        conversation.autoQaGrade === 'review' ||
+        defects.includes('hallucination_risk') ||
+        defects.includes('escalation_miss') ||
+        (conversation.lastConfidence ?? 1) <= 0.65 ||
+        conversation.ticketId !== undefined);
+
+    if (filter === 'all') return true;
+    if (filter === 'ungraded') return ungraded;
+    if (filter === 'needs_review') return needsReview;
+    if (filter === 'failed') return ungraded && failed;
+    if (filter === 'hallucination') return ungraded && (defects.includes('hallucination_risk') || conversation.hallucinationFlag);
+    if (filter === 'escalation') return ungraded && (defects.includes('escalation_needed') || defects.includes('escalation_miss'));
+    return needsReview;
+  }
+
+  private calibrationPriority(conversation: ConversationLog) {
+    let priority = 0;
+    if (conversation.qaGrade === undefined) priority += 100;
+    if (conversation.autoQaGrade === 'fail') priority += 80;
+    if (conversation.autoQaGrade === 'review') priority += 45;
+    if (conversation.autoQaDefects.includes('hallucination_risk')) priority += 35;
+    if (conversation.autoQaDefects.includes('escalation_miss')) priority += 40;
+    if (conversation.ticketId !== undefined) priority += 15;
+    if ((conversation.lastConfidence ?? 1) <= 0.65) priority += 15;
+    priority += 100 - (conversation.autoQaScore ?? 100);
+    return priority;
+  }
+
+  private buildCalibrationSummary(conversations: ConversationLog[]): CalibrationQueueSummary {
+    return {
+      total: conversations.length,
+      ungraded: conversations.filter((conversation) => conversation.qaGrade === undefined).length,
+      failed: conversations.filter((conversation) => conversation.autoQaGrade === 'fail').length,
+      review: conversations.filter((conversation) => conversation.autoQaGrade === 'review').length,
+      hallucinationRisk: conversations.filter((conversation) =>
+        conversation.autoQaDefects.includes('hallucination_risk'),
+      ).length,
+      escalationRisk: conversations.filter((conversation) =>
+        conversation.autoQaDefects.includes('escalation_needed') || conversation.autoQaDefects.includes('escalation_miss'),
+      ).length,
+    };
   }
 
   private mapTicket(ticket: {

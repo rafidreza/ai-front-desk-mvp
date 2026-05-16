@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   addTicketComment,
+  getCalibrationQueue,
   getConversations,
   getDatabaseHealth,
   getInternalUsers,
@@ -15,6 +16,8 @@ import {
 } from '@/lib/api';
 import {
   ApiHealth,
+  CalibrationQueueFilter,
+  CalibrationQueueSummary,
   ConversationLog,
   ConversationQaGrade,
   InternalUser,
@@ -33,10 +36,13 @@ import { assigneeLabel, getErrorMessage, statusLabels } from './_lib/helpers';
 export default function InternalConsole() {
   const [health, setHealth] = useState<ApiHealth | null>(null);
   const [conversations, setConversations] = useState<ConversationLog[]>([]);
+  const [calibrationConversations, setCalibrationConversations] = useState<ConversationLog[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [assigneeOptions, setAssigneeOptions] = useState<InternalUser[]>([]);
   const [activeView, setActiveView] = useState<'operations' | 'qa'>('operations');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
+  const [qaFilter, setQaFilter] = useState<CalibrationQueueFilter>('needs_review');
+  const [queueSummary, setQueueSummary] = useState<CalibrationQueueSummary | null>(null);
   const [commentDraft, setCommentDraft] = useState('');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -82,6 +88,20 @@ export default function InternalConsole() {
     }
   }
 
+  async function loadCalibrationQueuePanel(nextFilter = qaFilter) {
+    setIsConversationsLoading(true);
+    setConversationsError(null);
+    try {
+      const queue = await getCalibrationQueue(nextFilter);
+      setCalibrationConversations(queue.conversations);
+      setQueueSummary(queue.summary);
+    } catch (loadError) {
+      setConversationsError(getErrorMessage(loadError, 'Unable to load calibration queue.'));
+    } finally {
+      setIsConversationsLoading(false);
+    }
+  }
+
   async function loadTicketsPanel() {
     setIsTicketsLoading(true);
     setTicketsError(null);
@@ -105,7 +125,13 @@ export default function InternalConsole() {
   }
 
   async function loadData() {
-    await Promise.all([loadHealthPanel(), loadConversationsPanel(), loadTicketsPanel(), loadUsersPanel()]);
+    await Promise.all([
+      loadHealthPanel(),
+      loadConversationsPanel(),
+      loadCalibrationQueuePanel(),
+      loadTicketsPanel(),
+      loadUsersPanel(),
+    ]);
   }
 
   async function loadTicketDetailPanel(ticketId: string) {
@@ -177,6 +203,7 @@ export default function InternalConsole() {
   const openTickets = tickets.filter((ticket) => ticket.status !== 'resolved').length;
   const p1Tickets = tickets.filter((ticket) => ticket.priority === 'P1').length;
   const reviewConversations = conversations.slice(0, 100);
+  const queueConversations = calibrationConversations.slice(0, 100);
   const reviewedConversations = reviewConversations.filter(
     (conversation) => conversation.qaGrade !== undefined,
   );
@@ -280,6 +307,11 @@ export default function InternalConsole() {
       setConversations((current) =>
         current.map((item) => (item.id === updated.id ? updated : item)),
       );
+      setCalibrationConversations((current) =>
+        current
+          .map((item) => (item.id === updated.id ? updated : item))
+          .filter((item) => qaFilter === 'all' || item.qaGrade === undefined),
+      );
       setQaNotice('Conversation grading saved.');
     } catch (gradeError) {
       setConversationsError(getErrorMessage(gradeError, 'Unable to save QA grade.'));
@@ -340,12 +372,18 @@ export default function InternalConsole() {
 
         {activeView === 'qa' ? (
           <QaReview
-            conversations={reviewConversations}
+            conversations={queueConversations}
+            queueFilter={qaFilter}
+            queueSummary={queueSummary}
             qaNotice={qaNotice}
             conversationsError={conversationsError}
             isConversationsLoading={isConversationsLoading}
             isGrading={isGrading}
-            onReload={() => void loadConversationsPanel()}
+            onChangeFilter={(filter) => {
+              setQaFilter(filter);
+              void loadCalibrationQueuePanel(filter);
+            }}
+            onReload={() => void loadCalibrationQueuePanel()}
             onGrade={(conversation, grade, hallucinationFlag) =>
               void handleGradeConversation(conversation, grade, hallucinationFlag)
             }

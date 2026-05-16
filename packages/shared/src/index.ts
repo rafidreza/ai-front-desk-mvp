@@ -19,6 +19,14 @@ export type ConversationQaDefect =
   | 'incomplete_answer'
   | 'tone_risk';
 
+export type CalibrationQueueFilter =
+  | 'needs_review'
+  | 'failed'
+  | 'hallucination'
+  | 'escalation'
+  | 'ungraded'
+  | 'all';
+
 export interface ClientProfile {
   id: string;
   businessName: string;
@@ -169,6 +177,21 @@ export interface ConversationLog {
   autoQaReason?: string;
   autoQaAt?: string;
   autoQaVersion?: string;
+}
+
+export interface CalibrationQueueSummary {
+  total: number;
+  ungraded: number;
+  failed: number;
+  review: number;
+  hallucinationRisk: number;
+  escalationRisk: number;
+}
+
+export interface CalibrationQueueResult {
+  filter: CalibrationQueueFilter;
+  conversations: ConversationLog[];
+  summary: CalibrationQueueSummary;
 }
 
 export interface Ticket {

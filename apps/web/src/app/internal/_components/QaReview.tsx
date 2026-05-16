@@ -1,26 +1,46 @@
 import { CheckCircle2, Flag, RefreshCw, ShieldCheck, ThumbsDown, ThumbsUp } from 'lucide-react';
-import { ConversationLog, ConversationQaGrade } from '@/types/domain';
+import {
+  CalibrationQueueFilter,
+  CalibrationQueueSummary,
+  ConversationLog,
+  ConversationQaGrade,
+} from '@/types/domain';
 import { PanelError } from './PanelError';
 
 interface QaReviewProps {
   conversations: ConversationLog[];
+  queueFilter: CalibrationQueueFilter;
+  queueSummary: CalibrationQueueSummary | null;
   qaNotice: string | null;
   conversationsError: string | null;
   isConversationsLoading: boolean;
   isGrading: boolean;
+  onChangeFilter: (filter: CalibrationQueueFilter) => void;
   onReload: () => void;
   onGrade: (conversation: ConversationLog, qaGrade: ConversationQaGrade, hallucinationFlag?: boolean) => void;
 }
 
 export function QaReview({
   conversations,
+  queueFilter,
+  queueSummary,
   qaNotice,
   conversationsError,
   isConversationsLoading,
   isGrading,
+  onChangeFilter,
   onReload,
   onGrade,
 }: QaReviewProps) {
+  const filterOptions: Array<{ value: CalibrationQueueFilter; label: string }> = [
+    { value: 'needs_review', label: 'Needs review' },
+    { value: 'failed', label: 'Failed auto QA' },
+    { value: 'hallucination', label: 'Hallucination risk' },
+    { value: 'escalation', label: 'Escalation issues' },
+    { value: 'ungraded', label: 'Ungraded only' },
+    { value: 'all', label: 'All' },
+  ];
+
   return (
     <section className="qa-workspace">
       {qaNotice !== null && (
@@ -33,7 +53,7 @@ export function QaReview({
         <div className="panel-header">
           <div className="panel-title">
             <ShieldCheck size={16} />
-            Last 100 Conversations
+            Calibration Queue
           </div>
           <div className="panel-actions">
             {isConversationsLoading && <span className="badge">Loading</span>}
@@ -43,6 +63,30 @@ export function QaReview({
             </button>
           </div>
         </div>
+
+        <div className="qa-filter-bar">
+          {filterOptions.map((option) => (
+            <button
+              className="mini-button"
+              data-active={queueFilter === option.value}
+              key={option.value}
+              type="button"
+              onClick={() => onChangeFilter(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {queueSummary !== null && (
+          <div className="qa-summary-strip">
+            <span>{queueSummary.ungraded} ungraded</span>
+            <span>{queueSummary.failed} failed</span>
+            <span>{queueSummary.review} review</span>
+            <span>{queueSummary.hallucinationRisk} hallucination risk</span>
+            <span>{queueSummary.escalationRisk} escalation risk</span>
+          </div>
+        )}
 
         <div className="qa-list">
           {conversationsError !== null ? (

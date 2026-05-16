@@ -6,7 +6,16 @@ import { UrgentTicketNotificationService } from '../notifications/urgent-ticket-
 import { StructuredLoggerService } from '../observability/structured-logger.service';
 import { PromptProfileService } from '../prompts/prompt-profile.service';
 import { TicketService } from '../tickets/ticket.service';
-import { AgentReply, ClientProfile, ConversationLog, ConversationQaGrade, IncomingMessage, Ticket } from '../types/domain';
+import {
+  AgentReply,
+  CalibrationQueueFilter,
+  CalibrationQueueResult,
+  ClientProfile,
+  ConversationLog,
+  ConversationQaGrade,
+  IncomingMessage,
+  Ticket,
+} from '../types/domain';
 import { AutoQaService } from './auto-qa.service';
 import { ConversationRepository } from './conversation.repository';
 
@@ -192,6 +201,16 @@ export class ConversationService {
 
   listConversations(): Promise<ConversationLog[]> {
     return this.repository.listConversations();
+  }
+
+  listCalibrationQueue(input: {
+    filter?: CalibrationQueueFilter;
+    limit?: number;
+  }): Promise<CalibrationQueueResult> {
+    return this.repository.listCalibrationQueue({
+      filter: input.filter ?? 'needs_review',
+      limit: Math.max(1, Math.min(input.limit ?? 100, 200)),
+    });
   }
 
   listTickets(): Promise<Ticket[]> {

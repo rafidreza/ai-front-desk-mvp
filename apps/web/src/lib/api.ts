@@ -1,5 +1,7 @@
 import {
   ApiHealth,
+  CalibrationQueueFilter,
+  CalibrationQueueResult,
   ClientDashboardSummary,
   ClientProfile,
   ConversationLog,
@@ -43,6 +45,12 @@ export async function getDatabaseHealth(): Promise<ApiHealth> {
 export async function getConversations(): Promise<ConversationLog[]> {
   const data = await apiFetch<{ conversations: ConversationLog[] }>('/conversations');
   return data.conversations;
+}
+
+export async function getCalibrationQueue(
+  filter: CalibrationQueueFilter = 'needs_review',
+): Promise<CalibrationQueueResult> {
+  return apiFetch<CalibrationQueueResult>(`/conversations/calibration-queue?filter=${filter}`);
 }
 
 export async function getTickets(): Promise<Ticket[]> {

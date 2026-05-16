@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { ConversationService } from './conversation.service';
 
@@ -6,6 +6,13 @@ const GradeConversationSchema = z.object({
   qaGrade: z.enum(['good', 'bad']).optional().nullable(),
   hallucinationFlag: z.boolean().optional(),
   actorId: z.string().min(1).optional(),
+});
+
+const CalibrationQueueQuerySchema = z.object({
+  filter: z
+    .enum(['needs_review', 'failed', 'hallucination', 'escalation', 'ungraded', 'all'])
+    .optional(),
+  limit: z.coerce.number().int().positive().max(200).optional(),
 });
 
 @Controller()
@@ -24,6 +31,12 @@ export class ConversationController {
     return {
       tickets: await this.conversations.listTickets(),
     };
+  }
+
+  @Get('conversations/calibration-queue')
+  async calibrationQueue(@Query() query: unknown) {
+    const parsed = CalibrationQueueQuerySchema.parse(query);
+    return this.conversations.listCalibrationQueue(parsed);
   }
 
   @Patch('conversations/:id/grade')

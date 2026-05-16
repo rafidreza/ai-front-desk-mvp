@@ -190,4 +190,23 @@ describe('ConversationService', () => {
     expect(conversation?.autoQaDefects).toEqual([]);
     expect(conversation?.autoQaVersion).toBe('rule-v1');
   });
+
+  it('surfaces failed ungraded conversations in the calibration queue', async () => {
+    const { service } = createService(undefined, new AutoQaService());
+
+    await service.handleIncomingMessage({
+      id: 'message-calibration',
+      clientId: 'pilot-client',
+      channel: 'messenger',
+      externalConversationId: 'customer-calibration',
+      externalSenderId: 'customer-calibration',
+      text: 'eta gift wrap hobe?',
+      receivedAt: new Date().toISOString(),
+    });
+    const queue = await service.listCalibrationQueue({ filter: 'failed' });
+
+    expect(queue.conversations).toHaveLength(1);
+    expect(queue.conversations[0]?.autoQaGrade).toBe('fail');
+    expect(queue.summary.failed).toBeGreaterThanOrEqual(1);
+  });
 });
