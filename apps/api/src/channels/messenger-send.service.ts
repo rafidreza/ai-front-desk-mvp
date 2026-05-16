@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { StructuredLoggerService } from '../observability/structured-logger.service';
+import { ChannelSendService } from './channel-send.service';
 
 interface SendTextInput {
   recipientId: string;
@@ -7,49 +7,24 @@ interface SendTextInput {
 }
 
 interface SendTextResult {
-  mode: 'dry-run' | 'sent';
+  mode: 'dry-run' | 'sent' | 'skipped';
   recipientId: string;
   text: string;
 }
 
 @Injectable()
 export class MessengerSendService {
-  constructor(private readonly logger?: StructuredLoggerService) {}
+  constructor(private readonly channelSend?: ChannelSendService) {}
 
   async sendText(input: SendTextInput): Promise<SendTextResult> {
-    const token = process.env.MESSENGER_PAGE_ACCESS_TOKEN;
-    if (token === undefined || token === '') {
-      return {
-        mode: 'dry-run',
-        recipientId: input.recipientId,
-        text: input.text,
-      };
-    }
-
-    const response = await fetch('https://graph.facebook.com/v20.0/me/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(8_000),
-      body: JSON.stringify({
-        access_token: token,
-        recipient: { id: input.recipientId },
-        messaging_type: 'RESPONSE',
-        message: { text: input.text },
-      }),
+    const result = await this.channelSend?.sendText({
+      channel: 'messenger',
+      recipientId: input.recipientId,
+      text: input.text,
+      purpose: 'messenger.reply',
     });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      this.logger?.event('messenger.send.failed', {
-        recipientId: input.recipientId,
-        status: response.status,
-        errorBody,
-      });
-      throw new Error(`Messenger send failed: ${response.status} ${errorBody}`);
-    }
-
     return {
-      mode: 'sent',
+      mode: result?.mode ?? 'dry-run',
       recipientId: input.recipientId,
       text: input.text,
     };

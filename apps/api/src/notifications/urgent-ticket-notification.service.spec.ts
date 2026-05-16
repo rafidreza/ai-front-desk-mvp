@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ChannelSendService } from '../channels/channel-send.service';
 import { ClientProfile, Ticket } from '../types/domain';
 import { UrgentTicketNotificationService } from './urgent-ticket-notification.service';
 
@@ -42,13 +43,22 @@ describe('UrgentTicketNotificationService', () => {
   });
 
   it('dry-runs P1 WhatsApp pings when provider credentials are missing', async () => {
-    const service = new UrgentTicketNotificationService();
+    const channelSend = {
+      sendText: vi.fn(async () => ({
+        mode: 'dry-run' as const,
+        channel: 'whatsapp' as const,
+        recipientId: '8801712345678',
+        text: 'P1 support alert',
+      })),
+    } as unknown as ChannelSendService;
+    const service = new UrgentTicketNotificationService(channelSend);
 
     const result = await service.notifyP1({ client, ticket: p1Ticket });
 
     expect(result.mode).toBe('dry-run');
     expect(result.recipient).toBe('8801712345678');
     expect(result.text).toContain('P1 support alert');
+    expect(channelSend.sendText).toHaveBeenCalledWith(expect.objectContaining({ channel: 'whatsapp', purpose: 'p1-ticket-alert' }));
   });
 
   it('skips when no POC phone number is configured', async () => {
@@ -59,22 +69,20 @@ describe('UrgentTicketNotificationService', () => {
     expect(result).toMatchObject({ mode: 'skipped', reason: 'missing_whatsapp_poc' });
   });
 
-  it('sends through WhatsApp Cloud API when credentials exist', async () => {
-    process.env.WHATSAPP_ACCESS_TOKEN = 'test-token';
-    process.env.WHATSAPP_PHONE_NUMBER_ID = 'phone-number-id';
-    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
-    vi.stubGlobal('fetch', fetchMock);
-    const service = new UrgentTicketNotificationService();
+  it('returns sent mode from the shared channel sender', async () => {
+    const channelSend = {
+      sendText: vi.fn(async () => ({
+        mode: 'sent' as const,
+        channel: 'whatsapp' as const,
+        recipientId: '8801712345678',
+        text: 'P1 support alert',
+      })),
+    } as unknown as ChannelSendService;
+    const service = new UrgentTicketNotificationService(channelSend);
 
     const result = await service.notifyP1({ client, ticket: p1Ticket });
 
     expect(result.mode).toBe('sent');
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://graph.facebook.com/v20.0/phone-number-id/messages',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-      }),
-    );
+    expect(channelSend.sendText).toHaveBeenCalledOnce();
   });
 });

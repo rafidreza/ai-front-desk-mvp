@@ -50,7 +50,8 @@ The first working slice is intentionally thin:
   - internal prompt profile workspace at `/internal/agent-config` with prompt draft/edit/publish/archive/version/rollback;
   - active client prompt profiles are now loaded into AI reply generation with fallback to the client's legacy tone when no stored profile exists;
   - sales recovered estimate calculation and backfill;
-  - P1 urgent-ticket WhatsApp ping to the client's configured POC, with dry-run mode when WhatsApp Cloud API credentials are missing and ticket timeline events for ping outcomes.
+  - P1 urgent-ticket WhatsApp ping to the client's configured POC, with dry-run mode when WhatsApp Cloud API credentials are missing and ticket timeline events for ping outcomes;
+  - shared channel-send abstraction for Messenger and WhatsApp text delivery, reused by Messenger replies, auth-code WhatsApp delivery, and P1 urgent alerts.
 
 ## Verified
 
@@ -177,13 +178,13 @@ Operational hardening verification:
 
 ## Current Limitations
 
-- No real Messenger send unless `MESSENGER_PAGE_ACCESS_TOKEN` is configured.
+- Shared channel sender supports Messenger and WhatsApp text delivery, but real provider sends still require the relevant Meta credentials.
 - Real alpha seller KB is still missing; the app still uses the pilot seed data.
 - `ANTHROPIC_API_KEY` is still missing, so the fallback answer path is still active.
 - Public HTTPS deployment is still pending account/project access.
 - Meta App setup and live Page traffic are still pending Meta credentials/access.
 - Client-facing dashboard and delegation screens are protected by signed client sessions. Production auth delivery now has provider-ready email/WhatsApp paths, but real sends still require Postmark/WhatsApp credentials.
-- No WhatsApp adapter yet.
+- No inbound WhatsApp adapter yet.
 - No real KB import pipeline yet.
 - Internal KB editor now supports rich entry editing, version history, and rollback. It still needs real seller content/import pipelines before alpha use.
 - KB retrieval now uses hybrid keyword/vector scoring, but the current embedding provider is deterministic/local. A production embedding provider can replace it later without changing the retrieval contract.
@@ -213,7 +214,7 @@ Close the Phase 0 kernel:
 2. Provide `ANTHROPIC_API_KEY` and `MESSENGER_PAGE_ACCESS_TOKEN` so `TODO.md` T3/T4 can be completed.
 3. Provide deployment and Meta developer/business access for `TODO.md` T5/T6/T7.
 4. Continue non-blocked foundation work while external access is pending:
-   - generalise channel send abstraction;
+   - build inbound WhatsApp adapter;
    - start the KB import pipeline;
    - add production observability;
    - provide real alpha seller Q&A/source content.

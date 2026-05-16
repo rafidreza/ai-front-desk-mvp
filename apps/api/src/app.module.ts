@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AiService } from './ai/ai.service';
+import { ChannelSendService } from './channels/channel-send.service';
 import { MessengerController } from './channels/messenger.controller';
 import { MessengerSendService } from './channels/messenger-send.service';
 import { MessengerSignatureService } from './channels/messenger-signature.service';
@@ -44,6 +45,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
   ],
   providers: [
     AiService,
+    ChannelSendService,
     ConversationRepository,
     ConversationService,
     ClientAuthService,

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { StructuredLoggerService } from '../observability/structured-logger.service';
+import { ChannelSendService } from '../channels/channel-send.service';
 import { ClientProfile, Ticket } from '../types/domain';
 
 interface NotifyP1Input {
@@ -19,18 +19,10 @@ function isDisabled() {
   return process.env.ENABLE_P1_WHATSAPP_PINGS === 'false';
 }
 
-function normalizeRecipient(phone: string) {
-  const digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('00')) return digits.slice(2);
-  if (digits.startsWith('01')) return `88${digits}`;
-  return digits;
-}
-
 function getRecipient(client: ClientProfile) {
   const phone = client.whatsappPoc ?? client.ownerPhone;
   if (phone === undefined || phone.trim() === '') return undefined;
-  const normalized = normalizeRecipient(phone);
-  return normalized.length >= 8 ? normalized : undefined;
+  return phone;
 }
 
 function truncate(input: string, maxLength: number) {
@@ -50,7 +42,7 @@ function buildAlertText(client: ClientProfile, ticket: Ticket) {
 
 @Injectable()
 export class UrgentTicketNotificationService {
-  constructor(private readonly logger?: StructuredLoggerService) {}
+  constructor(private readonly channelSend?: ChannelSendService) {}
 
   async notifyP1(input: NotifyP1Input): Promise<UrgentTicketNotificationResult> {
     if (input.ticket.priority !== 'P1') {
@@ -67,47 +59,19 @@ export class UrgentTicketNotificationService {
     }
 
     const text = buildAlertText(input.client, input.ticket);
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-
-    if (accessToken === undefined || accessToken === '' || phoneNumberId === undefined || phoneNumberId === '') {
-      return { mode: 'dry-run', channel: 'whatsapp', recipient, text };
-    }
-
-    const graphVersion = process.env.WHATSAPP_GRAPH_VERSION ?? 'v20.0';
-    const response = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      signal: AbortSignal.timeout(8_000),
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: recipient,
-        type: 'text',
-        text: {
-          preview_url: false,
-          body: text,
-        },
-      }),
+    const result = await this.channelSend?.sendText({
+      channel: 'whatsapp',
+      recipientId: recipient,
+      text,
+      purpose: 'p1-ticket-alert',
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      this.logger?.event(
-        'p1_whatsapp_ping.failed',
-        {
-          ticketId: input.ticket.id,
-          clientId: input.ticket.clientId,
-          status: response.status,
-          errorBody,
-        },
-        'error',
-      );
-      throw new Error(`P1 WhatsApp ping failed: ${response.status} ${errorBody}`);
-    }
-
-    return { mode: 'sent', channel: 'whatsapp', recipient, text };
+    return {
+      mode: result?.mode ?? 'dry-run',
+      channel: 'whatsapp',
+      recipient: result?.recipientId ?? recipient,
+      reason: result?.reason,
+      text,
+    };
   }
 }

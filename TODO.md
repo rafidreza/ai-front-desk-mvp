@@ -24,11 +24,11 @@
 | 2 — Phase 0 hardening | 5 | 1 | 6 |
 | 3 — Phase 1 multi-tenant | 7 | 2 | 9 |
 | 4 — Client-facing features | 7 | 0 | 7 |
-| 5 — Channels | 0 | 3 | 3 |
+| 5 — Channels | 1 | 2 | 3 |
 | 6 — KB build pipeline | 0 | 6 | 6 |
 | 7 — QA & improvement loop | 0 | 5 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| **TOTAL** | **43** | **29** | **72** |
+| **TOTAL** | **44** | **28** | **72** |
 
 ---
 
@@ -131,7 +131,7 @@
 
 - [ ] **T31** WhatsApp channel adapter (default Meta Cloud API per PRD 08 Q1)
 - [ ] **T32** Web chat widget (deferrable per Q16)
-- [ ] **T33** Generalised channel send abstraction (currently Messenger-specific)
+- [x] **T33** Generalised channel send abstraction (currently Messenger-specific) — **DONE (2026-05-16): shared channel sender for Messenger and WhatsApp text delivery, dry-run/sent/skipped result contract, provider tests, and existing Messenger/auth-code/P1 alert paths migrated**
 
 ---
 

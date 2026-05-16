@@ -58,6 +58,7 @@ Copy `.env.example` to `.env` when credentials are available.
 - `DATABASE_URL` is required (Postgres / Neon). The API throws on startup if missing.
 - `MESSENGER_VERIFY_TOKEN` is used for Meta webhook verification.
 - `MESSENGER_PAGE_ACCESS_TOKEN` enables real Messenger sends.
+- `MESSENGER_GRAPH_VERSION` optionally pins the Messenger Graph API version; defaults to `v20.0`.
 - `MESSENGER_APP_SECRET` enables signed-webhook verification.
 - `ENABLE_P1_WHATSAPP_PINGS=false` disables urgent-ticket WhatsApp alerts. By default, P1 alerts dry-run when WhatsApp credentials are missing.
 - `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` enable real WhatsApp Cloud API P1 alerts to the client's `whatsappPoc` or `ownerPhone`.
