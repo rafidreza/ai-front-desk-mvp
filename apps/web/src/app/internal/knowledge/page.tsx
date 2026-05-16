@@ -1,16 +1,17 @@
 'use client';
 
-import { Archive, DatabaseZap, History, Plus, RefreshCw, RotateCcw, Save, Send } from 'lucide-react';
+import { Archive, DatabaseZap, FileUp, History, Plus, RefreshCw, RotateCcw, Save, Send } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   createKnowledgeDraft,
   getKnowledgeEntries,
   getKnowledgeVersions,
+  importKnowledgeFiles,
   rollbackKnowledgeEntry,
   setKnowledgeStatus,
   updateKnowledgeEntry,
 } from '@/lib/api';
-import { KnowledgeEntry, KnowledgeEntryVersion } from '@/types/domain';
+import { KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
 
 function parseKeywords(value: FormDataEntryValue | null) {
   return String(value ?? '')
@@ -25,15 +26,29 @@ function parseBoost(value: FormDataEntryValue | null) {
   return Number(raw);
 }
 
+function fileToBase64(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result ?? '');
+      resolve(result.includes(',') ? result.split(',')[1] : result);
+    };
+    reader.onerror = () => reject(new Error(`Unable to read ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function KnowledgePage() {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<KnowledgeEntry | null>(null);
   const [versions, setVersions] = useState<KnowledgeEntryVersion[]>([]);
+  const [importResult, setImportResult] = useState<KnowledgeImportResult | null>(null);
   const [status, setStatus] = useState('all');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const clientId = useMemo(() => {
     if (typeof window === 'undefined') return 'pilot-client';
     return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
@@ -114,6 +129,43 @@ export default function KnowledgePage() {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save entry.');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleImport(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const files = form.getAll('files').filter((file): file is File => file instanceof File && file.size > 0);
+    if (files.length === 0) {
+      setError('Choose at least one knowledge file to import.');
+      return;
+    }
+
+    setIsImporting(true);
+    setError(null);
+    setNotice(null);
+    setImportResult(null);
+    try {
+      const encodedFiles = await Promise.all(
+        files.map(async (file) => ({
+          fileName: file.name,
+          contentType: file.type,
+          base64: await fileToBase64(file),
+        })),
+      );
+      const result = await importKnowledgeFiles(clientId, {
+        files: encodedFiles,
+        actorId: 'internal-console',
+      });
+      setImportResult(result);
+      setNotice(`Imported ${result.imported.length} draft${result.imported.length === 1 ? '' : 's'} for review.`);
+      event.currentTarget.reset();
+      await loadEntries('draft', result.imported[0]?.entry.id);
+      setStatus('draft');
+    } catch (importError) {
+      setError(importError instanceof Error ? importError.message : 'Unable to import files.');
+    } finally {
+      setIsImporting(false);
     }
   }
 
@@ -303,6 +355,38 @@ export default function KnowledgePage() {
           <button className="icon-button" disabled={isSaving} type="submit">
             Create draft
           </button>
+        </form>
+
+        <form className="client-panel stack-form knowledge-import" onSubmit={handleImport}>
+          <div className="section-label">
+            <FileUp size={15} />
+            Import files
+          </div>
+          <label>
+            Source files
+            <input
+              name="files"
+              type="file"
+              multiple
+              accept=".txt,.csv,.tsv,.md,.markdown,.json,.pdf,.xlsx,.xlsm,.xls,.png,.jpg,.jpeg,.webp,text/*,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/*"
+            />
+          </label>
+          <p className="form-hint">
+            Creates draft entries only. Text, CSV, Markdown, PDF, and Excel extract locally; images need Google Vision OCR configured.
+          </p>
+          <button className="icon-button" disabled={isImporting} type="submit">
+            <FileUp size={15} />
+            {isImporting ? 'Importing...' : 'Import drafts'}
+          </button>
+          {importResult !== null && (
+            <div className="import-summary">
+              <strong>{importResult.imported.length} drafts created</strong>
+              <small>{importResult.extractedCharacters.toLocaleString()} characters extracted</small>
+              {importResult.skipped.map((skipped) => (
+                <small key={`${skipped.fileName}-${skipped.reason}`}>{skipped.fileName}: {skipped.reason}</small>
+              ))}
+            </div>
+          )}
         </form>
       </section>
     </main>

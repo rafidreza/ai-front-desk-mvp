@@ -15,14 +15,16 @@
     "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.61.0",
     "@ai-front-desk/shared": "*",
+    "@anthropic-ai/sdk": "^0.61.0",
     "@nestjs/common": "^11.1.0",
     "@nestjs/core": "^11.1.0",
     "@nestjs/platform-express": "^11.1.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
+    "pdf-parse": "^2.4.5",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

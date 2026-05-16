@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
@@ -11,7 +12,8 @@ if (existsSync(rootEnvPath)) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  app.useBodyParser('json', { limit: '24mb' });
   const allowedOrigin = process.env.WEB_APP_URL ?? 'http://localhost:3002';
   app.enableCors({
     origin: allowedOrigin.split(',').map((origin) => origin.trim()),

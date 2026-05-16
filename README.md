@@ -60,6 +60,23 @@ Web chat widget:
 ></iframe>
 ```
 
+Import seller knowledge files:
+
+```bash
+curl -X POST http://localhost:4000/clients/pilot-client/knowledge/import \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer dev-internal-api-token-only-for-local-work" \
+  -d '{
+    "files": [
+      {
+        "fileName": "faq.txt",
+        "contentType": "text/plain",
+        "base64": "UTogRGVsaXZlcnkgY2hhcmdlPwpBOiBEaGFrYSBkZWxpdmVyeSBjaGFyZ2UgaXMgODAgdGFrYS4="
+      }
+    ]
+  }'
+```
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` when credentials are available.
@@ -74,6 +91,7 @@ Copy `.env.example` to `.env` when credentials are available.
 - `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` enable real WhatsApp Cloud API P1 alerts to the client's `whatsappPoc` or `ownerPhone`.
 - `WHATSAPP_VERIFY_TOKEN` and `WHATSAPP_APP_SECRET` secure the `/webhooks/whatsapp` adapter. During migration-free alpha setup, set a client's `pageId` to the WhatsApp `phone_number_id` so inbound webhook events route to the right workspace.
 - `EMAIL_FROM_ADDRESS`, `POSTMARK_SERVER_TOKEN`, and `POSTMARK_MESSAGE_STREAM` enable Postmark delivery for client auth codes and daily/weekly digests. Without Postmark credentials, delivery endpoints return dry-run mode.
+- `GOOGLE_CLOUD_VISION_API_KEY` enables OCR for image uploads in the KB importer. Text, CSV, Markdown, JSON, PDF, and Excel extraction work without it.
 - `ANTHROPIC_API_KEY` enables Claude responses.
 - `INTERNAL_CONSOLE_PASSWORD` and `INTERNAL_CONSOLE_SESSION_SECRET` gate `/internal` and the backend proxy. In production the password must be at least 12 characters.
 - `WEB_APP_URL` is the allowlisted origin for API CORS.

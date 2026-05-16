@@ -54,6 +54,7 @@ The first working slice is intentionally thin:
   - shared channel-send abstraction for Messenger and WhatsApp text delivery, reused by Messenger replies, auth-code WhatsApp delivery, and P1 urgent alerts;
   - WhatsApp Cloud API webhook adapter for inbound text, CSAT capture, conversation routing, and outbound replies via the shared channel sender;
   - public web chat widget at `/widget?clientId=...` backed by the same conversation engine.
+  - knowledge file importer on `/internal/knowledge` and `POST /clients/:clientId/knowledge/import`, creating reviewable draft KB entries from text, CSV, Markdown, JSON, PDF, and Excel files, with Google Vision OCR wiring for image uploads when configured.
 
 ## Verified
 
@@ -124,6 +125,7 @@ Manual HTTP checks passed:
 - `GET /clients/pilot-client/knowledge/:entryId/versions`
 - `POST /clients/pilot-client/knowledge/:entryId/rollback`
 - `POST /clients/pilot-client/knowledge/reindex`
+- `POST /clients/pilot-client/knowledge/import`
 - Messenger-style delivery-cost question after reindex returned the delivery-charge KB answer through hybrid retrieval.
 - `GET /clients/pilot-client/prompts`
 - `POST /clients/pilot-client/prompts`
@@ -192,8 +194,8 @@ Operational hardening verification:
 - Meta App setup and live Page traffic are still pending Meta credentials/access.
 - Client-facing dashboard and delegation screens are protected by signed client sessions. Production auth delivery now has provider-ready email/WhatsApp paths, but real sends still require Postmark/WhatsApp credentials.
 - WhatsApp adapter is available, but alpha setup still needs Meta WhatsApp webhook credentials and a workspace mapping strategy; current migration-free setup maps webhook `phone_number_id` through the existing client `pageId` field.
-- No real KB import pipeline yet.
-- Internal KB editor now supports rich entry editing, version history, and rollback. It still needs real seller content/import pipelines before alpha use.
+- KB import now supports file-to-draft ingestion for text, CSV, Markdown, JSON, PDF, Excel, and provider-ready image OCR. It still needs real alpha seller source material and production OCR credentials for image-heavy catalogs.
+- Internal KB editor now supports rich entry editing, version history, rollback, and file import. It still needs real seller content before alpha use.
 - KB retrieval now uses hybrid keyword/vector scoring, but the current embedding provider is deterministic/local. A production embedding provider can replace it later without changing the retrieval contract.
 - Prompt profile versioning is now available, but prompt quality still needs real seller QA review and production Anthropic testing once `ANTHROPIC_API_KEY` is configured.
 - Daily/weekly digest delivery has Postmark/dry-run wiring and cron-callable send endpoints, but production scheduling and domain DNS are still deployment tasks.
@@ -217,7 +219,7 @@ Latest verified run used:
 
 Close the Phase 0 kernel:
 
-1. Provide alpha seller Q&A/source material so `TODO.md` T2 can be completed.
+1. Use the KB file importer with real alpha seller source material, then review and publish the generated draft entries.
 2. Provide `ANTHROPIC_API_KEY` and `MESSENGER_PAGE_ACCESS_TOKEN` so `TODO.md` T3/T4 can be completed.
 3. Provide deployment and Meta developer/business access for `TODO.md` T5/T6/T7.
 4. Continue non-blocked foundation work while external access is pending:

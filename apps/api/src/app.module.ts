@@ -23,6 +23,7 @@ import { DigestDeliveryService } from './clients/digest-delivery.service';
 import { KnowledgeService } from './knowledge/knowledge.service';
 import { KnowledgeController } from './knowledge/knowledge.controller';
 import { EmbeddingService } from './knowledge/embedding.service';
+import { KnowledgeImportService } from './knowledge/knowledge-import.service';
 import { AuthCodeDeliveryService } from './notifications/auth-code-delivery.service';
 import { EmailDeliveryService } from './notifications/email-delivery.service';
 import { UrgentTicketNotificationService } from './notifications/urgent-ticket-notification.service';
@@ -59,6 +60,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     EmbeddingService,
     AuthCodeDeliveryService,
     EmailDeliveryService,
+    KnowledgeImportService,
     KnowledgeService,
     MessengerSendService,
     MessengerSignatureService,

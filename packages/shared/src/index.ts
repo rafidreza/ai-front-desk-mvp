@@ -53,6 +53,29 @@ export interface KnowledgeEntryVersion {
   createdAt: string;
 }
 
+export interface KnowledgeImportFileInput {
+  fileName: string;
+  contentType?: string;
+  base64: string;
+}
+
+export interface KnowledgeImportDraft {
+  entry: KnowledgeEntry;
+  sourceFileName: string;
+  sourceType: string;
+}
+
+export interface KnowledgeImportSkippedFile {
+  fileName: string;
+  reason: string;
+}
+
+export interface KnowledgeImportResult {
+  imported: KnowledgeImportDraft[];
+  skipped: KnowledgeImportSkippedFile[];
+  extractedCharacters: number;
+}
+
 export interface PromptProfile {
   id: string;
   clientId: string;

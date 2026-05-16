@@ -7,6 +7,8 @@ import {
   InternalUser,
   KnowledgeEntry,
   KnowledgeEntryVersion,
+  KnowledgeImportFileInput,
+  KnowledgeImportResult,
   PromptProfile,
   PromptProfileVersion,
   Ticket,
@@ -123,6 +125,16 @@ export async function createKnowledgeDraft(
     body: JSON.stringify(input),
   });
   return data.entry;
+}
+
+export async function importKnowledgeFiles(
+  clientId: string,
+  input: { files: KnowledgeImportFileInput[]; actorId?: string },
+): Promise<KnowledgeImportResult> {
+  return apiFetch<KnowledgeImportResult>(`/clients/${clientId}/knowledge/import`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 }
 
 export async function updateKnowledgeEntry(

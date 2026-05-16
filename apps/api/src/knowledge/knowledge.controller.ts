@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
+import { KnowledgeImportService } from './knowledge-import.service';
 import { KnowledgeService } from './knowledge.service';
 
 const KnowledgeEntrySchema = z.object({
@@ -22,9 +23,26 @@ const RollbackSchema = z.object({
   actorId: z.string().trim().min(2).optional(),
 });
 
+const KnowledgeImportSchema = z.object({
+  actorId: z.string().trim().min(2).optional(),
+  files: z
+    .array(
+      z.object({
+        fileName: z.string().trim().min(2),
+        contentType: z.string().trim().optional(),
+        base64: z.string().trim().min(4),
+      }),
+    )
+    .min(1)
+    .max(5),
+});
+
 @Controller('clients/:clientId/knowledge')
 export class KnowledgeController {
-  constructor(private readonly knowledge: KnowledgeService) {}
+  constructor(
+    private readonly knowledge: KnowledgeService,
+    private readonly imports: KnowledgeImportService,
+  ) {}
 
   @Get()
   async list(@Param('clientId') clientId: string, @Query('status') status?: string) {
@@ -40,6 +58,12 @@ export class KnowledgeController {
   @Post('reindex')
   async reindex(@Param('clientId') clientId: string) {
     return this.knowledge.reindex(clientId);
+  }
+
+  @Post('import')
+  async import(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = KnowledgeImportSchema.parse(body);
+    return this.imports.importFiles({ clientId, ...parsed });
   }
 
   @Patch(':entryId')

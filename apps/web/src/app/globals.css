@@ -1115,6 +1115,11 @@ button {
   text-transform: none;
 }
 
+.stack-form input[type="file"] {
+  min-height: auto;
+  padding: 10px 12px;
+}
+
 .stack-form textarea {
   min-height: 118px;
   padding-top: 10px;
@@ -1304,12 +1309,49 @@ button {
 }
 
 .knowledge-editor,
-.knowledge-create {
+.knowledge-create,
+.knowledge-import {
   padding: 16px;
 }
 
-.knowledge-create {
+.knowledge-create,
+.knowledge-import {
   grid-column: 1 / -1;
+}
+
+.knowledge-import {
+  border-style: dashed;
+}
+
+.form-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.import-summary {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.import-summary strong,
+.import-summary small {
+  display: block;
+}
+
+.import-summary strong {
+  font-size: 13px;
+}
+
+.import-summary small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .version-list {
