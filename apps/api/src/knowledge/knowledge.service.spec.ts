@@ -32,3 +32,29 @@ describe('KnowledgeService (in-memory fallback)', () => {
     expect(match.entries[0]?.id).toBe('delivery-charge');
   });
 });
+
+describe('KnowledgeService.harvestFromResolvedTicket (no prisma)', () => {
+  it('returns null when prisma is not configured', async () => {
+    const service = new KnowledgeService();
+    const result = await service.harvestFromResolvedTicket({
+      clientId: 'pilot-client',
+      ticketId: 'ticket-1',
+      customerMessage: 'do you ship to Sylhet on Friday?',
+      resolutionAnswer: 'Yes, Sylhet delivery is daily including Friday.',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when prisma is not configured even with empty inputs', async () => {
+    const service = new KnowledgeService();
+    const result = await service.harvestFromResolvedTicket({
+      clientId: 'pilot-client',
+      ticketId: 'ticket-empty',
+      customerMessage: '   ',
+      resolutionAnswer: '   ',
+    });
+
+    expect(result).toBeNull();
+  });
+});

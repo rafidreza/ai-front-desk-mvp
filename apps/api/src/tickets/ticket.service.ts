@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ConversationRepository } from '../conversations/conversation.repository';
+import { KnowledgeService } from '../knowledge/knowledge.service';
+import { StructuredLoggerService } from '../observability/structured-logger.service';
 import { AgentReply, IncomingMessage, Ticket, TicketComment, TicketDetail, TicketPriority, TicketStatus } from '../types/domain';
 
 @Injectable()
 export class TicketService {
-  constructor(private readonly repository: ConversationRepository) {}
+  constructor(
+    private readonly repository: ConversationRepository,
+    private readonly knowledge?: KnowledgeService,
+    private readonly logger?: StructuredLoggerService,
+  ) {}
 
   async createFromEscalation(input: {
     message: IncomingMessage;
@@ -37,12 +43,52 @@ export class TicketService {
     actorId?: string;
     expectedVersion?: number;
   }): Promise<Ticket> {
-    return this.repository.updateTicketStatus({
+    const ticket = await this.repository.updateTicketStatus({
       ticketId: input.ticketId,
       status: input.status,
       actorId: input.actorId ?? 'internal-operator',
       expectedVersion: input.expectedVersion,
     });
+
+    if (input.status === 'resolved' && this.knowledge !== undefined) {
+      await this.harvestKnowledgeFromResolution(ticket, input.actorId);
+    }
+
+    return ticket;
+  }
+
+  private async harvestKnowledgeFromResolution(ticket: Ticket, actorId?: string): Promise<void> {
+    if (this.knowledge === undefined) return;
+    try {
+      const resolutionAnswer = await this.resolveAnswerText(ticket);
+      const harvested = await this.knowledge.harvestFromResolvedTicket({
+        clientId: ticket.clientId,
+        ticketId: ticket.id,
+        customerMessage: ticket.customerMessage,
+        resolutionAnswer,
+        actorId: actorId ?? 'live-learning',
+      });
+      if (harvested !== null) {
+        this.logger?.event('knowledge.live_learning.captured', {
+          ticketId: ticket.id,
+          clientId: ticket.clientId,
+          knowledgeEntryId: harvested.id,
+        });
+      }
+    } catch (error) {
+      this.logger?.event('knowledge.live_learning.failed', {
+        ticketId: ticket.id,
+        clientId: ticket.clientId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  private async resolveAnswerText(ticket: Ticket): Promise<string> {
+    const detail = await this.repository.getTicketDetail(ticket.id);
+    const operatorComment = detail?.comments.find((comment) => comment.body.trim() !== '');
+    if (operatorComment !== undefined) return operatorComment.body;
+    return ticket.suggestedReply;
   }
 
   async getDetail(ticketId: string): Promise<TicketDetail | null> {

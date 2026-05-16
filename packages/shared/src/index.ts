@@ -36,6 +36,8 @@ export interface KnowledgeEntry {
   embeddingText?: string;
   embeddedAt?: string;
   archivedAt?: string;
+  sourceTicketId?: string;
+  templateKey?: string;
 }
 
 export interface KnowledgeEntryVersion {

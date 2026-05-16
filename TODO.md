@@ -25,7 +25,7 @@
 | 3 — Phase 1 multi-tenant | 7 | 2 | 9 |
 | 4 — Client-facing features | 7 | 0 | 7 |
 | 5 — Channels | 3 | 0 | 3 |
-| 6 — KB build pipeline | 1 | 5 | 6 |
+| 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 0 | 5 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | **TOTAL** | **47** | **25** | **72** |
@@ -141,8 +141,8 @@
 - [ ] **T35** Facebook Page scraper (About, pinned post, album captions, post comments)
 - [x] **T36** File ingestor (image / PDF / Excel → OCR via Google Cloud Vision) — **DONE (2026-05-16): text/CSV/Markdown/JSON, PDF, and Excel files import into draft KB entries; image OCR path is wired through Google Cloud Vision when `GOOGLE_CLOUD_VISION_API_KEY` is configured**
 - [ ] **T37** Voice note ASR (vendor per PRD 08 Q10 benchmark)
-- [ ] **T38** Industry templates (start with clothing)
-- [ ] **T39** Live learning loop (closed ticket resolution → candidate KB entry)
+- [x] **T38** Industry templates (start with clothing) — **DONE (2026-05-16): clothing template JSON with 20 draft FAQ entries (delivery, payment, returns, sizing, fabric, custom orders, order status); `IndustryTemplateService` lists/get/apply with idempotent `templateKey` stamping; routes `GET /industry-templates`, `GET /industry-templates/:key`, `POST /clients/:clientId/industry-templates/:key/apply`; new `templateKey` column + index on `KnowledgeEntry` (migration `20260516130000_knowledge_industry_template`); covered by `industry-template.service.spec.ts` (5 tests incl. idempotency)**
+- [x] **T39** Live learning loop (closed ticket resolution → candidate KB entry) — **DONE (2026-05-16): `KnowledgeService.harvestFromResolvedTicket` creates a draft KB entry on ticket resolve, idempotent via new `sourceTicketId` column + index; `TicketService.updateStatus` invokes it on `status='resolved'`, prefers operator comment over suggested reply, swallows + logs failures; covered by `ticket.service.spec.ts` (4 tests) and KB no-prisma path tests**
 
 ---
 

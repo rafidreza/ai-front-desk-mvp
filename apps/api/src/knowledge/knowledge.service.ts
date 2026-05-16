@@ -24,6 +24,8 @@ function mapEntry(entry: {
   archivedAt: Date | null;
   embeddingText?: string | null;
   embeddedAt?: Date | null;
+  sourceTicketId?: string | null;
+  templateKey?: string | null;
 }): KnowledgeEntry {
   return {
     id: entry.id,
@@ -37,7 +39,33 @@ function mapEntry(entry: {
     embeddingText: entry.embeddingText ?? undefined,
     embeddedAt: entry.embeddedAt?.toISOString(),
     archivedAt: entry.archivedAt?.toISOString(),
+    sourceTicketId: entry.sourceTicketId ?? undefined,
+    templateKey: entry.templateKey ?? undefined,
   };
+}
+
+const harvestStopwords = new Set([
+  'the', 'and', 'for', 'with', 'this', 'that', 'have', 'has', 'are', 'was', 'were',
+  'how', 'what', 'when', 'where', 'why', 'who', 'will', 'can', 'could', 'would',
+  'should', 'about', 'from', 'into', 'just', 'your', 'you', 'i', 'me', 'we', 'us',
+  'is', 'am', 'be', 'a', 'an', 'of', 'on', 'in', 'to', 'it', 'at', 'by', 'or', 'as',
+  'do', 'did', 'does', 'not', 'no', 'yes', 'pls', 'please', 'hi', 'hello',
+]);
+
+function buildHarvestTitle(customerMessage: string): string {
+  const trimmed = customerMessage.trim().replace(/\s+/g, ' ');
+  if (trimmed.length === 0) return 'Live learning candidate';
+  const truncated = trimmed.length > 80 ? `${trimmed.slice(0, 77)}...` : trimmed;
+  return `Live learning: ${truncated}`;
+}
+
+function extractHarvestKeywords(customerMessage: string): string[] {
+  const tokens = customerMessage
+    .toLowerCase()
+    .split(/[^a-z0-9ঀ-৿]+/u)
+    .filter((token) => token.length >= 3 && !harvestStopwords.has(token));
+  const unique = Array.from(new Set(tokens));
+  return unique.slice(0, 12);
 }
 
 function mapVersion(version: {
@@ -151,6 +179,8 @@ export class KnowledgeService {
     keywords: string[];
     confidenceBoost?: number;
     actorId?: string;
+    sourceTicketId?: string;
+    templateKey?: string;
   }): Promise<KnowledgeEntry> {
     const prisma = this.requirePrisma();
     const entry = await prisma.$transaction(async (tx) => {
@@ -164,6 +194,8 @@ export class KnowledgeService {
           confidenceBoost: input.confidenceBoost,
           status: 'draft',
           version: 1,
+          sourceTicketId: input.sourceTicketId,
+          templateKey: input.templateKey,
         },
       });
       await this.writeEmbedding(tx, created);
@@ -172,6 +204,48 @@ export class KnowledgeService {
     });
 
     return mapEntry(entry);
+  }
+
+  async findBySourceTicketId(clientId: string, ticketId: string): Promise<KnowledgeEntry | null> {
+    if (this.prisma?.enabled !== true) return null;
+    const entry = await this.prisma.knowledgeEntry.findFirst({
+      where: { clientId, sourceTicketId: ticketId },
+    });
+    return entry === null ? null : mapEntry(entry);
+  }
+
+  async findByTemplateKey(clientId: string, templateKey: string): Promise<KnowledgeEntry | null> {
+    if (this.prisma?.enabled !== true) return null;
+    const entry = await this.prisma.knowledgeEntry.findFirst({
+      where: { clientId, templateKey },
+    });
+    return entry === null ? null : mapEntry(entry);
+  }
+
+  async harvestFromResolvedTicket(input: {
+    clientId: string;
+    ticketId: string;
+    customerMessage: string;
+    resolutionAnswer: string;
+    actorId?: string;
+  }): Promise<KnowledgeEntry | null> {
+    if (this.prisma?.enabled !== true) return null;
+    if (input.customerMessage.trim() === '' || input.resolutionAnswer.trim() === '') return null;
+
+    const existing = await this.findBySourceTicketId(input.clientId, input.ticketId);
+    if (existing !== null) return existing;
+
+    const title = buildHarvestTitle(input.customerMessage);
+    const keywords = extractHarvestKeywords(input.customerMessage);
+
+    return this.createDraft({
+      clientId: input.clientId,
+      title,
+      answer: input.resolutionAnswer.trim(),
+      keywords,
+      actorId: input.actorId ?? 'live-learning',
+      sourceTicketId: input.ticketId,
+    });
   }
 
   async update(

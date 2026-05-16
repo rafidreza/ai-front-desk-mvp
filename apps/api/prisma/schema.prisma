@@ -71,12 +71,16 @@ model KnowledgeEntry {
   embeddingText   String?
   embeddedAt      DateTime?
   archivedAt      DateTime?
+  sourceTicketId  String?
+  templateKey     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   versions        KnowledgeEntryVersion[]
 
   @@index([clientId])
+  @@index([sourceTicketId])
+  @@index([templateKey])
 }
 
 model KnowledgeEntryVersion {

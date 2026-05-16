@@ -1,0 +1,133 @@
+{
+  "key": "clothing",
+  "label": "F-Commerce clothing seller",
+  "description": "Common FAQ coverage for clothing sellers on Facebook Page + Messenger commerce: delivery, payment, returns, sizing, fabric, custom orders, and order status. Each entry is created as a draft so the KB Engineer can tune phrasing and pricing for the specific seller before publishing.",
+  "language": "mixed",
+  "entries": [
+    {
+      "slug": "delivery-charge",
+      "title": "Delivery charge — Dhaka and outside Dhaka",
+      "answer": "Inside Dhaka city delivery charge is BDT 80. Outside Dhaka delivery charge is BDT 130. Please update with the seller's real charges before publishing.",
+      "keywords": ["delivery", "charge", "shipping", "courier", "ডেলিভারি", "ডেলিভারি চার্জ", "koto"],
+      "confidenceBoost": 0.1
+    },
+    {
+      "slug": "delivery-time",
+      "title": "Delivery time after order placement",
+      "answer": "Inside Dhaka delivery usually takes 1–2 working days. Outside Dhaka delivery usually takes 2–4 working days. Friday and public holidays may add one day.",
+      "keywords": ["time", "kobe", "kotodin", "delivery time", "কবে", "কতদিন", "arrive"],
+      "confidenceBoost": 0.05
+    },
+    {
+      "slug": "cash-on-delivery",
+      "title": "Cash on delivery availability",
+      "answer": "Yes, cash on delivery is available across Bangladesh. Please confirm your full delivery address and phone number before we dispatch the order.",
+      "keywords": ["cod", "cash on delivery", "advance", "payment", "ক্যাশ"],
+      "confidenceBoost": 0.1
+    },
+    {
+      "slug": "payment-methods",
+      "title": "Accepted payment methods",
+      "answer": "We accept Cash on Delivery, bKash, Nagad, and bank transfer. Please share the bKash / Nagad transaction ID after sending the advance.",
+      "keywords": ["bkash", "nagad", "rocket", "payment method", "পেমেন্ট", "advance"],
+      "confidenceBoost": 0.05
+    },
+    {
+      "slug": "advance-payment",
+      "title": "Advance payment for orders outside Dhaka",
+      "answer": "For orders outside Dhaka or for custom-made items, a partial advance is required to confirm the order. The advance amount is non-refundable if the customer cancels after dispatch.",
+      "keywords": ["advance", "agim", "outside dhaka", "custom", "অগ্রিম"]
+    },
+    {
+      "slug": "return-policy",
+      "title": "Return and exchange policy",
+      "answer": "Exchanges are allowed within 3 days of delivery if the product is damaged or the wrong item was delivered. The customer must keep the product unworn and in the original packaging. Please share photos of the issue when raising the exchange request.",
+      "keywords": ["return", "exchange", "refund", "damaged", "wrong", "রিটার্ন", "এক্সচেঞ্জ", "রিফান্ড"],
+      "confidenceBoost": 0.05
+    },
+    {
+      "slug": "size-chart",
+      "title": "Size chart and fit guidance",
+      "answer": "Please refer to the size chart in the product album. If you are between two sizes, we usually recommend the larger size for a comfortable fit. Share your bust / waist / hip measurements in inches if you'd like a tailored recommendation.",
+      "keywords": ["size", "size chart", "fit", "measurement", "small", "medium", "large", "saiz", "মাপ"]
+    },
+    {
+      "slug": "fabric-info",
+      "title": "Fabric and material information",
+      "answer": "The fabric is described in the product post. Please ask for fabric details by mentioning the product code so we can share the exact material and weight.",
+      "keywords": ["fabric", "material", "cotton", "linen", "silk", "কাপড়", "ফেব্রিক"]
+    },
+    {
+      "slug": "color-availability",
+      "title": "Color and stock availability",
+      "answer": "Available colors are listed in the post. If a color is sold out, we can add you to the restock list and notify you when the next batch arrives.",
+      "keywords": ["color", "stock", "available", "out of stock", "restock", "রঙ", "স্টক"]
+    },
+    {
+      "slug": "live-photos",
+      "title": "Live photos or video of the product",
+      "answer": "Yes, we can share live photos or a short video of the product. Please share the product code from the album and give us a few minutes to capture it.",
+      "keywords": ["live photo", "real photo", "video", "actual photo", "asol chobi", "লাইভ ছবি"]
+    },
+    {
+      "slug": "wash-care",
+      "title": "Wash and care instructions",
+      "answer": "We recommend gentle hand wash in cold water and dry in shade to keep the colour. Avoid harsh detergents and bleach. Iron on low to medium heat depending on the fabric.",
+      "keywords": ["wash", "care", "iron", "shrink", "color fade", "ধোয়া", "ইস্ত্রি"]
+    },
+    {
+      "slug": "custom-orders",
+      "title": "Custom orders and tailoring",
+      "answer": "Custom orders and tailoring requests are accepted with a partial advance and 7–10 working days lead time. Please share the measurements and desired customization in writing so we can confirm feasibility.",
+      "keywords": ["custom", "tailor", "stitch", "alter", "custom made", "কাস্টম", "মাপের"]
+    },
+    {
+      "slug": "bulk-order",
+      "title": "Bulk and wholesale orders",
+      "answer": "Bulk and wholesale orders are welcome. Please share the quantity, item codes, and delivery location so we can prepare a quote with bulk pricing and lead time.",
+      "keywords": ["bulk", "wholesale", "quantity", "bulk discount", "পাইকারি"]
+    },
+    {
+      "slug": "order-tracking",
+      "title": "Tracking an existing order",
+      "answer": "Please share your order ID or the phone number used during checkout so we can check the current status with the courier. We will get back with the tracking update shortly.",
+      "keywords": ["track", "order id", "status", "where", "delivery status", "ট্র্যাক", "অর্ডার"]
+    },
+    {
+      "slug": "cancel-order",
+      "title": "Cancelling an order",
+      "answer": "Orders can be cancelled before dispatch by sharing the order ID. Once the order is handed over to the courier, cancellation may not be possible, but the parcel can be refused on delivery instead.",
+      "keywords": ["cancel", "cancellation", "refuse", "stop order", "ক্যান্সেল", "বাতিল"]
+    },
+    {
+      "slug": "damaged-item",
+      "title": "Damaged item on arrival",
+      "answer": "We're sorry to hear that. Please share clear photos of the damaged item and the parcel within 24 hours of delivery so we can arrange a replacement or refund as per our exchange policy.",
+      "keywords": ["damaged", "broken", "torn", "stain", "damaged item", "ক্ষতিগ্রস্ত", "নষ্ট"]
+    },
+    {
+      "slug": "wrong-item",
+      "title": "Received the wrong item",
+      "answer": "Sorry for the mix-up. Please share photos of the item you received along with your order ID. We will arrange a pickup and ship the correct item at no extra delivery charge.",
+      "keywords": ["wrong item", "different", "not what i ordered", "mismatch", "ভুল"]
+    },
+    {
+      "slug": "business-hours",
+      "title": "Business hours and reply window",
+      "answer": "Our team is available 10 AM – 9 PM (Bangladesh time) every day except Friday afternoon. Messages received outside these hours are answered first thing in the morning.",
+      "keywords": ["hours", "open", "close", "available", "shop time", "সময়", "খোলা"]
+    },
+    {
+      "slug": "preorder-restock",
+      "title": "Pre-order and restock requests",
+      "answer": "If an item is out of stock, you can pre-book by sharing your preferred size and colour. We will notify you once the next stock arrives, usually within 1–2 weeks.",
+      "keywords": ["preorder", "pre-order", "restock", "next batch", "waitlist", "প্রি-অর্ডার", "রিস্টক"]
+    },
+    {
+      "slug": "festival-offer",
+      "title": "Festival and special offers",
+      "answer": "We run special offers during Eid, Pohela Boishakh, and end-of-season sales. Follow our Facebook page or subscribe on our WhatsApp number to receive offer announcements first.",
+      "keywords": ["eid", "boishakh", "offer", "discount", "sale", "ছাড়", "অফার", "সেল"]
+    }
+  ]
+}
