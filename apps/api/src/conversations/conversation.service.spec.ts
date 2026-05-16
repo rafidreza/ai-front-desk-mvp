@@ -6,6 +6,7 @@ import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UrgentTicketNotificationService } from '../notifications/urgent-ticket-notification.service';
 import { TicketService } from '../tickets/ticket.service';
 import { ClientProfile } from '../types/domain';
+import { AutoQaService } from './auto-qa.service';
 import { ConversationRepository } from './conversation.repository';
 import { ConversationService } from './conversation.service';
 
@@ -19,7 +20,7 @@ const pilotClient: ClientProfile = {
   escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
 };
 
-function createService(urgentNotifications?: UrgentTicketNotificationService) {
+function createService(urgentNotifications?: UrgentTicketNotificationService, autoQa?: AutoQaService) {
   const disabledPrisma = { enabled: false } as unknown as PrismaService;
   const clients = { findById: async () => pilotClient } as unknown as PilotClientService;
   const repository = new ConversationRepository();
@@ -32,6 +33,7 @@ function createService(urgentNotifications?: UrgentTicketNotificationService) {
     undefined,
     undefined,
     urgentNotifications,
+    autoQa,
   );
 
   return { repository, service };
@@ -166,5 +168,26 @@ describe('ConversationService', () => {
 
     expect(conversation?.csatScore).toBe(5);
     expect(conversation?.csatComment).toBe('csat_5');
+  });
+
+  it('auto-scores completed AI replies when auto QA is enabled', async () => {
+    const { service } = createService(undefined, new AutoQaService());
+
+    const result = await service.handleIncomingMessage({
+      id: 'message-auto-qa',
+      clientId: 'pilot-client',
+      channel: 'messenger',
+      externalConversationId: 'customer-auto-qa',
+      externalSenderId: 'customer-auto-qa',
+      text: 'delivery charge koto?',
+      receivedAt: new Date().toISOString(),
+    });
+    const conversations = await service.listConversations();
+    const conversation = conversations.find((item) => item.id === result.conversation.id);
+
+    expect(conversation?.autoQaGrade).toBe('pass');
+    expect(conversation?.autoQaScore).toBe(100);
+    expect(conversation?.autoQaDefects).toEqual([]);
+    expect(conversation?.autoQaVersion).toBe('rule-v1');
   });
 });

@@ -65,6 +65,16 @@ export function QaReview({
                         ? `${Math.round(conversation.lastConfidence * 100)}% confidence`
                         : 'No confidence score'}
                     </small>
+                    <div className="qa-auto-line">
+                      <span data-grade={conversation.autoQaGrade ?? 'none'}>
+                        {conversation.autoQaGrade === undefined
+                          ? 'Auto QA pending'
+                          : `Auto ${conversation.autoQaGrade} ${conversation.autoQaScore ?? 0}/100`}
+                      </span>
+                      {conversation.autoQaDefects.map((defect) => (
+                        <span key={defect}>{defect.replaceAll('_', ' ')}</span>
+                      ))}
+                    </div>
                   </div>
                   <div className="qa-actions">
                     <button

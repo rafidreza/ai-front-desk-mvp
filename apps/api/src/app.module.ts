@@ -12,6 +12,7 @@ import { PilotClientService } from './clients/pilot-client.service';
 import { ConversationController } from './conversations/conversation.controller';
 import { ConversationRepository } from './conversations/conversation.repository';
 import { ConversationService } from './conversations/conversation.service';
+import { AutoQaService } from './conversations/auto-qa.service';
 import { PrismaService } from './database/prisma.service';
 import { HealthController } from './health/health.controller';
 import { InternalUsersController } from './internal-users/internal-users.controller';
@@ -54,6 +55,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
   ],
   providers: [
     AiService,
+    AutoQaService,
     ChannelSendService,
     ConversationRepository,
     ConversationService,

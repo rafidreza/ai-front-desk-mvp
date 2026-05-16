@@ -8,6 +8,17 @@ export type TicketStatus = 'open' | 'assigned' | 'waiting_client' | 'resolved';
 
 export type ConversationQaGrade = 'good' | 'bad';
 
+export type ConversationAutoQaGrade = 'pass' | 'review' | 'fail';
+
+export type ConversationQaDefect =
+  | 'low_confidence'
+  | 'no_knowledge_match'
+  | 'hallucination_risk'
+  | 'escalation_needed'
+  | 'escalation_miss'
+  | 'incomplete_answer'
+  | 'tone_risk';
+
 export interface ClientProfile {
   id: string;
   businessName: string;
@@ -152,6 +163,12 @@ export interface ConversationLog {
   hallucinationFlag: boolean;
   gradedBy?: string;
   gradedAt?: string;
+  autoQaScore?: number;
+  autoQaGrade?: ConversationAutoQaGrade;
+  autoQaDefects: ConversationQaDefect[];
+  autoQaReason?: string;
+  autoQaAt?: string;
+  autoQaVersion?: string;
 }
 
 export interface Ticket {

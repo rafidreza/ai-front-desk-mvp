@@ -55,6 +55,7 @@ The first working slice is intentionally thin:
   - WhatsApp Cloud API webhook adapter for inbound text, CSAT capture, conversation routing, and outbound replies via the shared channel sender;
   - public web chat widget at `/widget?clientId=...` backed by the same conversation engine.
   - knowledge file importer on `/internal/knowledge` and `POST /clients/:clientId/knowledge/import`, creating reviewable draft KB entries from text, CSV, Markdown, JSON, PDF, and Excel files, with Google Vision OCR wiring for image uploads when configured.
+  - automatic conversation QA scoring with stored auto grade, score, reason, version, and defect tags, visible in the internal QA review view.
 
 ## Verified
 
@@ -146,6 +147,7 @@ Database verification:
 - Ticket assignee update persisted to Neon.
 - Ticket internal note persisted to Neon.
 - Conversation QA grade persisted to Neon.
+- Conversation auto-QA migration file added for score, grade, defect tags, reason, version, and scoring timestamp.
 - Client profile metadata columns migrated successfully.
 - Knowledge entry status/version columns migrated successfully.
 - Knowledge entry version history table migrated and existing entries backfilled successfully.
@@ -181,6 +183,7 @@ Operational hardening verification:
 - Internal console has panel-level loading, error, and retry states for database health, tickets, conversations, and active ticket detail.
 - Internal console is protected by a lightweight passcode gate for local/alpha use.
 - Internal console supports assignee filtering, assignee updates, ticket notes, and manual QA grading.
+- Internal QA review now shows auto-QA score/grade and defect tags next to manual reviewer controls.
 - Internal console now reaches the API through a same-origin Next.js proxy; direct API data/mutation endpoints require an internal bearer token.
 - `sslmode=verify-full` was tested successfully against Neon and applied locally.
 - Redesigned internal console production build completed successfully and local route returned HTTP 200 after dev-server restart.
@@ -198,6 +201,7 @@ Operational hardening verification:
 - Internal KB editor now supports rich entry editing, version history, rollback, and file import. It still needs real seller content before alpha use.
 - KB retrieval now uses hybrid keyword/vector scoring, but the current embedding provider is deterministic/local. A production embedding provider can replace it later without changing the retrieval contract.
 - Prompt profile versioning is now available, but prompt quality still needs real seller QA review and production Anthropic testing once `ANTHROPIC_API_KEY` is configured.
+- Auto QA currently uses deterministic launch rules. It should be calibrated against real human reviews before being used as a client-facing quality metric.
 - Daily/weekly digest delivery has Postmark/dry-run wiring and cron-callable send endpoints, but production scheduling and domain DNS are still deployment tasks.
 - Moderate npm audit advisories remain unresolved because the available automatic fixes are not safe for this stack.
 

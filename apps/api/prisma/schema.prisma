@@ -161,6 +161,12 @@ model Conversation {
   hallucinationFlag      Boolean   @default(false)
   gradedBy               String?
   gradedAt               DateTime?
+  autoQaScore            Float?
+  autoQaGrade            String?
+  autoQaDefects          String[]   @default([])
+  autoQaReason           String?
+  autoQaAt               DateTime?
+  autoQaVersion          String?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   client                 Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -168,6 +174,7 @@ model Conversation {
   tickets                Ticket[]
 
   @@index([clientId])
+  @@index([clientId, autoQaGrade])
   @@unique([clientId, channel, externalConversationId])
 }
 

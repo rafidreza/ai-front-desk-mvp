@@ -4,7 +4,9 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import {
   ConversationLog,
+  ConversationAutoQaGrade,
   ConversationMessage,
+  ConversationQaDefect,
   ConversationQaGrade,
   Ticket,
   TicketComment,
@@ -23,7 +25,21 @@ export class ConversationRepository {
   private readonly ticketComments = new Map<string, TicketComment[]>();
 
   async upsertConversation(
-    input: Omit<ConversationLog, 'id' | 'messages' | 'hallucinationFlag' | 'qaGrade' | 'gradedBy' | 'gradedAt'>,
+    input: Omit<
+      ConversationLog,
+      | 'id'
+      | 'messages'
+      | 'hallucinationFlag'
+      | 'qaGrade'
+      | 'gradedBy'
+      | 'gradedAt'
+      | 'autoQaScore'
+      | 'autoQaGrade'
+      | 'autoQaDefects'
+      | 'autoQaReason'
+      | 'autoQaAt'
+      | 'autoQaVersion'
+    >,
   ): Promise<ConversationLog> {
     if (this.prisma?.enabled === true) {
       const conversation = await this.prisma.conversation.upsert({
@@ -59,6 +75,12 @@ export class ConversationRepository {
         hallucinationFlag: conversation.hallucinationFlag,
         gradedBy: conversation.gradedBy ?? undefined,
         gradedAt: conversation.gradedAt?.toISOString(),
+        autoQaScore: conversation.autoQaScore ?? undefined,
+        autoQaGrade: (conversation.autoQaGrade as ConversationAutoQaGrade | null) ?? undefined,
+        autoQaDefects: conversation.autoQaDefects as ConversationQaDefect[],
+        autoQaReason: conversation.autoQaReason ?? undefined,
+        autoQaAt: conversation.autoQaAt?.toISOString(),
+        autoQaVersion: conversation.autoQaVersion ?? undefined,
         messages: conversation.messages.map((message) => ({
           id: message.id,
           direction: message.direction as ConversationMessage['direction'],
@@ -83,6 +105,7 @@ export class ConversationRepository {
       ...input,
       messages: [],
       hallucinationFlag: false,
+      autoQaDefects: [],
     };
     this.conversations.set(conversation.id, conversation);
     return conversation;
@@ -218,6 +241,12 @@ export class ConversationRepository {
         hallucinationFlag: conversation.hallucinationFlag,
         gradedBy: conversation.gradedBy ?? undefined,
         gradedAt: conversation.gradedAt?.toISOString(),
+        autoQaScore: conversation.autoQaScore ?? undefined,
+        autoQaGrade: (conversation.autoQaGrade as ConversationAutoQaGrade | null) ?? undefined,
+        autoQaDefects: conversation.autoQaDefects as ConversationQaDefect[],
+        autoQaReason: conversation.autoQaReason ?? undefined,
+        autoQaAt: conversation.autoQaAt?.toISOString(),
+        autoQaVersion: conversation.autoQaVersion ?? undefined,
         messages: conversation.messages.map((message) => ({
           id: message.id,
           direction: message.direction as ConversationMessage['direction'],
@@ -655,6 +684,47 @@ export class ConversationRepository {
     return updatedConversation;
   }
 
+  async updateConversationAutoQa(input: {
+    conversationId: string;
+    score: number;
+    grade: ConversationAutoQaGrade;
+    defects: ConversationQaDefect[];
+    reason: string;
+    version: string;
+  }): Promise<ConversationLog> {
+    const now = new Date().toISOString();
+
+    if (this.prisma?.enabled === true) {
+      const conversation = await this.prisma.conversation.update({
+        where: { id: input.conversationId },
+        data: {
+          autoQaScore: input.score,
+          autoQaGrade: input.grade,
+          autoQaDefects: input.defects,
+          autoQaReason: input.reason,
+          autoQaAt: new Date(now),
+          autoQaVersion: input.version,
+        },
+        include: { messages: { orderBy: { createdAt: 'asc' } } },
+      });
+
+      return this.mapConversation(conversation);
+    }
+
+    const conversation = this.getConversation(input.conversationId);
+    const updatedConversation: ConversationLog = {
+      ...conversation,
+      autoQaScore: input.score,
+      autoQaGrade: input.grade,
+      autoQaDefects: input.defects,
+      autoQaReason: input.reason,
+      autoQaAt: now,
+      autoQaVersion: input.version,
+    };
+    this.conversations.set(input.conversationId, updatedConversation);
+    return updatedConversation;
+  }
+
   private mapTicket(ticket: {
     id: string;
     clientId: string;
@@ -702,6 +772,12 @@ export class ConversationRepository {
     hallucinationFlag: boolean;
     gradedBy: string | null;
     gradedAt: Date | null;
+    autoQaScore: number | null;
+    autoQaGrade: string | null;
+    autoQaDefects: string[];
+    autoQaReason: string | null;
+    autoQaAt: Date | null;
+    autoQaVersion: string | null;
     messages: {
       id: string;
       direction: string;
@@ -724,6 +800,12 @@ export class ConversationRepository {
       hallucinationFlag: conversation.hallucinationFlag,
       gradedBy: conversation.gradedBy ?? undefined,
       gradedAt: conversation.gradedAt?.toISOString(),
+      autoQaScore: conversation.autoQaScore ?? undefined,
+      autoQaGrade: (conversation.autoQaGrade as ConversationAutoQaGrade | null) ?? undefined,
+      autoQaDefects: conversation.autoQaDefects as ConversationQaDefect[],
+      autoQaReason: conversation.autoQaReason ?? undefined,
+      autoQaAt: conversation.autoQaAt?.toISOString(),
+      autoQaVersion: conversation.autoQaVersion ?? undefined,
       messages: conversation.messages.map((message) => ({
         id: message.id,
         direction: message.direction as ConversationMessage['direction'],

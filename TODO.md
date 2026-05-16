@@ -26,9 +26,9 @@
 | 4 — Client-facing features | 7 | 0 | 7 |
 | 5 — Channels | 3 | 0 | 3 |
 | 6 — KB build pipeline | 3 | 3 | 6 |
-| 7 — QA & improvement loop | 0 | 5 | 5 |
+| 7 — QA & improvement loop | 2 | 3 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| **TOTAL** | **47** | **25** | **72** |
+| **TOTAL** | **51** | **21** | **72** |
 
 ---
 
@@ -148,8 +148,8 @@
 
 ## Tier 7 — QA & improvement loop (PRD 06)
 
-- [ ] **T40** Auto QA scoring on every conversation close (within 60 sec)
-- [ ] **T41** Defect tagging (hallucination, tone, escalation miss, etc.)
+- [x] **T40** Auto QA scoring on every conversation close (within 60 sec) — **DONE (2026-05-16): deterministic `AutoQaService` scores each processed AI reply, stores score/grade/reason/version on the conversation, and logs scoring events**
+- [x] **T41** Defect tagging (hallucination, tone, escalation miss, etc.) — **DONE (2026-05-16): auto QA now stores defect tags including low confidence, no knowledge match, hallucination risk, escalation needed/miss, incomplete answer, and tone risk; internal QA view shows auto grade and tags**
 - [ ] **T42** Calibration sample queue for human review
 - [ ] **T43** Improvement-loop kanban board (Mon-Fri cadence per MVP §5.3)
 - [ ] **T44** A/B framework for prompt versions

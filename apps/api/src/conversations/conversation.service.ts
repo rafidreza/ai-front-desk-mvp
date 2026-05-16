@@ -7,6 +7,7 @@ import { StructuredLoggerService } from '../observability/structured-logger.serv
 import { PromptProfileService } from '../prompts/prompt-profile.service';
 import { TicketService } from '../tickets/ticket.service';
 import { AgentReply, ClientProfile, ConversationLog, ConversationQaGrade, IncomingMessage, Ticket } from '../types/domain';
+import { AutoQaService } from './auto-qa.service';
 import { ConversationRepository } from './conversation.repository';
 
 interface HandleMessageResult {
@@ -32,6 +33,7 @@ export class ConversationService {
     private readonly prompts?: PromptProfileService,
     private readonly logger?: StructuredLoggerService,
     private readonly urgentNotifications?: UrgentTicketNotificationService,
+    private readonly autoQa?: AutoQaService,
   ) {}
 
   async handleIncomingMessage(message: IncomingMessage): Promise<HandleMessageResult> {
@@ -102,11 +104,50 @@ export class ConversationService {
       ticketId: ticket?.id,
     });
 
+    await this.scoreConversation({
+      conversationId,
+      customerText: message.text,
+      reply,
+      ticket,
+    });
+
     return {
       conversation,
       reply,
       ticket,
     };
+  }
+
+  private async scoreConversation(input: {
+    conversationId: string;
+    customerText: string;
+    reply: AgentReply;
+    ticket?: Ticket;
+  }): Promise<void> {
+    if (this.autoQa === undefined) return;
+
+    try {
+      const result = this.autoQa.score(input);
+      await this.repository.updateConversationAutoQa({
+        conversationId: input.conversationId,
+        ...result,
+      });
+      this.logger?.event('conversation.auto_qa_scored', {
+        conversationId: input.conversationId,
+        score: result.score,
+        grade: result.grade,
+        defects: result.defects,
+      });
+    } catch (error) {
+      this.logger?.event(
+        'conversation.auto_qa_failed',
+        {
+          conversationId: input.conversationId,
+          error: error instanceof Error ? error.message : 'Unknown auto QA failure',
+        },
+        'error',
+      );
+    }
   }
 
   private async notifyPocForUrgentTicket(client: ClientProfile, ticket: Ticket): Promise<void> {

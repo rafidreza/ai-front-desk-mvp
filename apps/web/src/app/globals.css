@@ -860,6 +860,44 @@ button {
   font-size: 12px;
 }
 
+.qa-auto-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.qa-auto-line span {
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+
+.qa-auto-line span[data-grade="pass"] {
+  border-color: #9bcbb8;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.qa-auto-line span[data-grade="review"] {
+  border-color: #dfc184;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.qa-auto-line span[data-grade="fail"] {
+  border-color: #dfa29b;
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+
 .qa-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(112px, 1fr));
