@@ -51,7 +51,8 @@ The first working slice is intentionally thin:
   - active client prompt profiles are now loaded into AI reply generation with fallback to the client's legacy tone when no stored profile exists;
   - sales recovered estimate calculation and backfill;
   - P1 urgent-ticket WhatsApp ping to the client's configured POC, with dry-run mode when WhatsApp Cloud API credentials are missing and ticket timeline events for ping outcomes;
-  - shared channel-send abstraction for Messenger and WhatsApp text delivery, reused by Messenger replies, auth-code WhatsApp delivery, and P1 urgent alerts.
+  - shared channel-send abstraction for Messenger and WhatsApp text delivery, reused by Messenger replies, auth-code WhatsApp delivery, and P1 urgent alerts;
+  - WhatsApp Cloud API webhook adapter for inbound text, CSAT capture, conversation routing, and outbound replies via the shared channel sender.
 
 ## Verified
 
@@ -77,6 +78,9 @@ Manual HTTP checks passed:
 - `POST /webhooks/messenger` with an unknown product-detail question
 - `POST /webhooks/messenger` with a valid signed payload
 - `POST /webhooks/messenger` with an invalid signed payload, returning `401`
+- `GET /webhooks/whatsapp` verification challenge with `WHATSAPP_VERIFY_TOKEN`
+- `POST /webhooks/whatsapp` with WhatsApp Cloud API text payload routed into the conversation engine
+- `POST /webhooks/whatsapp` with `CSAT_5` payload updates the existing conversation rating
 - `PATCH /tickets/:id/status`
 - `GET /tickets/:id`
 - `GET /conversations`
@@ -184,7 +188,7 @@ Operational hardening verification:
 - Public HTTPS deployment is still pending account/project access.
 - Meta App setup and live Page traffic are still pending Meta credentials/access.
 - Client-facing dashboard and delegation screens are protected by signed client sessions. Production auth delivery now has provider-ready email/WhatsApp paths, but real sends still require Postmark/WhatsApp credentials.
-- No inbound WhatsApp adapter yet.
+- WhatsApp adapter is available, but alpha setup still needs Meta WhatsApp webhook credentials and a workspace mapping strategy; current migration-free setup maps webhook `phone_number_id` through the existing client `pageId` field.
 - No real KB import pipeline yet.
 - Internal KB editor now supports rich entry editing, version history, and rollback. It still needs real seller content/import pipelines before alpha use.
 - KB retrieval now uses hybrid keyword/vector scoring, but the current embedding provider is deterministic/local. A production embedding provider can replace it later without changing the retrieval contract.
@@ -214,7 +218,7 @@ Close the Phase 0 kernel:
 2. Provide `ANTHROPIC_API_KEY` and `MESSENGER_PAGE_ACCESS_TOKEN` so `TODO.md` T3/T4 can be completed.
 3. Provide deployment and Meta developer/business access for `TODO.md` T5/T6/T7.
 4. Continue non-blocked foundation work while external access is pending:
-   - build inbound WhatsApp adapter;
+   - build the web chat widget;
    - start the KB import pipeline;
    - add production observability;
    - provide real alpha seller Q&A/source content.

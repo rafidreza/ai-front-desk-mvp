@@ -118,6 +118,29 @@ export class PilotClientService {
     throw new NotFoundException(`Client not found for page: ${pageId}`);
   }
 
+  async findByWhatsAppIdentifier(identifier: string): Promise<ClientProfile> {
+    if (this.prisma?.enabled !== true) {
+      if (identifier === pilotClientFallback.pageId || identifier === process.env.WHATSAPP_PHONE_NUMBER_ID) {
+        return pilotClientFallback;
+      }
+      throw new NotFoundException(`Client not found for WhatsApp identifier: ${identifier}`);
+    }
+
+    const client = await this.prisma.client.findFirst({
+      where: {
+        OR: [
+          { pageId: identifier },
+          { id: identifier },
+        ],
+      },
+    });
+    if (client !== null) {
+      return toClientProfile(client);
+    }
+
+    throw new NotFoundException(`Client not found for WhatsApp identifier: ${identifier}`);
+  }
+
   async findById(clientId: string): Promise<ClientProfile> {
     if (this.prisma?.enabled !== true) {
       if (clientId === pilotClientFallback.id) return pilotClientFallback;

@@ -5,6 +5,8 @@ import { ChannelSendService } from './channels/channel-send.service';
 import { MessengerController } from './channels/messenger.controller';
 import { MessengerSendService } from './channels/messenger-send.service';
 import { MessengerSignatureService } from './channels/messenger-signature.service';
+import { WhatsAppController } from './channels/whatsapp.controller';
+import { WhatsAppSignatureService } from './channels/whatsapp-signature.service';
 import { PilotClientService } from './clients/pilot-client.service';
 import { ConversationController } from './conversations/conversation.controller';
 import { ConversationRepository } from './conversations/conversation.repository';
@@ -40,6 +42,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     InternalUsersController,
     KnowledgeController,
     MessengerController,
+    WhatsAppController,
     PromptProfileController,
     TicketController,
   ],
@@ -57,6 +60,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     KnowledgeService,
     MessengerSendService,
     MessengerSignatureService,
+    WhatsAppSignatureService,
     PilotClientService,
     PromptProfileService,
     PrismaService,
