@@ -63,6 +63,23 @@ export async function getInternalUsers(): Promise<InternalUser[]> {
   return data.users;
 }
 
+export async function createInternalUser(input: {
+  label: string;
+  email?: string;
+  role: string;
+}): Promise<InternalUser> {
+  const data = await apiFetch<{ user: InternalUser }>('/internal/users', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.user;
+}
+
+export async function getClients(): Promise<ClientProfile[]> {
+  const data = await apiFetch<{ clients: ClientProfile[] }>('/clients');
+  return data.clients;
+}
+
 export async function signupClient(input: {
   businessName: string;
   ownerName?: string;

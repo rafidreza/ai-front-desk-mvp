@@ -1,5 +1,6 @@
 import {
   BotMessageSquare,
+  Building2,
   DatabaseZap,
   LayoutDashboard,
   LogOut,
@@ -7,11 +8,20 @@ import {
   Settings2,
   ShieldCheck,
   TicketCheck,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ApiHealth } from '@/types/domain';
 
-type ActiveView = 'operations' | 'qa' | 'tickets' | 'conversations' | 'knowledge' | 'agent-config';
+type ActiveView =
+  | 'operations'
+  | 'qa'
+  | 'clients'
+  | 'team'
+  | 'tickets'
+  | 'conversations'
+  | 'knowledge'
+  | 'agent-config';
 
 interface SidebarProps {
   activeView: ActiveView;
@@ -24,6 +34,8 @@ interface SidebarProps {
 export function Sidebar({ activeView, onChangeView, health, healthError, onLogout }: SidebarProps) {
   const topLinks = [
     { view: 'operations' as const, label: 'Operations', icon: <LayoutDashboard size={17} />, href: '/internal' },
+    { view: 'clients' as const, label: 'Clients', icon: <Building2 size={17} />, href: '/internal/clients' },
+    { view: 'team' as const, label: 'Team', icon: <Users size={17} />, href: '/internal/team' },
     { view: 'tickets' as const, label: 'Tickets', icon: <TicketCheck size={17} />, href: '/internal/tickets' },
     { view: 'conversations' as const, label: 'Conversations', icon: <MessagesSquare size={17} />, href: '/internal/conversations' },
     { view: 'qa' as const, label: 'QA Review', icon: <ShieldCheck size={17} />, href: '/internal?view=qa' },

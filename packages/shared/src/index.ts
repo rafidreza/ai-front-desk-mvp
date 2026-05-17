@@ -245,6 +245,11 @@ export interface ApiHealth {
 export interface InternalUser {
   id: string;
   label: string;
+  email?: string;
+  role?: string;
+  status?: 'active' | 'invited' | 'disabled';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ClientDashboardSummary {

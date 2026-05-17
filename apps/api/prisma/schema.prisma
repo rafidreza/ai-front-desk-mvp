@@ -58,6 +58,19 @@ model ClientAuthChallenge {
   @@index([expiresAt])
 }
 
+model InternalUser {
+  id        String   @id
+  label     String
+  email     String?  @unique
+  role      String   @default("support")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([role])
+}
+
 model KnowledgeEntry {
   id              String   @id
   clientId        String

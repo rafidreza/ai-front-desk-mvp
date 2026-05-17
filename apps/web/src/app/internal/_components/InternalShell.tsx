@@ -6,7 +6,15 @@ import { ApiHealth } from '@/types/domain';
 import { Sidebar } from './Sidebar';
 
 interface InternalShellProps {
-  activeView: 'operations' | 'qa' | 'tickets' | 'conversations' | 'knowledge' | 'agent-config';
+  activeView:
+    | 'operations'
+    | 'qa'
+    | 'clients'
+    | 'team'
+    | 'tickets'
+    | 'conversations'
+    | 'knowledge'
+    | 'agent-config';
   eyebrow: string;
   title: string;
   action?: ReactNode;
