@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { ClientDashboardSummary, ConversationLog, Ticket, TicketStatus } from '../types/domain';
+import { Channel, ClientChannelSummary, ClientDashboardSummary, ClientProfile, ConversationLog, Ticket, TicketStatus } from '../types/domain';
 import { PilotClientService } from './pilot-client.service';
 
 @Injectable()
@@ -16,15 +16,33 @@ export class ClientDashboardService {
       this.listClientConversations(clientId, 10),
       this.listClientTickets(clientId),
     ]);
-    const totalConversations = await this.prisma.conversation.count({ where: { clientId } });
-    const totalTickets = await this.prisma.ticket.count({ where: { clientId } });
+    const [
+      totalConversations,
+      totalTickets,
+      contained,
+      confidence,
+      csat,
+      sales,
+      channelCounts,
+    ] = await Promise.all([
+      this.prisma.conversation.count({ where: { clientId } }),
+      this.prisma.ticket.count({ where: { clientId } }),
+      this.prisma.conversation.count({ where: { clientId, ticketId: null } }),
+      this.prisma.conversation.aggregate({ where: { clientId }, _avg: { lastConfidence: true } }),
+      this.prisma.conversation.aggregate({ where: { clientId, csatScore: { not: null } }, _avg: { csatScore: true } }),
+      this.prisma.ticket.aggregate({ where: { clientId }, _sum: { salesRecoveredEstimate: true } }),
+      this.prisma.conversation.groupBy({
+        by: ['channel'],
+        where: { clientId },
+        _count: { _all: true },
+      }),
+    ]);
     const openTickets = tickets.filter((ticket) => ticket.status !== 'resolved').length;
     const resolvedTickets = tickets.filter((ticket) => ticket.status === 'resolved').length;
     const p1Tickets = tickets.filter((ticket) => ticket.priority === 'P1').length;
-    const contained = await this.prisma.conversation.count({ where: { clientId, ticketId: null } });
-    const confidence = await this.prisma.conversation.aggregate({ where: { clientId }, _avg: { lastConfidence: true } });
-    const csat = await this.prisma.conversation.aggregate({ where: { clientId, csatScore: { not: null } }, _avg: { csatScore: true } });
-    const sales = await this.prisma.ticket.aggregate({ where: { clientId }, _sum: { salesRecoveredEstimate: true } });
+    const conversationsByChannel = new Map(
+      channelCounts.map((item) => [item.channel as Channel, item._count._all]),
+    );
 
     return {
       client,
@@ -39,6 +57,7 @@ export class ClientDashboardService {
         averageCsat: csat._avg.csatScore === null ? null : Number(csat._avg.csatScore.toFixed(1)),
         salesRecoveredEstimate: sales._sum.salesRecoveredEstimate ?? 0,
       },
+      channels: this.buildChannelSummaries(client, conversationsByChannel),
       recentTickets: tickets.slice(0, 8),
       recentConversations: conversations,
     };
@@ -229,5 +248,42 @@ export class ClientDashboardService {
         createdAt: message.createdAt.toISOString(),
       })),
     }));
+  }
+
+  private buildChannelSummaries(client: ClientProfile, conversationsByChannel: Map<Channel, number>): ClientChannelSummary[] {
+    const messengerConnected = client.pageId.trim().length > 0 && !client.pageId.endsWith('-page-pending');
+    const whatsappContact = client.whatsappPoc ?? client.ownerPhone;
+    const whatsappConnected = whatsappContact !== undefined && whatsappContact.trim().length > 0;
+
+    return [
+      {
+        channel: 'messenger',
+        label: 'Messenger',
+        status: messengerConnected ? 'connected' : 'needs_setup',
+        conversations: conversationsByChannel.get('messenger') ?? 0,
+        setupLabel: messengerConnected ? 'Page linked' : 'Page setup needed',
+        detail: messengerConnected ? `Page ID: ${client.pageId}` : 'Add the Facebook Page ID before Messenger traffic can go live.',
+        actionLabel: messengerConnected ? 'Ready for inbox automation' : 'Connect Facebook Page',
+      },
+      {
+        channel: 'whatsapp',
+        label: 'WhatsApp',
+        status: whatsappConnected ? 'connected' : 'needs_setup',
+        conversations: conversationsByChannel.get('whatsapp') ?? 0,
+        setupLabel: whatsappConnected ? 'Business contact set' : 'Business contact needed',
+        detail: whatsappConnected ? `Support contact: ${whatsappContact}` : 'Add a WhatsApp POC or owner phone number for handoff routing.',
+        actionLabel: whatsappConnected ? 'Ready for WhatsApp support' : 'Add WhatsApp contact',
+      },
+      {
+        channel: 'web',
+        label: 'Web widget',
+        status: 'available',
+        conversations: conversationsByChannel.get('web') ?? 0,
+        setupLabel: 'Widget available',
+        detail: `Embed URL: /widget?clientId=${client.id}`,
+        actionLabel: 'Copy embed link',
+        actionHref: `/widget?clientId=${client.id}`,
+      },
+    ];
   }
 }

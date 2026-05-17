@@ -1408,6 +1408,90 @@ button {
   line-height: 1.12;
 }
 
+.client-command-card,
+.client-ticket-command {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+  gap: 18px;
+  align-items: end;
+  padding: 22px;
+  border: 1px solid #223140;
+  background:
+    linear-gradient(135deg, rgba(16, 24, 32, 0.96), rgba(20, 48, 56, 0.92)),
+    var(--nav);
+  color: #ffffff;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.client-ticket-command {
+  align-items: center;
+}
+
+.client-command-main,
+.client-ticket-command > div:first-child {
+  display: grid;
+  gap: 8px;
+}
+
+.client-command-card .eyebrow,
+.client-ticket-command .eyebrow {
+  color: #9db5c5;
+}
+
+.client-command-card h2,
+.client-command-card p,
+.client-account-card span,
+.client-account-card strong,
+.client-account-card small,
+.client-ticket-command h2,
+.client-ticket-command p {
+  margin: 0;
+}
+
+.client-command-card h2,
+.client-ticket-command h2 {
+  max-width: 760px;
+  font-size: 28px;
+  line-height: 1.14;
+}
+
+.client-command-card p,
+.client-ticket-command p {
+  max-width: 760px;
+  color: #d5e0e7;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.client-account-card {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  text-align: right;
+}
+
+.client-account-card span,
+.ticket-command-stats span {
+  color: #a8bac8;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.client-account-card strong {
+  font-size: 18px;
+}
+
+.client-account-card small {
+  max-width: 320px;
+  overflow: hidden;
+  color: #d5e0e7;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .client-panel {
   border: 1px solid var(--line);
   background: var(--surface);
@@ -1502,6 +1586,135 @@ button {
   align-items: start;
 }
 
+.client-channel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.channel-card {
+  min-height: 210px;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(28, 39, 52, 0.06);
+}
+
+.channel-card[data-status="connected"] {
+  border-color: #b8d8ce;
+}
+
+.channel-card[data-status="available"] {
+  border-color: #b8cfe1;
+}
+
+.channel-card[data-status="needs_setup"] {
+  border-color: #e6c59c;
+}
+
+.channel-card-head,
+.channel-title,
+.channel-action-row,
+.ticket-card-meta,
+.client-filter-bar > div:first-child {
+  display: flex;
+  align-items: center;
+}
+
+.channel-card-head {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.channel-title {
+  min-width: 0;
+  gap: 10px;
+}
+
+.channel-title > span {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--green);
+  border-radius: 8px;
+}
+
+.channel-title div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.channel-title strong {
+  font-size: 14px;
+}
+
+.channel-title small,
+.channel-count span,
+.channel-card p,
+.channel-action-row span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.status-pill {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-pill[data-status="connected"] {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.status-pill[data-status="available"] {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.status-pill[data-status="needs_setup"] {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.channel-count {
+  display: grid;
+  gap: 3px;
+}
+
+.channel-count strong {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.channel-card p {
+  min-height: 38px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.channel-action-row {
+  min-height: 34px;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
 .client-list {
   display: grid;
   align-content: start;
@@ -1556,6 +1769,46 @@ button {
   gap: 8px;
 }
 
+.client-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+.client-filter-bar > div:first-child {
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ticket-command-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.ticket-command-stats div {
+  min-height: 86px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.ticket-command-stats strong {
+  font-size: 26px;
+  line-height: 1;
+}
+
 .ticket-delegation-list {
   display: grid;
   gap: 12px;
@@ -1595,6 +1848,26 @@ button {
   display: block;
   margin-top: 8px;
   font-weight: 750;
+}
+
+.ticket-card-meta {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ticket-card-meta > span:last-child {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
 }
 
 .delegation-actions {
@@ -1926,6 +2199,9 @@ button {
   }
 
   .client-grid,
+  .client-command-card,
+  .client-ticket-command,
+  .client-channel-grid,
   .ticket-portal-grid,
   .conversation-portal-grid,
   .client-portal-grid,
@@ -1975,6 +2251,9 @@ button {
   .conversation-summary-strip,
   .client-portal-grid,
   .team-portal-grid,
+  .client-command-card,
+  .client-ticket-command,
+  .client-channel-grid,
   .client-info-grid,
   .knowledge-client-strip,
   .pricing-panel,
@@ -2003,6 +2282,21 @@ button {
   }
 
   .client-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .client-account-card {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .client-command-card h2,
+  .client-ticket-command h2 {
+    font-size: 24px;
+  }
+
+  .client-filter-bar {
     align-items: flex-start;
     flex-direction: column;
   }

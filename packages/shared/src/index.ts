@@ -43,6 +43,19 @@ export interface ClientProfile {
   digestEmail?: string;
 }
 
+export type ClientChannelStatus = 'connected' | 'available' | 'needs_setup';
+
+export interface ClientChannelSummary {
+  channel: Channel;
+  label: string;
+  status: ClientChannelStatus;
+  conversations: number;
+  setupLabel: string;
+  detail: string;
+  actionLabel: string;
+  actionHref?: string;
+}
+
 export interface KnowledgeEntry {
   id: string;
   clientId: string;
@@ -267,6 +280,7 @@ export interface ClientDashboardSummary {
     averageCsat: number | null;
     salesRecoveredEstimate: number;
   };
+  channels: ClientChannelSummary[];
   recentTickets: Ticket[];
   recentConversations: ConversationLog[];
 }

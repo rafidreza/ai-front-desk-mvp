@@ -1,19 +1,34 @@
 'use client';
 
-import { MessageSquareText, RefreshCw, TicketCheck } from 'lucide-react';
+import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { captureCsat, getClientDashboard } from '@/lib/api';
-import { ClientDashboardSummary } from '@/types/domain';
+import { ClientChannelSummary, ClientDashboardSummary } from '@/types/domain';
+
+const channelIcons = {
+  messenger: MessageSquareText,
+  whatsapp: MessageCircle,
+  web: Code2,
+};
+
+function formatChannelStatus(status: ClientChannelSummary['status']) {
+  if (status === 'connected') return 'Connected';
+  if (status === 'available') return 'Available';
+  return 'Needs setup';
+}
 
 export default function ClientDashboardPage() {
   const [dashboard, setDashboard] = useState<ClientDashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [origin, setOrigin] = useState('');
 
   const clientId = useMemo(() => {
     if (typeof window === 'undefined') return 'pilot-client';
     return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
   }, []);
+
+  const connectedChannelCount = dashboard?.channels.filter((channel) => channel.status !== 'needs_setup').length ?? 0;
 
   async function loadDashboard() {
     setIsLoading(true);
@@ -28,6 +43,7 @@ export default function ClientDashboardPage() {
   }
 
   useEffect(() => {
+    setOrigin(window.location.origin);
     void loadDashboard();
   }, []);
 
@@ -39,6 +55,11 @@ export default function ClientDashboardPage() {
   async function logout() {
     await fetch('/api/client-auth/logout', { method: 'POST' });
     window.location.href = '/client/login';
+  }
+
+  async function copyWidgetUrl(path: string) {
+    if (navigator.clipboard === undefined) return;
+    await navigator.clipboard.writeText(`${origin}${path}`);
   }
 
   return (
@@ -61,6 +82,22 @@ export default function ClientDashboardPage() {
 
       {error !== null && <div className="inline-alert">{error}</div>}
 
+      <section className="client-command-card">
+        <div className="client-command-main">
+          <p className="eyebrow">Support coverage</p>
+          <h2>AI assistance is active across {connectedChannelCount} of 3 customer channels</h2>
+          <p>
+            Messenger, WhatsApp, and the web widget are tracked separately so your team can see which channels are live,
+            which need setup, and where customers are already talking.
+          </p>
+        </div>
+        <div className="client-account-card">
+          <span>Client account</span>
+          <strong>{dashboard?.client.businessName ?? 'Loading account'}</strong>
+          <small>{dashboard?.client.ownerEmail ?? dashboard?.client.ownerPhone ?? dashboard?.client.pageId ?? 'Contact details pending'}</small>
+        </div>
+      </section>
+
       <section className="metrics">
         <article className="metric">
           <span>Conversations</span>
@@ -82,6 +119,51 @@ export default function ClientDashboardPage() {
           <strong>{dashboard?.totals.salesRecoveredEstimate ?? 0}</strong>
           <small>BDT estimate</small>
         </article>
+      </section>
+
+      <section className="client-channel-grid" aria-label="Channel visibility">
+        {(dashboard?.channels ?? []).map((channel) => {
+          const ChannelIcon = channelIcons[channel.channel];
+          return (
+            <article className="channel-card" data-status={channel.status} key={channel.channel}>
+              <div className="channel-card-head">
+                <div className="channel-title">
+                  <span>
+                    <ChannelIcon size={18} />
+                  </span>
+                  <div>
+                    <strong>{channel.label}</strong>
+                    <small>{channel.setupLabel}</small>
+                  </div>
+                </div>
+                <span className="status-pill" data-status={channel.status}>
+                  {channel.status === 'needs_setup' ? <TriangleAlert size={13} /> : <CheckCircle2 size={13} />}
+                  {formatChannelStatus(channel.status)}
+                </span>
+              </div>
+              <div className="channel-count">
+                <strong>{channel.conversations}</strong>
+                <span>conversations</span>
+              </div>
+              <p>{channel.detail}</p>
+              <div className="channel-action-row">
+                {channel.actionHref !== undefined ? (
+                  <>
+                    <a className="mini-button" href={channel.actionHref} target="_blank" rel="noreferrer">
+                      Open widget
+                    </a>
+                    <button className="mini-button" type="button" onClick={() => void copyWidgetUrl(channel.actionHref ?? '')}>
+                      <Copy size={13} />
+                      Copy
+                    </button>
+                  </>
+                ) : (
+                  <span>{channel.actionLabel}</span>
+                )}
+              </div>
+            </article>
+          );
+        })}
       </section>
 
       <section className="client-grid">

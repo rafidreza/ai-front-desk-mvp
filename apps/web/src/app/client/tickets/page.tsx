@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, Clock3, RefreshCw } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock3, Filter, RefreshCw, TicketCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { getClientTickets, updateClientTicketStatus } from '@/lib/api';
 import { Ticket, TicketStatus } from '@/types/domain';
@@ -43,6 +43,9 @@ export default function ClientTicketsPage() {
     window.location.href = '/client/login';
   }
 
+  const openTickets = tickets.filter((ticket) => ticket.status !== 'resolved').length;
+  const urgentTickets = tickets.filter((ticket) => ticket.priority === 'P1').length;
+
   return (
     <main className="client-shell">
       <header className="client-topbar">
@@ -61,32 +64,66 @@ export default function ClientTicketsPage() {
         </div>
       </header>
 
-      <div className="filter-row">
-        {['all', 'open', 'assigned', 'waiting_client', 'resolved'].map((item) => (
-          <button
-            className="status-button"
-            data-active={filter === item}
-            key={item}
-            type="button"
-            onClick={() => {
-              setFilter(item);
-              void loadTickets(item);
-            }}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-
       {error !== null && <div className="inline-alert">{error}</div>}
+
+      <section className="client-ticket-command">
+        <div>
+          <a className="mini-button" href={`/client/dashboard?clientId=${clientId}`}>
+            <ArrowLeft size={13} />
+            Dashboard
+          </a>
+          <p className="eyebrow">Ticket queue</p>
+          <h2>Customer issues waiting for client decision</h2>
+          <p>Review delegated conversations, update ownership state, and keep the support team aligned on resolution.</p>
+        </div>
+        <div className="ticket-command-stats">
+          <div>
+            <span>Open</span>
+            <strong>{openTickets}</strong>
+          </div>
+          <div>
+            <span>P1</span>
+            <strong>{urgentTickets}</strong>
+          </div>
+        </div>
+      </section>
+
+      <div className="client-filter-bar">
+        <div>
+          <Filter size={15} />
+          Status
+        </div>
+        <div className="filter-row">
+          {['all', 'open', 'assigned', 'waiting_client', 'resolved'].map((item) => (
+            <button
+              className="status-button"
+              data-active={filter === item}
+              key={item}
+              type="button"
+              onClick={() => {
+                setFilter(item);
+                void loadTickets(item);
+              }}
+            >
+              {item.replace('_', ' ')}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <section className="ticket-delegation-list">
         {tickets.map((ticket) => (
           <article className="delegation-card" key={ticket.id}>
             <div>
-              <span className="badge" data-tone={ticket.priority === 'P1' ? 'coral' : ticket.priority === 'P2' ? 'amber' : 'blue'}>
-                {ticket.priority}
-              </span>
+              <div className="ticket-card-meta">
+                <span className="badge" data-tone={ticket.priority === 'P1' ? 'coral' : ticket.priority === 'P2' ? 'amber' : 'blue'}>
+                  {ticket.priority}
+                </span>
+                <span>
+                  <TicketCheck size={13} />
+                  {ticket.status.replace('_', ' ')}
+                </span>
+              </div>
               <h2>{ticket.customerMessage}</h2>
               <p>{ticket.reason}</p>
               <small>BDT {ticket.salesRecoveredEstimate} protected estimate</small>

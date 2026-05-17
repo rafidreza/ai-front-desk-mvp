@@ -3,6 +3,8 @@ export type {
   CalibrationQueueFilter,
   CalibrationQueueResult,
   CalibrationQueueSummary,
+  ClientChannelStatus,
+  ClientChannelSummary,
   Channel,
   ClientProfile,
   ClientDashboardSummary,
