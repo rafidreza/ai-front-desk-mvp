@@ -113,6 +113,24 @@ describe('ClientAuthService', () => {
     expect(challenges.size).toBe(0);
   });
 
+  it('uses a fixed development code when configured outside production', async () => {
+    process.env = {
+      ...originalEnv,
+      CLIENT_AUTH_CODE_SECRET: 'x'.repeat(40),
+      DEV_RETURN_AUTH_CODE: 'true',
+      DEV_CLIENT_AUTH_CODE: '123456',
+      NODE_ENV: 'development',
+    };
+    const { service } = createService();
+
+    const challenge = await service.requestCode({ identifier: 'owner@example.com', channel: 'email' });
+
+    expect(challenge.devCode).toBe('123456');
+    await expect(service.verifyCode({ challengeId: challenge.challengeId, code: '123456' })).resolves.toMatchObject({
+      id: 'pilot-client',
+    });
+  });
+
   it('rejects wrong, expired, and replayed codes', async () => {
     const { challenges, service } = createService();
     const challenge = await service.requestCode({ identifier: 'owner@example.com', channel: 'email' });

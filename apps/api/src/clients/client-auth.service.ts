@@ -31,6 +31,14 @@ function hashCode(challengeId: string, code: string) {
 }
 
 function createCode() {
+  const devCode = process.env.DEV_CLIENT_AUTH_CODE;
+  if (process.env.NODE_ENV !== 'production' && devCode !== undefined) {
+    if (!/^\d{6}$/.test(devCode)) {
+      throw new Error('DEV_CLIENT_AUTH_CODE must be exactly 6 digits.');
+    }
+    return devCode;
+  }
+
   return String(randomInt(0, 1_000_000)).padStart(6, '0');
 }
 
