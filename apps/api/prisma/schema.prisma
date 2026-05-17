@@ -77,6 +77,7 @@ model KnowledgeEntry {
   title           String
   answer          String
   keywords        String[]
+  category        String   @default("general")
   confidenceBoost Float?
   status          String   @default("active")
   version         Int      @default(1)
@@ -92,6 +93,7 @@ model KnowledgeEntry {
   versions        KnowledgeEntryVersion[]
 
   @@index([clientId])
+  @@index([clientId, category])
   @@index([sourceTicketId])
   @@index([templateKey])
 }
@@ -104,6 +106,7 @@ model KnowledgeEntryVersion {
   title           String
   answer          String
   keywords        String[]
+  category        String   @default("general")
   confidenceBoost Float?
   status          String
   action          String

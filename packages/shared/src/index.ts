@@ -49,6 +49,7 @@ export interface KnowledgeEntry {
   title: string;
   answer: string;
   keywords: string[];
+  category?: string;
   confidenceBoost?: number;
   status: 'draft' | 'active' | 'archived';
   version: number;
@@ -67,6 +68,7 @@ export interface KnowledgeEntryVersion {
   title: string;
   answer: string;
   keywords: string[];
+  category?: string;
   confidenceBoost?: number;
   status: KnowledgeEntry['status'];
   action: 'baseline' | 'created' | 'updated' | 'published' | 'archived' | 'rollback';

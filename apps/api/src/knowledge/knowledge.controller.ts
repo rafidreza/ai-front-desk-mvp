@@ -7,6 +7,7 @@ const KnowledgeEntrySchema = z.object({
   title: z.string().trim().min(2),
   answer: z.string().trim().min(2),
   keywords: z.array(z.string().trim().min(1)).min(1),
+  category: z.string().trim().min(2).max(40).optional(),
   confidenceBoost: z.number().min(0).max(0.5).optional(),
   actorId: z.string().trim().min(2).optional(),
 });

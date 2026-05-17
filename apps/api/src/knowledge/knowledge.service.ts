@@ -18,6 +18,7 @@ function mapEntry(entry: {
   title: string;
   answer: string;
   keywords: string[];
+  category?: string;
   confidenceBoost: number | null;
   status: string;
   version: number;
@@ -33,6 +34,7 @@ function mapEntry(entry: {
     title: entry.title,
     answer: entry.answer,
     keywords: entry.keywords,
+    category: entry.category ?? 'general',
     confidenceBoost: entry.confidenceBoost ?? undefined,
     status: entry.status as KnowledgeEntry['status'],
     version: entry.version,
@@ -76,6 +78,7 @@ function mapVersion(version: {
   title: string;
   answer: string;
   keywords: string[];
+  category?: string;
   confidenceBoost: number | null;
   status: string;
   action: string;
@@ -90,6 +93,7 @@ function mapVersion(version: {
     title: version.title,
     answer: version.answer,
     keywords: version.keywords,
+    category: version.category ?? 'general',
     confidenceBoost: version.confidenceBoost ?? undefined,
     status: version.status as KnowledgeEntry['status'],
     action: version.action as KnowledgeEntryVersion['action'],
@@ -107,6 +111,7 @@ export class KnowledgeService {
 
   private readonly entries: KnowledgeEntry[] = pilotKnowledge.map((entry) => ({
     ...entry,
+    category: 'general',
     confidenceBoost: entry.confidenceBoost ?? undefined,
     status: 'active' as const,
     version: 1,
@@ -177,6 +182,7 @@ export class KnowledgeService {
     title: string;
     answer: string;
     keywords: string[];
+    category?: string;
     confidenceBoost?: number;
     actorId?: string;
     sourceTicketId?: string;
@@ -191,6 +197,7 @@ export class KnowledgeService {
           title: input.title,
           answer: input.answer,
           keywords: input.keywords,
+          category: input.category ?? 'general',
           confidenceBoost: input.confidenceBoost,
           status: 'draft',
           version: 1,
@@ -243,6 +250,7 @@ export class KnowledgeService {
       title,
       answer: input.resolutionAnswer.trim(),
       keywords,
+      category: 'live-learning',
       actorId: input.actorId ?? 'live-learning',
       sourceTicketId: input.ticketId,
     });
@@ -251,7 +259,7 @@ export class KnowledgeService {
   async update(
     clientId: string,
     entryId: string,
-    input: Partial<Pick<KnowledgeEntry, 'title' | 'answer' | 'keywords' | 'confidenceBoost'>> & { actorId?: string },
+    input: Partial<Pick<KnowledgeEntry, 'title' | 'answer' | 'keywords' | 'category' | 'confidenceBoost'>> & { actorId?: string },
   ): Promise<KnowledgeEntry> {
     const { actorId, ...changes } = input;
     const prisma = this.requirePrisma();
@@ -337,6 +345,7 @@ export class KnowledgeService {
           title: snapshot.title,
           answer: snapshot.answer,
           keywords: snapshot.keywords,
+          category: snapshot.category,
           confidenceBoost: snapshot.confidenceBoost,
           status: 'draft',
           archivedAt: null,
@@ -420,6 +429,7 @@ export class KnowledgeService {
             title: string;
             answer: string;
             keywords: string[];
+            category?: string;
             confidenceBoost?: number | null;
             status: string;
             action: string;
@@ -435,6 +445,7 @@ export class KnowledgeService {
       title: string;
       answer: string;
       keywords: string[];
+      category?: string | null;
       confidenceBoost: number | null;
       status: string;
     },
@@ -450,6 +461,7 @@ export class KnowledgeService {
         title: entry.title,
         answer: entry.answer,
         keywords: entry.keywords,
+        category: entry.category ?? 'general',
         confidenceBoost: entry.confidenceBoost,
         status: entry.status,
         action,

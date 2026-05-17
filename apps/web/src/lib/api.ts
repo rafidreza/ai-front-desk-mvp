@@ -143,7 +143,7 @@ export async function getKnowledgeEntries(clientId: string, status = 'all'): Pro
 
 export async function createKnowledgeDraft(
   clientId: string,
-  input: { title: string; answer: string; keywords: string[]; confidenceBoost?: number },
+  input: { title: string; answer: string; keywords: string[]; category?: string; confidenceBoost?: number },
 ): Promise<KnowledgeEntry> {
   const data = await apiFetch<{ entry: KnowledgeEntry }>(`/clients/${clientId}/knowledge`, {
     method: 'POST',
@@ -165,7 +165,7 @@ export async function importKnowledgeFiles(
 export async function updateKnowledgeEntry(
   clientId: string,
   entryId: string,
-  input: { title?: string; answer?: string; keywords?: string[]; confidenceBoost?: number; actorId?: string },
+  input: { title?: string; answer?: string; keywords?: string[]; category?: string; confidenceBoost?: number; actorId?: string },
 ): Promise<KnowledgeEntry> {
   const data = await apiFetch<{ entry: KnowledgeEntry }>(`/clients/${clientId}/knowledge/${entryId}`, {
     method: 'PATCH',

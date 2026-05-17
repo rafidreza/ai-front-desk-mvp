@@ -1,9 +1,23 @@
 'use client';
 
-import { Archive, DatabaseZap, FileUp, History, Plus, RefreshCw, RotateCcw, Save, Send } from 'lucide-react';
+import {
+  Archive,
+  Building2,
+  DatabaseZap,
+  FileUp,
+  History,
+  Layers3,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  Search,
+  Send,
+} from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   createKnowledgeDraft,
+  getClients,
   getKnowledgeEntries,
   getKnowledgeVersions,
   importKnowledgeFiles,
@@ -11,8 +25,23 @@ import {
   setKnowledgeStatus,
   updateKnowledgeEntry,
 } from '@/lib/api';
-import { KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
+import { ClientProfile, KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
+
+const categoryOptions = [
+  { value: 'general', label: 'General' },
+  { value: 'delivery', label: 'Delivery' },
+  { value: 'payment', label: 'Payment' },
+  { value: 'returns', label: 'Returns' },
+  { value: 'product', label: 'Product' },
+  { value: 'pricing', label: 'Pricing' },
+  { value: 'live-learning', label: 'Live Learning' },
+];
+
+function categoryLabel(category?: string) {
+  const normalized = category ?? 'general';
+  return categoryOptions.find((option) => option.value === normalized)?.label ?? normalized.replaceAll('-', ' ');
+}
 
 function parseKeywords(value: FormDataEntryValue | null) {
   return String(value ?? '')
@@ -40,31 +69,33 @@ function fileToBase64(file: File) {
 }
 
 export default function KnowledgePage() {
+  const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('pilot-client');
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<KnowledgeEntry | null>(null);
   const [versions, setVersions] = useState<KnowledgeEntryVersion[]>([]);
   const [importResult, setImportResult] = useState<KnowledgeImportResult | null>(null);
   const [status, setStatus] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const clientId = useMemo(() => {
-    if (typeof window === 'undefined') return 'pilot-client';
-    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
-  }, []);
+  const activeClient = clients.find((client) => client.id === selectedClientId);
+  const clientId = selectedClientId;
 
-  async function loadEntries(nextStatus = status, nextSelectedId = selectedEntry?.id) {
+  async function loadEntries(nextStatus = status, nextSelectedId = selectedEntry?.id, nextClientId = selectedClientId) {
     setIsLoading(true);
     setError(null);
     try {
-      const loaded = await getKnowledgeEntries(clientId, nextStatus);
+      const loaded = await getKnowledgeEntries(nextClientId, nextStatus);
       setEntries(loaded);
       const nextSelected = loaded.find((entry) => entry.id === nextSelectedId) ?? loaded[0] ?? null;
       setSelectedEntry(nextSelected);
       if (nextSelected !== null) {
-        setVersions(await getKnowledgeVersions(clientId, nextSelected.id));
+        setVersions(await getKnowledgeVersions(nextClientId, nextSelected.id));
       } else {
         setVersions([]);
       }
@@ -79,12 +110,60 @@ export default function KnowledgePage() {
     setSelectedEntry(entry);
     setError(null);
     setNotice(null);
-    setVersions(await getKnowledgeVersions(clientId, entry.id));
+    setVersions(await getKnowledgeVersions(selectedClientId, entry.id));
   }
 
   useEffect(() => {
-    void loadEntries();
+    async function loadInitialData() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const clientData = await getClients();
+        const requestedClientId = new URLSearchParams(window.location.search).get('clientId');
+        const initialClientId =
+          clientData.find((client) => client.id === requestedClientId)?.id ??
+          clientData[0]?.id ??
+          'pilot-client';
+        setClients(clientData);
+        setSelectedClientId(initialClientId);
+        await loadEntries(status, undefined, initialClientId);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load knowledge.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadInitialData();
   }, []);
+
+  const availableCategories = useMemo(() => {
+    const categories = Array.from(new Set(entries.map((entry) => entry.category ?? 'general')));
+    return ['all', ...categoryOptions.map((option) => option.value), ...categories.filter((category) =>
+      !categoryOptions.some((option) => option.value === category),
+    )].filter((category, index, all) => all.indexOf(category) === index);
+  }, [entries]);
+
+  const filteredEntries = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return entries.filter((entry) => {
+      const categoryMatches = categoryFilter === 'all' || (entry.category ?? 'general') === categoryFilter;
+      const queryMatches =
+        normalizedQuery === '' ||
+        [entry.title, entry.answer, entry.category, entry.status, ...entry.keywords]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+      return categoryMatches && queryMatches;
+    });
+  }, [categoryFilter, entries, query]);
+
+  const categoryCounts = useMemo(() => {
+    return entries.reduce<Record<string, number>>((counts, entry) => {
+      const category = entry.category ?? 'general';
+      counts[category] = (counts[category] ?? 0) + 1;
+      return counts;
+    }, {});
+  }, [entries]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,6 +176,7 @@ export default function KnowledgePage() {
         title: String(form.get('title') ?? ''),
         answer: String(form.get('answer') ?? ''),
         keywords: parseKeywords(form.get('keywords')),
+        category: String(form.get('category') ?? 'general'),
         confidenceBoost: parseBoost(form.get('confidenceBoost')),
       });
       event.currentTarget.reset();
@@ -121,6 +201,7 @@ export default function KnowledgePage() {
         title: String(form.get('title') ?? ''),
         answer: String(form.get('answer') ?? ''),
         keywords: parseKeywords(form.get('keywords')),
+        category: String(form.get('category') ?? 'general'),
         confidenceBoost: parseBoost(form.get('confidenceBoost')),
         actorId: 'internal-console',
       });
@@ -206,17 +287,62 @@ export default function KnowledgePage() {
     <InternalShell
       activeView="knowledge"
       eyebrow="Knowledge base"
-      title="Answers, drafts, and history"
+      title="Client knowledge libraries"
       action={
-        <button className="icon-button" type="button" onClick={() => void loadEntries()} disabled={isLoading}>
-          <RefreshCw size={16} />
-          Refresh
-        </button>
+        <div className="page-actions">
+          <select
+            className="header-select"
+            value={selectedClientId}
+            onChange={(event) => {
+              const nextClientId = event.target.value;
+              setSelectedClientId(nextClientId);
+              setSelectedEntry(null);
+              setVersions([]);
+              setNotice(null);
+              setCategoryFilter('all');
+              void loadEntries(status, undefined, nextClientId);
+            }}
+          >
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.businessName}
+              </option>
+            ))}
+          </select>
+          <button className="icon-button" type="button" onClick={() => void loadEntries()} disabled={isLoading}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+        </div>
       }
     >
 
       {error !== null && <div className="inline-alert">{error}</div>}
       {notice !== null && <div className="inline-success">{notice}</div>}
+
+      <section className="knowledge-client-strip">
+        <div>
+          <span>
+            <Building2 size={14} />
+            Client
+          </span>
+          <strong>{activeClient?.businessName ?? selectedClientId}</strong>
+          <small>{activeClient?.pageId ?? 'No page ID'} | {activeClient?.businessCategory ?? 'No category'}</small>
+        </div>
+        <div>
+          <span>
+            <Layers3 size={14} />
+            Categories
+          </span>
+          <strong>{Object.keys(categoryCounts).length}</strong>
+          <small>{entries.length} entries for this client</small>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{status === 'all' ? 'All entries' : status}</strong>
+          <small>{filteredEntries.length} currently visible</small>
+        </div>
+      </section>
 
       <section className="knowledge-layout">
         <section className="client-panel">
@@ -225,22 +351,38 @@ export default function KnowledgePage() {
               <DatabaseZap size={16} />
               Entries
             </div>
-            <select
-              className="owner-filter"
-              value={status}
-              onChange={(event) => {
-                setStatus(event.target.value);
-                void loadEntries(event.target.value);
-              }}
-            >
-              <option value="all">All</option>
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-              <option value="archived">Archived</option>
-            </select>
+            <span className="count">{filteredEntries.length}</span>
+          </div>
+          <div className="knowledge-filter-stack">
+            <div className="search-control">
+              <Search size={14} />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search knowledge" />
+            </div>
+            <div className="filter-row">
+              <select
+                className="owner-filter"
+                value={status}
+                onChange={(event) => {
+                  setStatus(event.target.value);
+                  void loadEntries(event.target.value);
+                }}
+              >
+                <option value="all">All status</option>
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="archived">Archived</option>
+              </select>
+              <select className="owner-filter" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
+                {availableCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category === 'all' ? 'All categories' : categoryLabel(category)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="client-list">
-            {entries.map((entry) => (
+            {filteredEntries.map((entry) => (
               <button
                 className="knowledge-row"
                 data-selected={selectedEntry?.id === entry.id}
@@ -249,10 +391,11 @@ export default function KnowledgePage() {
                 onClick={() => void selectEntry(entry)}
               >
                 <strong>{entry.title}</strong>
-                <small>{entry.status} | v{entry.version} | {entry.keywords.join(', ')}</small>
+                <small>{categoryLabel(entry.category)} | {entry.status} | v{entry.version}</small>
+                <small>{entry.keywords.join(', ')}</small>
               </button>
             ))}
-            {entries.length === 0 && <div className="empty">No knowledge entries</div>}
+            {filteredEntries.length === 0 && <div className="empty">No matching knowledge entries</div>}
           </div>
         </section>
 
@@ -278,6 +421,16 @@ export default function KnowledgePage() {
               <label>
                 Keywords
                 <input name="keywords" required defaultValue={selectedEntry.keywords.join(', ')} />
+              </label>
+              <label>
+                Category
+                <select name="category" required defaultValue={selectedEntry.category ?? 'general'}>
+                  {categoryOptions.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
                 Confidence boost
@@ -348,6 +501,16 @@ export default function KnowledgePage() {
           <label>
             Keywords
             <input name="keywords" required placeholder="delivery, charge, courier" />
+          </label>
+          <label>
+            Category
+            <select name="category" defaultValue="general">
+              {categoryOptions.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Confidence boost
