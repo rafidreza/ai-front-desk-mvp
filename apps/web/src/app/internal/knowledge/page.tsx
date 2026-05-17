@@ -12,6 +12,7 @@ import {
   updateKnowledgeEntry,
 } from '@/lib/api';
 import { KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
+import { InternalShell } from '../_components/InternalShell';
 
 function parseKeywords(value: FormDataEntryValue | null) {
   return String(value ?? '')
@@ -202,17 +203,17 @@ export default function KnowledgePage() {
   }
 
   return (
-    <main className="client-shell">
-      <header className="client-topbar">
-        <div>
-          <p className="eyebrow">Knowledge base</p>
-          <h1>Answers, drafts, and history</h1>
-        </div>
+    <InternalShell
+      activeView="knowledge"
+      eyebrow="Knowledge base"
+      title="Answers, drafts, and history"
+      action={
         <button className="icon-button" type="button" onClick={() => void loadEntries()} disabled={isLoading}>
           <RefreshCw size={16} />
           Refresh
         </button>
-      </header>
+      }
+    >
 
       {error !== null && <div className="inline-alert">{error}</div>}
       {notice !== null && <div className="inline-success">{notice}</div>}
@@ -389,6 +390,6 @@ export default function KnowledgePage() {
           )}
         </form>
       </section>
-    </main>
+    </InternalShell>
   );
 }

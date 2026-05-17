@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { ConversationService } from './conversation.service';
 
@@ -13,6 +13,10 @@ const CalibrationQueueQuerySchema = z.object({
     .enum(['needs_review', 'failed', 'hallucination', 'escalation', 'ungraded', 'all'])
     .optional(),
   limit: z.coerce.number().int().positive().max(200).optional(),
+});
+
+const TakeoverConversationSchema = z.object({
+  actorId: z.string().min(1).optional(),
 });
 
 @Controller()
@@ -50,5 +54,16 @@ export class ConversationController {
     });
 
     return { conversation };
+  }
+
+  @Post('conversations/:id/takeover')
+  async takeOverConversation(@Param('id') conversationId: string, @Body() body: unknown) {
+    const parsed = TakeoverConversationSchema.parse(body ?? {});
+    const ticket = await this.conversations.takeOverConversation({
+      conversationId,
+      actorId: parsed.actorId,
+    });
+
+    return { ticket };
   }
 }

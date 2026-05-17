@@ -248,4 +248,8 @@ export class ConversationService {
       actorId: input.actorId ?? 'internal-qa',
     });
   }
+
+  takeOverConversation(input: { conversationId: string; actorId?: string }): Promise<Ticket> {
+    return this.tickets.createFromManualTakeover(input);
+  }
 }

@@ -11,6 +11,7 @@ import {
   updatePromptProfile,
 } from '@/lib/api';
 import { PromptProfile, PromptProfileVersion } from '@/types/domain';
+import { InternalShell } from '../_components/InternalShell';
 
 function profileFromForm(form: FormData) {
   return {
@@ -136,17 +137,17 @@ export default function AgentConfigPage() {
   }
 
   return (
-    <main className="client-shell">
-      <header className="client-topbar">
-        <div>
-          <p className="eyebrow">Agent configuration</p>
-          <h1>Prompt profiles</h1>
-        </div>
+    <InternalShell
+      activeView="agent-config"
+      eyebrow="Agent configuration"
+      title="Conversation behavior setup"
+      action={
         <button className="icon-button" type="button" onClick={() => void loadProfiles()} disabled={isLoading}>
           <RefreshCw size={16} />
           Refresh
         </button>
-      </header>
+      }
+    >
 
       {error !== null && <div className="inline-alert">{error}</div>}
       {notice !== null && <div className="inline-success">{notice}</div>}
@@ -205,24 +206,29 @@ export default function AgentConfigPage() {
                 <input name="name" required defaultValue={selectedProfile.name} />
               </label>
               <label>
-                System instructions
+                Opening conversation and role
                 <textarea name="systemInstructions" required rows={6} defaultValue={selectedProfile.systemInstructions} />
+                <span className="form-hint">Define how the agent starts, what it can answer, and when it should ask one clarifying question.</span>
               </label>
               <label>
-                Tone rules
+                Greeting and tone
                 <textarea name="toneRules" required rows={4} defaultValue={selectedProfile.toneRules} />
+                <span className="form-hint">Example: friendly, concise, Bangla-English mixed when the customer does that first.</span>
               </label>
               <label>
-                Escalation rules
+                Handoff rules
                 <textarea name="escalationRules" required rows={4} defaultValue={selectedProfile.escalationRules} />
+                <span className="form-hint">List the exact moments when a human should take over: refund, angry customer, missing answer, payment issue.</span>
               </label>
               <label>
-                Forbidden claims
+                Never say
                 <textarea name="forbiddenClaims" required rows={4} defaultValue={selectedProfile.forbiddenClaims} />
+                <span className="form-hint">Block promises the business cannot guarantee, such as fake stock, exact delivery dates, or refund approval.</span>
               </label>
               <label>
-                Fallback behavior
+                Fallback and review request
                 <textarea name="fallbackBehavior" required rows={4} defaultValue={selectedProfile.fallbackBehavior} />
+                <span className="form-hint">Tell the agent what to do when unsure, and how it should ask for a short review after a resolved conversation.</span>
               </label>
               <div className="filter-row">
                 <button className="icon-button" disabled={isSaving} type="submit">
@@ -278,30 +284,55 @@ export default function AgentConfigPage() {
             <input name="name" required placeholder="Holiday sales prompt" />
           </label>
           <label>
-            System instructions
-            <textarea name="systemInstructions" required rows={4} />
+            Opening conversation and role
+            <textarea
+              name="systemInstructions"
+              required
+              rows={4}
+              placeholder="Start with a short greeting, identify the business, answer only from approved knowledge, and ask one clarifying question when needed."
+            />
           </label>
           <label>
-            Tone rules
-            <textarea name="toneRules" required rows={3} />
+            Greeting and tone
+            <textarea
+              name="toneRules"
+              required
+              rows={3}
+              placeholder="Warm, direct, and helpful. Mirror the customer's language. Keep replies short unless the customer asks for detail."
+            />
           </label>
           <label>
-            Escalation rules
-            <textarea name="escalationRules" required rows={3} />
+            Handoff rules
+            <textarea
+              name="escalationRules"
+              required
+              rows={3}
+              placeholder="Hand off when refund, complaint, delivery failure, payment confusion, or low-confidence answer appears."
+            />
           </label>
           <label>
-            Forbidden claims
-            <textarea name="forbiddenClaims" required rows={3} />
+            Never say
+            <textarea
+              name="forbiddenClaims"
+              required
+              rows={3}
+              placeholder="Do not promise exact stock, delivery date, discount, refund approval, or policy exceptions unless present in knowledge."
+            />
           </label>
           <label>
-            Fallback behavior
-            <textarea name="fallbackBehavior" required rows={3} />
+            Fallback and review request
+            <textarea
+              name="fallbackBehavior"
+              required
+              rows={3}
+              placeholder="If unsure, say a human will confirm. After solving the request, ask the customer to rate the support experience."
+            />
           </label>
           <button className="icon-button" disabled={isSaving} type="submit">
             Create draft
           </button>
         </form>
       </section>
-    </main>
+    </InternalShell>
   );
 }

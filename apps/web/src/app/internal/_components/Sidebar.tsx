@@ -1,18 +1,34 @@
-import { BotMessageSquare, DatabaseZap, LayoutDashboard, LogOut, Settings2, ShieldCheck } from 'lucide-react';
+import {
+  BotMessageSquare,
+  DatabaseZap,
+  LayoutDashboard,
+  LogOut,
+  MessagesSquare,
+  Settings2,
+  ShieldCheck,
+  TicketCheck,
+} from 'lucide-react';
 import Link from 'next/link';
 import { ApiHealth } from '@/types/domain';
 
-type ActiveView = 'operations' | 'qa';
+type ActiveView = 'operations' | 'qa' | 'tickets' | 'conversations' | 'knowledge' | 'agent-config';
 
 interface SidebarProps {
   activeView: ActiveView;
-  onChangeView: (view: ActiveView) => void;
+  onChangeView?: (view: 'operations' | 'qa') => void;
   health: ApiHealth | null;
   healthError: string | null;
   onLogout: () => void;
 }
 
 export function Sidebar({ activeView, onChangeView, health, healthError, onLogout }: SidebarProps) {
+  const topLinks = [
+    { view: 'operations' as const, label: 'Operations', icon: <LayoutDashboard size={17} />, href: '/internal' },
+    { view: 'tickets' as const, label: 'Tickets', icon: <TicketCheck size={17} />, href: '/internal/tickets' },
+    { view: 'conversations' as const, label: 'Conversations', icon: <MessagesSquare size={17} />, href: '/internal/conversations' },
+    { view: 'qa' as const, label: 'QA Review', icon: <ShieldCheck size={17} />, href: '/internal?view=qa' },
+  ];
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -26,29 +42,30 @@ export function Sidebar({ activeView, onChangeView, health, healthError, onLogou
       </div>
 
       <nav className="side-nav" aria-label="Internal sections">
-        <button
-          className="side-link"
-          data-active={activeView === 'operations'}
-          type="button"
-          onClick={() => onChangeView('operations')}
-        >
-          <LayoutDashboard size={17} />
-          Operations
-        </button>
-        <button
-          className="side-link"
-          data-active={activeView === 'qa'}
-          type="button"
-          onClick={() => onChangeView('qa')}
-        >
-          <ShieldCheck size={17} />
-          QA Review
-        </button>
-        <Link className="side-link" href="/internal/knowledge">
+        {topLinks.map((item) =>
+          onChangeView !== undefined && (item.view === 'operations' || item.view === 'qa') ? (
+            <button
+              className="side-link"
+              data-active={activeView === item.view}
+              key={item.view}
+              type="button"
+              onClick={() => onChangeView(item.view)}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ) : (
+            <Link className="side-link" data-active={activeView === item.view} href={item.href} key={item.view}>
+              {item.icon}
+              {item.label}
+            </Link>
+          ),
+        )}
+        <Link className="side-link" data-active={activeView === 'knowledge'} href="/internal/knowledge">
           <DatabaseZap size={17} />
           Knowledge
         </Link>
-        <Link className="side-link" href="/internal/agent-config">
+        <Link className="side-link" data-active={activeView === 'agent-config'} href="/internal/agent-config">
           <Settings2 size={17} />
           Agent Config
         </Link>

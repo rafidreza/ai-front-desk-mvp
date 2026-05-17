@@ -229,6 +229,13 @@ button {
   font-size: 26px;
 }
 
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .icon-button,
 .status-button,
 .mini-button {
@@ -243,6 +250,7 @@ button {
   border-radius: 8px;
   font-size: 13px;
   font-weight: 650;
+  text-decoration: none;
 }
 
 .icon-button {
@@ -320,6 +328,21 @@ button {
   grid-template-columns: minmax(300px, 0.82fr) minmax(330px, 1fr) minmax(420px, 1.25fr);
   gap: 14px;
   align-items: start;
+}
+
+.ticket-portal-grid,
+.conversation-portal-grid {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+
+.ticket-portal-grid {
+  grid-template-columns: minmax(340px, 0.72fr) minmax(520px, 1.28fr);
+}
+
+.conversation-portal-grid {
+  grid-template-columns: minmax(340px, 0.72fr) minmax(560px, 1.28fr);
 }
 
 .panel,
@@ -972,6 +995,68 @@ button {
   font-size: 11px;
 }
 
+.conversation-detail-panel {
+  min-height: calc(100vh - 142px);
+}
+
+.conversation-detail {
+  min-height: calc(100vh - 198px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.conversation-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.conversation-summary-strip div {
+  display: grid;
+  gap: 4px;
+  min-height: 58px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.conversation-summary-strip span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.conversation-summary-strip strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.conversation-thread {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 420px;
+  padding: 16px;
+  overflow: auto;
+  background: #f5f7f9;
+}
+
+.conversation-thread .bubble small {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .empty {
   display: grid;
   place-items: center;
@@ -1396,7 +1481,9 @@ button {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+  font-weight: 500;
   line-height: 1.5;
+  text-transform: none;
 }
 
 .import-summary {
@@ -1602,6 +1689,8 @@ button {
   }
 
   .client-grid,
+  .ticket-portal-grid,
+  .conversation-portal-grid,
   .knowledge-layout,
   .delegation-card {
     grid-template-columns: 1fr;
@@ -1639,6 +1728,9 @@ button {
 
   .metrics,
   .triage-grid,
+  .ticket-portal-grid,
+  .conversation-portal-grid,
+  .conversation-summary-strip,
   .detail-grid,
   .status-actions,
   .client-row,

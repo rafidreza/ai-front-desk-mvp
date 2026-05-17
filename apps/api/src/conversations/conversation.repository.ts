@@ -164,6 +164,22 @@ export class ConversationRepository {
     }
   }
 
+  async attachTicketToConversation(conversationId: string, ticketId: string): Promise<void> {
+    if (this.prisma?.enabled === true) {
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { ticketId },
+      });
+      return;
+    }
+
+    const conversation = this.getConversation(conversationId);
+    this.conversations.set(conversationId, {
+      ...conversation,
+      ticketId,
+    });
+  }
+
   async saveTicket(ticket: Ticket): Promise<Ticket> {
     const createdEvent: TicketEvent = {
       id: `${ticket.id}:created`,
@@ -260,6 +276,19 @@ export class ConversationRepository {
     }
 
     return [...this.conversations.values()];
+  }
+
+  async getConversationById(conversationId: string): Promise<ConversationLog | null> {
+    if (this.prisma?.enabled === true) {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: { messages: { orderBy: { createdAt: 'asc' } } },
+      });
+
+      return conversation === null ? null : this.mapConversation(conversation);
+    }
+
+    return this.conversations.get(conversationId) ?? null;
   }
 
   async listCalibrationQueue(input: {

@@ -170,6 +170,34 @@ describe('ConversationService', () => {
     expect(conversation?.csatComment).toBe('csat_5');
   });
 
+  it('creates and links a ticket when an operator takes over a conversation', async () => {
+    const { service, repository } = createService();
+    const result = await service.handleIncomingMessage({
+      id: 'message-takeover',
+      clientId: 'pilot-client',
+      channel: 'messenger',
+      externalConversationId: 'customer-takeover',
+      externalSenderId: 'customer-takeover',
+      text: 'delivery charge koto?',
+      receivedAt: new Date().toISOString(),
+    });
+
+    const ticket = await service.takeOverConversation({
+      conversationId: result.conversation.id,
+      actorId: 'qa-operator',
+    });
+    const conversations = await service.listConversations();
+    const detail = await repository.getTicketDetail(ticket.id);
+
+    expect(ticket.status).toBe('assigned');
+    expect(ticket.reason).toBe('Manual operator takeover requested');
+    expect(conversations.find((conversation) => conversation.id === result.conversation.id)?.ticketId).toBe(ticket.id);
+    expect(detail?.events.map((event) => event.eventType)).toEqual([
+      'ticket.created',
+      'ticket.manual_takeover_requested',
+    ]);
+  });
+
   it('auto-scores completed AI replies when auto QA is enabled', async () => {
     const { service } = createService(undefined, new AutoQaService());
 

@@ -285,3 +285,11 @@ export async function gradeConversation(
   });
   return data.conversation;
 }
+
+export async function takeOverConversation(conversationId: string): Promise<Ticket> {
+  const data = await apiFetch<{ ticket: Ticket }>(`/conversations/${conversationId}/takeover`, {
+    method: 'POST',
+    body: JSON.stringify({ actorId: 'internal-console' }),
+  });
+  return data.ticket;
+}

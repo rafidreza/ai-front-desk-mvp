@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ConversationRepository } from '../conversations/conversation.repository';
 import { KnowledgeService } from '../knowledge/knowledge.service';
@@ -35,6 +35,53 @@ export class TicketService {
       createdAt: now,
       updatedAt: now,
     });
+  }
+
+  async createFromManualTakeover(input: {
+    conversationId: string;
+    actorId?: string;
+  }): Promise<Ticket> {
+    const conversation = await this.repository.getConversationById(input.conversationId);
+    if (conversation === null) {
+      throw new NotFoundException('Conversation not found.');
+    }
+
+    if (conversation.ticketId !== undefined) {
+      const existing = await this.repository.getTicketDetail(conversation.ticketId);
+      if (existing !== null) return existing.ticket;
+    }
+
+    const now = new Date().toISOString();
+    const lastInbound = [...conversation.messages].reverse().find((message) => message.direction === 'inbound');
+    const lastOutbound = [...conversation.messages].reverse().find((message) => message.direction === 'outbound');
+    const ticket = await this.repository.saveTicket({
+      id: randomUUID(),
+      clientId: conversation.clientId,
+      conversationId: conversation.id,
+      version: 0,
+      priority: 'P2',
+      status: 'assigned',
+      reason: 'Manual operator takeover requested',
+      customerMessage: lastInbound?.text ?? 'Manual takeover requested from the conversation view.',
+      suggestedReply:
+        lastOutbound?.text ??
+        'Review the conversation and reply directly to the customer before closing the ticket.',
+      salesRecoveredEstimate: this.estimateRecoveredSales('P2'),
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await this.repository.attachTicketToConversation(conversation.id, ticket.id);
+    await this.repository.recordTicketEvent({
+      ticketId: ticket.id,
+      eventType: 'ticket.manual_takeover_requested',
+      payload: {
+        actorId: input.actorId ?? 'internal-console',
+        conversationId: conversation.id,
+      },
+    });
+
+    return ticket;
   }
 
   async updateStatus(input: {

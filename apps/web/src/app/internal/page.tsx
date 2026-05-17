@@ -41,7 +41,7 @@ export default function InternalConsole() {
   const [assigneeOptions, setAssigneeOptions] = useState<InternalUser[]>([]);
   const [activeView, setActiveView] = useState<'operations' | 'qa'>('operations');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [qaFilter, setQaFilter] = useState<CalibrationQueueFilter>('needs_review');
+  const [qaFilter, setQaFilter] = useState<CalibrationQueueFilter>('all');
   const [queueSummary, setQueueSummary] = useState<CalibrationQueueSummary | null>(null);
   const [commentDraft, setCommentDraft] = useState('');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
@@ -148,6 +148,9 @@ export default function InternalConsole() {
   }
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('view') === 'qa') {
+      setActiveView('qa');
+    }
     void loadData();
   }, []);
 
