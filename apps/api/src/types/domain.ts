@@ -6,6 +6,7 @@ export type {
   ClientChannelStatus,
   ClientChannelSummary,
   Channel,
+  ClientKnowledgeEntry,
   ClientProfile,
   ClientDashboardSummary,
   ConversationLog,

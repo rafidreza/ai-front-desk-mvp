@@ -7,6 +7,17 @@ function getBackendClientId(pathname: string) {
   return match?.[1];
 }
 
+function isClientAllowedBackendPath(pathname: string) {
+  return (
+    /^\/api\/backend\/clients\/[^/]+\/dashboard$/.test(pathname) ||
+    /^\/api\/backend\/clients\/[^/]+\/tickets(?:\/[^/]+\/status)?$/.test(pathname) ||
+    /^\/api\/backend\/clients\/[^/]+\/conversations\/[^/]+\/csat$/.test(pathname) ||
+    /^\/api\/backend\/clients\/[^/]+\/knowledge\/client-view$/.test(pathname) ||
+    /^\/api\/backend\/clients\/[^/]+\/knowledge\/requests(?:\/[^/]+)?$/.test(pathname) ||
+    /^\/api\/backend\/clients\/[^/]+\/knowledge\/[^/]+\/requests$/.test(pathname)
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginPath = pathname === '/internal/login';
@@ -48,7 +59,7 @@ export async function middleware(request: NextRequest) {
 
   if (isBackendProxy && !isAuthenticated) {
     const backendClientId = getBackendClientId(pathname);
-    if (backendClientId !== undefined && clientSession?.clientId === backendClientId) {
+    if (backendClientId !== undefined && clientSession?.clientId === backendClientId && isClientAllowedBackendPath(pathname)) {
       return NextResponse.next();
     }
     return NextResponse.json({ error: 'Internal session required.' }, { status: 401 });

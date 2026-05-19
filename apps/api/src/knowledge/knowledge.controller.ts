@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
+import { KnowledgeChangeRequestService } from './knowledge-change-request.service';
 import { KnowledgeImportService } from './knowledge-import.service';
 import { KnowledgeService } from './knowledge.service';
 
@@ -13,6 +14,15 @@ const KnowledgeEntrySchema = z.object({
 });
 
 const KnowledgePatchSchema = KnowledgeEntrySchema.partial();
+
+const ClientKnowledgeRequestSchema = z.object({
+  proposedTitle: z.string().trim().min(2),
+  proposedAnswer: z.string().trim().min(2),
+  proposedKeywords: z.array(z.string().trim().min(1)).default([]),
+  proposedCategory: z.string().trim().min(2).max(40).optional(),
+  urgency: z.enum(['normal', 'urgent']).optional(),
+  requesterNote: z.string().trim().max(1000).optional(),
+});
 
 const StatusSchema = z.object({
   status: z.enum(['draft', 'active', 'archived']),
@@ -42,6 +52,7 @@ const KnowledgeImportSchema = z.object({
 export class KnowledgeController {
   constructor(
     private readonly knowledge: KnowledgeService,
+    private readonly requests: KnowledgeChangeRequestService,
     private readonly imports: KnowledgeImportService,
   ) {}
 
@@ -54,6 +65,66 @@ export class KnowledgeController {
   async create(@Param('clientId') clientId: string, @Body() body: unknown) {
     const parsed = KnowledgeEntrySchema.parse(body);
     return { entry: await this.knowledge.createDraft({ clientId, ...parsed }) };
+  }
+
+  @Get('client-view')
+  async listClientKnowledge(@Param('clientId') clientId: string) {
+    const entries = await this.knowledge.list(clientId, 'active');
+    return {
+      entries: entries.map((entry) => ({
+        id: entry.id,
+        clientId: entry.clientId,
+        title: entry.title,
+        answer: entry.answer,
+        keywords: entry.keywords,
+        category: entry.category ?? 'general',
+        status: entry.status,
+        version: entry.version,
+      })),
+    };
+  }
+
+  @Get('requests')
+  async listRequests(@Param('clientId') clientId: string, @Query('status') status?: string, @Query('urgency') urgency?: string) {
+    return {
+      requests: await this.requests.list({
+        clientId,
+        status: status === undefined ? undefined : status === 'all' ? 'all' : z.enum(['submitted', 'in_review', 'needs_clarification', 'approved', 'edited_then_published', 'rejected', 'published']).parse(status),
+        urgency: urgency === undefined ? undefined : urgency === 'all' ? 'all' : z.enum(['normal', 'urgent']).parse(urgency),
+      }),
+    };
+  }
+
+  @Get('requests/:requestId')
+  async getRequest(@Param('clientId') clientId: string, @Param('requestId') requestId: string) {
+    return { request: await this.requests.find(clientId, requestId) };
+  }
+
+  @Post('requests')
+  async createRequest(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = ClientKnowledgeRequestSchema.parse(body);
+    return {
+      request: await this.requests.create({
+        clientId,
+        requestType: 'create',
+        ...parsed,
+        submittedBy: 'client-portal',
+      }),
+    };
+  }
+
+  @Post(':entryId/requests')
+  async createEditRequest(@Param('clientId') clientId: string, @Param('entryId') entryId: string, @Body() body: unknown) {
+    const parsed = ClientKnowledgeRequestSchema.parse(body);
+    return {
+      request: await this.requests.create({
+        clientId,
+        requestType: 'edit',
+        targetEntryId: entryId,
+        ...parsed,
+        submittedBy: 'client-portal',
+      }),
+    };
   }
 
   @Post('reindex')

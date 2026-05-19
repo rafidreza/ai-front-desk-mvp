@@ -73,6 +73,17 @@ export interface KnowledgeEntry {
   templateKey?: string;
 }
 
+export interface ClientKnowledgeEntry {
+  id: string;
+  clientId: string;
+  title: string;
+  answer: string;
+  keywords: string[];
+  category?: string;
+  status: 'active';
+  version: number;
+}
+
 export interface KnowledgeEntryVersion {
   id: string;
   entryId: string;

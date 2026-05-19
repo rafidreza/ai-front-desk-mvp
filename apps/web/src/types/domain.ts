@@ -7,6 +7,7 @@ export type {
   ClientChannelStatus,
   ClientChannelSummary,
   ClientDashboardSummary,
+  ClientKnowledgeEntry,
   ClientProfile,
   ConversationAutoQaGrade,
   ConversationLog,

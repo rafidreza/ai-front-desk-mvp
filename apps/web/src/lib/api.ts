@@ -3,10 +3,14 @@ import {
   CalibrationQueueFilter,
   CalibrationQueueResult,
   ClientDashboardSummary,
+  ClientKnowledgeEntry,
   ClientProfile,
   ConversationLog,
   ConversationQaGrade,
   InternalUser,
+  KnowledgeChangeRequest,
+  KnowledgeChangeRequestStatus,
+  KnowledgeChangeRequestUrgency,
   KnowledgeEntry,
   KnowledgeEntryVersion,
   KnowledgeImportFileInput,
@@ -134,6 +138,65 @@ export async function captureCsat(
     body: JSON.stringify(input),
   });
   return data.conversation;
+}
+
+export async function getClientKnowledgeEntries(clientId: string): Promise<ClientKnowledgeEntry[]> {
+  const data = await apiFetch<{ entries: ClientKnowledgeEntry[] }>(`/clients/${clientId}/knowledge/client-view`);
+  return data.entries;
+}
+
+export async function getClientKnowledgeRequests(
+  clientId: string,
+  input: { status?: KnowledgeChangeRequestStatus | 'all'; urgency?: KnowledgeChangeRequestUrgency | 'all' } = {},
+): Promise<KnowledgeChangeRequest[]> {
+  const params = new URLSearchParams();
+  if (input.status !== undefined) params.set('status', input.status);
+  if (input.urgency !== undefined) params.set('urgency', input.urgency);
+  const query = params.size === 0 ? '' : `?${params.toString()}`;
+  const data = await apiFetch<{ requests: KnowledgeChangeRequest[] }>(`/clients/${clientId}/knowledge/requests${query}`);
+  return data.requests;
+}
+
+export async function getClientKnowledgeRequest(clientId: string, requestId: string): Promise<KnowledgeChangeRequest> {
+  const data = await apiFetch<{ request: KnowledgeChangeRequest }>(`/clients/${clientId}/knowledge/requests/${requestId}`);
+  return data.request;
+}
+
+export async function submitClientKnowledgeRequest(
+  clientId: string,
+  input: {
+    proposedTitle: string;
+    proposedAnswer: string;
+    proposedKeywords?: string[];
+    proposedCategory?: string;
+    urgency?: KnowledgeChangeRequestUrgency;
+    requesterNote?: string;
+  },
+): Promise<KnowledgeChangeRequest> {
+  const data = await apiFetch<{ request: KnowledgeChangeRequest }>(`/clients/${clientId}/knowledge/requests`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.request;
+}
+
+export async function submitClientKnowledgeEditRequest(
+  clientId: string,
+  entryId: string,
+  input: {
+    proposedTitle: string;
+    proposedAnswer: string;
+    proposedKeywords?: string[];
+    proposedCategory?: string;
+    urgency?: KnowledgeChangeRequestUrgency;
+    requesterNote?: string;
+  },
+): Promise<KnowledgeChangeRequest> {
+  const data = await apiFetch<{ request: KnowledgeChangeRequest }>(`/clients/${clientId}/knowledge/${entryId}/requests`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.request;
 }
 
 export async function getKnowledgeEntries(clientId: string, status = 'all'): Promise<KnowledgeEntry[]> {
