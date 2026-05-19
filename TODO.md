@@ -28,8 +28,8 @@
 | 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| 9 — Improvement backlog | 9 | 3 | 12 |
-| **TOTAL** | **61** | **23** | **84** |
+| 9 — Improvement backlog | 10 | 2 | 12 |
+| **TOTAL** | **62** | **22** | **84** |
 
 ---
 
@@ -181,7 +181,7 @@
 - [x] **T57 — IMPROVEMENT** Build internal review API endpoints for listing/filtering KB requests, viewing diffs, approving, editing-then-publishing, rejecting, and asking for clarification. — **DONE (2026-05-19): added internal KB request review controller, review detail/diff contract, list/detail endpoints, review action endpoints, and web API helpers for the upcoming internal queue UI**
 - [x] **T58 — IMPROVEMENT** Add an internal KB review queue page with client/status/urgency filters, current-vs-proposed comparison, reviewer notes, and action buttons. — **DONE (2026-05-19): added `/internal/kb-review`, sidebar navigation, queue filters, current/proposed diff panel, final edit fields, reviewer/client/internal notes, and review action buttons wired to the internal review APIs**
 - [x] **T59 — IMPROVEMENT** Implement publish behavior that updates or creates the live `KnowledgeEntry`, writes a version-history snapshot, marks the request as published, and triggers embedding reindexing. — **DONE (2026-05-19): internal approve/edit-then-publish now creates or updates `KnowledgeEntry` through `KnowledgeService`, publishes it active, writes KB version history, refreshes embeddings, stores final decision snapshot, and marks the request published with timestamps**
-- [ ] **T60 — IMPROVEMENT** Add audit trail events for every KB request transition so internal users can see who submitted, reviewed, edited, rejected, or published each change.
+- [x] **T60 — IMPROVEMENT** Add audit trail events for every KB request transition so internal users can see who submitted, reviewed, edited, rejected, or published each change. — **DONE (2026-05-19): added `KnowledgeChangeRequestEvent` migration/model, backfilled submission events, records new submit/review/publish events, returns audit events in review detail, and shows the audit trail in `/internal/kb-review`**
 - [ ] **T61 — IMPROVEMENT** Surface internal feedback back to the client portal when a KB request is rejected or needs clarification.
 - [ ] **T62 — IMPROVEMENT** Add tests for the KB request lifecycle: client submit, internal approve, edit-then-publish, reject with reason, permission boundaries, and reindex trigger.
 

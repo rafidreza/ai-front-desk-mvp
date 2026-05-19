@@ -1048,6 +1048,37 @@ button {
   gap: 8px;
 }
 
+.kb-event-list {
+  display: grid;
+  gap: 8px;
+}
+
+.kb-event-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.kb-event-row strong,
+.kb-event-row small {
+  display: block;
+}
+
+.kb-event-row strong {
+  font-size: 13px;
+}
+
+.kb-event-row small,
+.kb-event-row p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .qa-list {
   display: grid;
   gap: 8px;

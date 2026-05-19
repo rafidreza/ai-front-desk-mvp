@@ -286,6 +286,23 @@ export default function InternalKbReviewPage() {
                   </article>
                 </section>
 
+                <section className="kb-event-list">
+                  <div className="section-label">
+                    <ClipboardCheck size={14} />
+                    Audit trail
+                  </div>
+                  {detail.events.map((event) => (
+                    <article className="kb-event-row" key={event.id}>
+                      <div>
+                        <strong>{formatLabel(event.eventType)}</strong>
+                        <small>{event.actorId} | {new Date(event.createdAt).toLocaleString()}</small>
+                      </div>
+                      {event.note !== undefined && <p>{event.note}</p>}
+                    </article>
+                  ))}
+                  {detail.events.length === 0 && <div className="timeline-empty">No audit events yet</div>}
+                </section>
+
                 <form className="stack-form" onSubmit={runEditThenPublish}>
                   <label>
                     Final title

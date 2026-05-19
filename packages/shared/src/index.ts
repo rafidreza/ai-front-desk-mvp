@@ -140,8 +140,19 @@ export interface KnowledgeChangeRequest {
   closedAt?: string;
 }
 
+export interface KnowledgeChangeRequestEvent {
+  id: string;
+  requestId: string;
+  eventType: string;
+  actorId: string;
+  note?: string;
+  payload: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface KnowledgeChangeRequestReviewDetail {
   request: KnowledgeChangeRequest;
+  events: KnowledgeChangeRequestEvent[];
   current?: {
     title?: string;
     answer?: string;

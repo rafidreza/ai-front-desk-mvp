@@ -127,11 +127,27 @@ model KnowledgeChangeRequest {
   closedAt             DateTime?
   client               Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
   targetEntry          KnowledgeEntry? @relation(fields: [targetEntryId], references: [id], onDelete: SetNull)
+  events               KnowledgeChangeRequestEvent[]
 
   @@index([clientId])
   @@index([clientId, status])
   @@index([targetEntryId])
   @@index([status, urgency])
+  @@index([createdAt])
+}
+
+model KnowledgeChangeRequestEvent {
+  id        String                 @id
+  requestId String
+  eventType String
+  actorId   String
+  note      String?
+  payload   Json                   @default("{}")
+  createdAt DateTime               @default(now())
+  request   KnowledgeChangeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([eventType])
   @@index([createdAt])
 }
 

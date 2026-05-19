@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import {
   KnowledgeChangeRequest,
+  KnowledgeChangeRequestEvent,
   KnowledgeChangeRequestReviewDetail,
   KnowledgeChangeRequestStatus,
   KnowledgeChangeRequestType,
@@ -36,6 +37,16 @@ type KnowledgeChangeRequestRecord = {
   reviewedAt: Date | null;
   publishedAt: Date | null;
   closedAt: Date | null;
+};
+
+type KnowledgeChangeRequestEventRecord = {
+  id: string;
+  requestId: string;
+  eventType: string;
+  actorId: string;
+  note: string | null;
+  payload: Prisma.JsonValue;
+  createdAt: Date;
 };
 
 type EntrySnapshot = {
@@ -113,6 +124,18 @@ function mapRequest(record: KnowledgeChangeRequestRecord): KnowledgeChangeReques
   };
 }
 
+function mapEvent(record: KnowledgeChangeRequestEventRecord): KnowledgeChangeRequestEvent {
+  return {
+    id: record.id,
+    requestId: record.requestId,
+    eventType: record.eventType,
+    actorId: record.actorId,
+    note: record.note ?? undefined,
+    payload: mapJsonObject(record.payload) ?? {},
+    createdAt: record.createdAt.toISOString(),
+  };
+}
+
 function snapshotEntry(entry: {
   id: string;
   title: string;
@@ -181,9 +204,14 @@ export class KnowledgeChangeRequestService {
 
   async getReviewDetail(requestId: string): Promise<KnowledgeChangeRequestReviewDetail> {
     const request = await this.findById(requestId);
+    const events = await this.prisma.knowledgeChangeRequestEvent.findMany({
+      where: { requestId },
+      orderBy: { createdAt: 'asc' },
+    });
     const current = request.currentEntrySnapshot;
     return {
       request,
+      events: events.map(mapEvent),
       current:
         current === undefined
           ? undefined
@@ -247,6 +275,13 @@ export class KnowledgeChangeRequestService {
         currentEntrySnapshot,
       },
     });
+    await this.recordEvent({
+      requestId: created.id,
+      eventType: 'submitted',
+      actorId: created.submittedBy,
+      note: created.requesterNote ?? undefined,
+      payload: { requestType, status: created.status, urgency: created.urgency },
+    });
 
     return mapRequest(created);
   }
@@ -282,6 +317,16 @@ export class KnowledgeChangeRequestService {
         decisionSnapshot: input.decisionSnapshot as Prisma.InputJsonValue | undefined,
         reviewedAt: now,
         closedAt,
+      },
+    });
+    await this.recordEvent({
+      requestId: updated.id,
+      eventType: status,
+      actorId: input.reviewedBy ?? 'internal-console',
+      note: input.clientVisibleMessage ?? input.reviewerNote ?? input.internalNote,
+      payload: {
+        previousStatus: existing.status,
+        status,
       },
     });
 
@@ -342,6 +387,17 @@ export class KnowledgeChangeRequestService {
         closedAt: now,
       },
     });
+    await this.recordEvent({
+      requestId: updated.id,
+      eventType: 'published',
+      actorId,
+      note: input.clientVisibleMessage ?? input.reviewerNote ?? input.internalNote,
+      payload: {
+        previousStatus: request.status,
+        publishedEntryId: published.id,
+        requestType: request.requestType,
+      },
+    });
 
     return mapRequest(updated);
   }
@@ -351,5 +407,24 @@ export class KnowledgeChangeRequestService {
       throw new BadRequestException('targetEntryId is required to publish edit requests.');
     }
     return request.targetEntryId;
+  }
+
+  private async recordEvent(input: {
+    requestId: string;
+    eventType: string;
+    actorId: string;
+    note?: string;
+    payload?: Record<string, unknown>;
+  }) {
+    await this.prisma.knowledgeChangeRequestEvent.create({
+      data: {
+        id: randomUUID(),
+        requestId: input.requestId,
+        eventType: input.eventType,
+        actorId: input.actorId,
+        note: input.note,
+        payload: (input.payload ?? {}) as Prisma.InputJsonValue,
+      },
+    });
   }
 }
