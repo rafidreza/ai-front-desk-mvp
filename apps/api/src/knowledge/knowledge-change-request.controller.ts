@@ -65,12 +65,9 @@ export class KnowledgeChangeRequestController {
   @Post(':requestId/approve')
   async approve(@Param('requestId') requestId: string, @Body() body: unknown) {
     const parsed = ReviewActionSchema.parse(body);
-    const request = await this.requests.findById(requestId);
     return {
-      request: await this.requests.updateReviewState({
-        clientId: request.clientId,
+      request: await this.requests.publish({
         requestId,
-        status: 'approved',
         ...parsed,
       }),
     };
@@ -79,22 +76,17 @@ export class KnowledgeChangeRequestController {
   @Post(':requestId/edit-then-publish')
   async editThenPublish(@Param('requestId') requestId: string, @Body() body: unknown) {
     const parsed = EditThenPublishSchema.parse(body);
-    const request = await this.requests.findById(requestId);
     return {
-      request: await this.requests.updateReviewState({
-        clientId: request.clientId,
+      request: await this.requests.publish({
         requestId,
-        status: 'edited_then_published',
         reviewerNote: parsed.reviewerNote,
         clientVisibleMessage: parsed.clientVisibleMessage,
         internalNote: parsed.internalNote,
         reviewedBy: parsed.reviewedBy,
-        decisionSnapshot: {
-          proposedTitle: parsed.proposedTitle,
-          proposedAnswer: parsed.proposedAnswer,
-          proposedKeywords: parsed.proposedKeywords,
-          proposedCategory: parsed.proposedCategory ?? request.proposedCategory,
-        },
+        finalTitle: parsed.proposedTitle,
+        finalAnswer: parsed.proposedAnswer,
+        finalKeywords: parsed.proposedKeywords,
+        finalCategory: parsed.proposedCategory,
       }),
     };
   }

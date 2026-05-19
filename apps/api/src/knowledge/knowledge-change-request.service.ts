@@ -9,6 +9,7 @@ import {
   KnowledgeChangeRequestType,
   KnowledgeChangeRequestUrgency,
 } from '../types/domain';
+import { KnowledgeService } from './knowledge.service';
 
 type KnowledgeChangeRequestRecord = {
   id: string;
@@ -46,6 +47,18 @@ type EntrySnapshot = {
   confidenceBoost?: number;
   status: string;
   version: number;
+};
+
+type PublishInput = {
+  requestId: string;
+  reviewerNote?: string;
+  clientVisibleMessage?: string;
+  internalNote?: string;
+  reviewedBy?: string;
+  finalTitle?: string;
+  finalAnswer?: string;
+  finalKeywords?: string[];
+  finalCategory?: string;
 };
 
 const requestTypes: KnowledgeChangeRequestType[] = ['create', 'edit'];
@@ -124,7 +137,10 @@ function snapshotEntry(entry: {
 
 @Injectable()
 export class KnowledgeChangeRequestService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly knowledge: KnowledgeService,
+  ) {}
 
   async list(input: {
     clientId?: string;
@@ -270,5 +286,70 @@ export class KnowledgeChangeRequestService {
     });
 
     return mapRequest(updated);
+  }
+
+  async publish(input: PublishInput): Promise<KnowledgeChangeRequest> {
+    const request = await this.findById(input.requestId);
+    if (request.status === 'published') {
+      throw new BadRequestException('Knowledge change request has already been published.');
+    }
+    if (request.status === 'rejected') {
+      throw new BadRequestException('Rejected knowledge change requests cannot be published.');
+    }
+
+    const finalTitle = input.finalTitle?.trim() || request.proposedTitle;
+    const finalAnswer = input.finalAnswer?.trim() || request.proposedAnswer;
+    const finalKeywords = input.finalKeywords?.length ? input.finalKeywords : request.proposedKeywords;
+    const finalCategory = input.finalCategory?.trim() || request.proposedCategory;
+    const actorId = input.reviewedBy ?? 'internal-console';
+
+    const draft =
+      request.requestType === 'create'
+        ? await this.knowledge.createDraft({
+            clientId: request.clientId,
+            title: finalTitle,
+            answer: finalAnswer,
+            keywords: finalKeywords,
+            category: finalCategory,
+            actorId,
+          })
+        : await this.knowledge.update(request.clientId, this.requireTargetEntryId(request), {
+            title: finalTitle,
+            answer: finalAnswer,
+            keywords: finalKeywords,
+            category: finalCategory,
+            actorId,
+          });
+    const published = await this.knowledge.setStatus(request.clientId, draft.id, 'active', actorId);
+    const now = new Date();
+    const updated = await this.prisma.knowledgeChangeRequest.update({
+      where: { id: request.id },
+      data: {
+        status: 'published',
+        reviewerNote: input.reviewerNote,
+        clientVisibleMessage: input.clientVisibleMessage,
+        internalNote: input.internalNote,
+        reviewedBy: actorId,
+        publishedEntryId: published.id,
+        decisionSnapshot: {
+          proposedTitle: finalTitle,
+          proposedAnswer: finalAnswer,
+          proposedKeywords: finalKeywords,
+          proposedCategory: finalCategory,
+        },
+        reviewedAt: now,
+        publishedAt: now,
+        closedAt: now,
+      },
+    });
+
+    return mapRequest(updated);
+  }
+
+  private requireTargetEntryId(request: KnowledgeChangeRequest) {
+    if (request.targetEntryId === undefined) {
+      throw new BadRequestException('targetEntryId is required to publish edit requests.');
+    }
+    return request.targetEntryId;
   }
 }
