@@ -427,11 +427,14 @@ export default function ClientKnowledgePage() {
                   <span className="badge" data-tone={statusTone(request.status)}>
                     {formatStatus(request.status)}
                   </span>
-                  {(request.clientVisibleMessage ?? request.reviewerNote) !== undefined && (
+                {(request.clientVisibleMessage ?? request.reviewerNote) !== undefined && (
+                  <div className="knowledge-request-feedback">
+                    <span>Feedback</span>
                     <p>{request.clientVisibleMessage ?? request.reviewerNote}</p>
-                  )}
-                </article>
-              ))}
+                  </div>
+                )}
+              </article>
+            ))}
               {!isLoading && requests.length === 0 && <div className="empty">No update requests yet</div>}
             </div>
           </section>

@@ -2033,7 +2033,8 @@ button {
 }
 
 .knowledge-client-entry p,
-.knowledge-request-row p {
+.knowledge-request-row p,
+.knowledge-request-feedback p {
   margin: 0;
   color: #2e3945;
   font-size: 13px;
@@ -2080,11 +2081,20 @@ button {
   border-radius: 8px;
 }
 
-.knowledge-request-row p {
+.knowledge-request-feedback {
   grid-column: 1 / -1;
+  display: grid;
+  gap: 5px;
   padding: 10px;
   background: var(--surface-2);
   border-radius: 8px;
+}
+
+.knowledge-request-feedback span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .knowledge-request-form {
