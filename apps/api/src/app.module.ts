@@ -27,6 +27,7 @@ import { EmbeddingService } from './knowledge/embedding.service';
 import { IndustryTemplateController } from './knowledge/industry-template.controller';
 import { IndustryTemplateService } from './knowledge/industry-template.service';
 import { KnowledgeImportService } from './knowledge/knowledge-import.service';
+import { KnowledgeChangeRequestService } from './knowledge/knowledge-change-request.service';
 import { AuthCodeDeliveryService } from './notifications/auth-code-delivery.service';
 import { EmailDeliveryService } from './notifications/email-delivery.service';
 import { UrgentTicketNotificationService } from './notifications/urgent-ticket-notification.service';
@@ -66,6 +67,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     IndustryTemplateService,
     AuthCodeDeliveryService,
     EmailDeliveryService,
+    KnowledgeChangeRequestService,
     KnowledgeImportService,
     KnowledgeService,
     MessengerSendService,
