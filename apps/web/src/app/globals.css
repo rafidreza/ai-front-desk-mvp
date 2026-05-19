@@ -1601,6 +1601,12 @@ button {
   align-items: start;
 }
 
+.client-knowledge-side {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
 .client-channel-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1882,6 +1888,10 @@ button {
   line-height: 1.48;
 }
 
+.knowledge-edit-button {
+  justify-self: start;
+}
+
 .keyword-row {
   display: flex;
   flex-wrap: wrap;
@@ -1923,6 +1933,27 @@ button {
   padding: 10px;
   background: var(--surface-2);
   border-radius: 8px;
+}
+
+.knowledge-request-form {
+  padding: 12px;
+}
+
+.knowledge-request-form textarea {
+  min-height: 96px;
+}
+
+.knowledge-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.5fr);
+  gap: 10px;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .ticket-delegation-list {
@@ -2319,6 +2350,7 @@ button {
   .client-ticket-command,
   .client-knowledge-command,
   .client-knowledge-grid,
+  .knowledge-form-row,
   .client-channel-grid,
   .ticket-portal-grid,
   .conversation-portal-grid,
