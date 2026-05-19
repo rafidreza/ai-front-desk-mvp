@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
+import { shouldUseSecureCookie } from '@/lib/cookies';
 import { createInternalSessionCookie, internalSessionCookieName } from '@/lib/internal-auth';
 
 const attempts = new Map<string, { count: number; resetAt: number }>();
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
     value: await createInternalSessionCookie(),
     httpOnly: true,
     sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
+    secure: shouldUseSecureCookie(request),
     path: '/',
     maxAge: 60 * 60 * 12,
   });

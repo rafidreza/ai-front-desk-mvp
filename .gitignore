@@ -7,3 +7,4 @@ apps/web/.next
 .DS_Store
 coverage
 *.log
+.run/

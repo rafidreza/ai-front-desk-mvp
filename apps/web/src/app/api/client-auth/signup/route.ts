@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clientSessionCookieName, createClientSessionCookie } from '@/lib/client-auth';
+import { shouldUseSecureCookie } from '@/lib/cookies';
 import { backendFetch } from '@/lib/server-backend';
 import { ClientProfile } from '@/types/domain';
 
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
       value: await createClientSessionCookie(data.client.id),
       httpOnly: true,
       sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production',
+      secure: shouldUseSecureCookie(request),
       path: '/',
       maxAge: 60 * 60 * 24 * 14,
     });

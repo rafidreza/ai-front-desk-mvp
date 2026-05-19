@@ -2,9 +2,15 @@ function getApiBaseUrl() {
   return process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
 }
 
+function isLocalApiBaseUrl(apiBaseUrl: string) {
+  const hostname = new URL(apiBaseUrl).hostname;
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+}
+
 function getApiToken() {
+  const apiBaseUrl = getApiBaseUrl();
   const token = process.env.INTERNAL_API_TOKEN;
-  if (process.env.NODE_ENV === 'production' && (token === undefined || token.length < 32)) {
+  if (process.env.NODE_ENV === 'production' && (token === undefined || token.length < 32) && !isLocalApiBaseUrl(apiBaseUrl)) {
     throw new Error('INTERNAL_API_TOKEN must be set to at least 32 characters in production.');
   }
   return token ?? 'dev-internal-api-token-only-for-local-work';
