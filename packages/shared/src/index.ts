@@ -140,6 +140,24 @@ export interface KnowledgeChangeRequest {
   closedAt?: string;
 }
 
+export interface KnowledgeChangeRequestReviewDetail {
+  request: KnowledgeChangeRequest;
+  current?: {
+    title?: string;
+    answer?: string;
+    keywords?: string[];
+    category?: string;
+    status?: string;
+    version?: number;
+  };
+  proposed: {
+    title: string;
+    answer: string;
+    keywords: string[];
+    category: string;
+  };
+}
+
 export interface KnowledgeImportFileInput {
   fileName: string;
   contentType?: string;

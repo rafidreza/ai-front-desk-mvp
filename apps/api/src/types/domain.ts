@@ -17,6 +17,7 @@ export type {
   IncomingMessage,
   KnowledgeEntry,
   KnowledgeChangeRequest,
+  KnowledgeChangeRequestReviewDetail,
   KnowledgeChangeRequestStatus,
   KnowledgeChangeRequestType,
   KnowledgeChangeRequestUrgency,

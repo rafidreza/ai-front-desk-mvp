@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import {
   KnowledgeChangeRequest,
+  KnowledgeChangeRequestReviewDetail,
   KnowledgeChangeRequestStatus,
   KnowledgeChangeRequestType,
   KnowledgeChangeRequestUrgency,
@@ -150,6 +151,41 @@ export class KnowledgeChangeRequestService {
       throw new NotFoundException(`Knowledge change request not found: ${requestId}`);
     }
     return mapRequest(record);
+  }
+
+  async findById(requestId: string): Promise<KnowledgeChangeRequest> {
+    const record = await this.prisma.knowledgeChangeRequest.findUnique({
+      where: { id: requestId },
+    });
+    if (record === null) {
+      throw new NotFoundException(`Knowledge change request not found: ${requestId}`);
+    }
+    return mapRequest(record);
+  }
+
+  async getReviewDetail(requestId: string): Promise<KnowledgeChangeRequestReviewDetail> {
+    const request = await this.findById(requestId);
+    const current = request.currentEntrySnapshot;
+    return {
+      request,
+      current:
+        current === undefined
+          ? undefined
+          : {
+              title: typeof current.title === 'string' ? current.title : undefined,
+              answer: typeof current.answer === 'string' ? current.answer : undefined,
+              keywords: Array.isArray(current.keywords) ? current.keywords.filter((item): item is string => typeof item === 'string') : undefined,
+              category: typeof current.category === 'string' ? current.category : undefined,
+              status: typeof current.status === 'string' ? current.status : undefined,
+              version: typeof current.version === 'number' ? current.version : undefined,
+            },
+      proposed: {
+        title: request.proposedTitle,
+        answer: request.proposedAnswer,
+        keywords: request.proposedKeywords,
+        category: request.proposedCategory,
+      },
+    };
   }
 
   async create(input: {

@@ -27,6 +27,7 @@ import { EmbeddingService } from './knowledge/embedding.service';
 import { IndustryTemplateController } from './knowledge/industry-template.controller';
 import { IndustryTemplateService } from './knowledge/industry-template.service';
 import { KnowledgeImportService } from './knowledge/knowledge-import.service';
+import { KnowledgeChangeRequestController } from './knowledge/knowledge-change-request.controller';
 import { KnowledgeChangeRequestService } from './knowledge/knowledge-change-request.service';
 import { AuthCodeDeliveryService } from './notifications/auth-code-delivery.service';
 import { EmailDeliveryService } from './notifications/email-delivery.service';
@@ -47,6 +48,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     HealthController,
     IndustryTemplateController,
     InternalUsersController,
+    KnowledgeChangeRequestController,
     KnowledgeController,
     MessengerController,
     WebChatController,

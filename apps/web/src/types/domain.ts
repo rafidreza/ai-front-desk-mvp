@@ -16,6 +16,7 @@ export type {
   ConversationQaGrade,
   InternalUser,
   KnowledgeChangeRequest,
+  KnowledgeChangeRequestReviewDetail,
   KnowledgeChangeRequestStatus,
   KnowledgeChangeRequestType,
   KnowledgeChangeRequestUrgency,

@@ -9,6 +9,7 @@ import {
   ConversationQaGrade,
   InternalUser,
   KnowledgeChangeRequest,
+  KnowledgeChangeRequestReviewDetail,
   KnowledgeChangeRequestStatus,
   KnowledgeChangeRequestUrgency,
   KnowledgeEntry,
@@ -193,6 +194,56 @@ export async function submitClientKnowledgeEditRequest(
   },
 ): Promise<KnowledgeChangeRequest> {
   const data = await apiFetch<{ request: KnowledgeChangeRequest }>(`/clients/${clientId}/knowledge/${entryId}/requests`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.request;
+}
+
+export async function getInternalKnowledgeRequests(input: {
+  clientId?: string;
+  status?: KnowledgeChangeRequestStatus | 'all';
+  urgency?: KnowledgeChangeRequestUrgency | 'all';
+} = {}): Promise<KnowledgeChangeRequest[]> {
+  const params = new URLSearchParams();
+  if (input.clientId !== undefined) params.set('clientId', input.clientId);
+  if (input.status !== undefined) params.set('status', input.status);
+  if (input.urgency !== undefined) params.set('urgency', input.urgency);
+  const query = params.size === 0 ? '' : `?${params.toString()}`;
+  const data = await apiFetch<{ requests: KnowledgeChangeRequest[] }>(`/internal/knowledge-requests${query}`);
+  return data.requests;
+}
+
+export async function getInternalKnowledgeRequestDetail(requestId: string): Promise<KnowledgeChangeRequestReviewDetail> {
+  return apiFetch<KnowledgeChangeRequestReviewDetail>(`/internal/knowledge-requests/${requestId}`);
+}
+
+export async function updateInternalKnowledgeRequest(
+  requestId: string,
+  action: 'in-review' | 'approve' | 'reject' | 'clarify',
+  input: { reviewerNote?: string; clientVisibleMessage?: string; internalNote?: string; reviewedBy?: string },
+): Promise<KnowledgeChangeRequest> {
+  const data = await apiFetch<{ request: KnowledgeChangeRequest }>(`/internal/knowledge-requests/${requestId}/${action}`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.request;
+}
+
+export async function editThenPublishKnowledgeRequest(
+  requestId: string,
+  input: {
+    proposedTitle: string;
+    proposedAnswer: string;
+    proposedKeywords?: string[];
+    proposedCategory?: string;
+    reviewerNote?: string;
+    clientVisibleMessage?: string;
+    internalNote?: string;
+    reviewedBy?: string;
+  },
+): Promise<KnowledgeChangeRequest> {
+  const data = await apiFetch<{ request: KnowledgeChangeRequest }>(`/internal/knowledge-requests/${requestId}/edit-then-publish`, {
     method: 'POST',
     body: JSON.stringify(input),
   });
