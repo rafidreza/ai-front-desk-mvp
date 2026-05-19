@@ -1,6 +1,6 @@
 # AI Front Desk — TODO
 
-**Last updated:** 2026-05-16
+**Last updated:** 2026-05-19
 **Source of truth for scope:** [`/MVP_GUIDELINE.md`](../MVP_GUIDELINE.md) + [`/PRD/`](../PRD/)
 **Companion doc:** [`DEVELOPMENT_STATUS.md`](DEVELOPMENT_STATUS.md) (verified build artifacts)
 
@@ -28,7 +28,8 @@
 | 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| **TOTAL** | **52** | **20** | **72** |
+| 9 — Improvement backlog | 1 | 11 | 12 |
+| **TOTAL** | **53** | **31** | **84** |
 
 ---
 
@@ -164,6 +165,25 @@
 - [ ] **T48** Sentry / observability beyond structured logs
 - [ ] **T49** Billing integration (Stripe BD or local processor, per pricing tiers)
 - [ ] **T50** Legal: DPA template + Bangladesh PDPA consent flow (PRD 08 Q4)
+
+---
+
+## Tier 9 — Improvement backlog
+
+### Client KB contribution + internal approval workflow
+
+- [x] **T51 — IMPROVEMENT** Define the client-editable KB scope and approval rules: which fields clients can suggest, which changes are auto-blocked, and which internal-only KB controls stay hidden. — **DONE (2026-05-19): added `docs/client-knowledge-approval-scope.md` with client-editable fields, internal-only controls, auto-block rules, approval outcomes, UX boundaries, publishing rules, and permission boundaries**
+- [ ] **T52 — IMPROVEMENT** Add a `KnowledgeChangeRequest` data model for client-submitted create/edit requests without writing directly to live `KnowledgeEntry` rows.
+- [ ] **T53 — IMPROVEMENT** Add migration + Prisma access for KB change requests, including status, urgency, requester notes, reviewer notes, submitted/reviewed/published timestamps, and optional target `KnowledgeEntry`.
+- [ ] **T54 — IMPROVEMENT** Build client API endpoints to list published KB entries, submit new KB requests, submit edits to existing entries, and view request status.
+- [ ] **T55 — IMPROVEMENT** Add a client portal KB page for viewing approved knowledge, searching/filtering entries, and seeing pending/rejected/published request status.
+- [ ] **T56 — IMPROVEMENT** Add client portal request forms for "add knowledge" and "suggest edit", with urgency, business note, and clear validation/error states.
+- [ ] **T57 — IMPROVEMENT** Build internal review API endpoints for listing/filtering KB requests, viewing diffs, approving, editing-then-publishing, rejecting, and asking for clarification.
+- [ ] **T58 — IMPROVEMENT** Add an internal KB review queue page with client/status/urgency filters, current-vs-proposed comparison, reviewer notes, and action buttons.
+- [ ] **T59 — IMPROVEMENT** Implement publish behavior that updates or creates the live `KnowledgeEntry`, writes a version-history snapshot, marks the request as published, and triggers embedding reindexing.
+- [ ] **T60 — IMPROVEMENT** Add audit trail events for every KB request transition so internal users can see who submitted, reviewed, edited, rejected, or published each change.
+- [ ] **T61 — IMPROVEMENT** Surface internal feedback back to the client portal when a KB request is rejected or needs clarification.
+- [ ] **T62 — IMPROVEMENT** Add tests for the KB request lifecycle: client submit, internal approve, edit-then-publish, reject with reason, permission boundaries, and reindex trigger.
 
 ---
 
