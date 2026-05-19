@@ -28,8 +28,8 @@
 | 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| 9 — Improvement backlog | 11 | 1 | 12 |
-| **TOTAL** | **63** | **21** | **84** |
+| 9 — Improvement backlog | 12 | 0 | 12 |
+| **TOTAL** | **64** | **20** | **84** |
 
 ---
 
@@ -183,7 +183,7 @@
 - [x] **T59 — IMPROVEMENT** Implement publish behavior that updates or creates the live `KnowledgeEntry`, writes a version-history snapshot, marks the request as published, and triggers embedding reindexing. — **DONE (2026-05-19): internal approve/edit-then-publish now creates or updates `KnowledgeEntry` through `KnowledgeService`, publishes it active, writes KB version history, refreshes embeddings, stores final decision snapshot, and marks the request published with timestamps**
 - [x] **T60 — IMPROVEMENT** Add audit trail events for every KB request transition so internal users can see who submitted, reviewed, edited, rejected, or published each change. — **DONE (2026-05-19): added `KnowledgeChangeRequestEvent` migration/model, backfilled submission events, records new submit/review/publish events, returns audit events in review detail, and shows the audit trail in `/internal/kb-review`**
 - [x] **T61 — IMPROVEMENT** Surface internal feedback back to the client portal when a KB request is rejected or needs clarification. — **DONE (2026-05-19): client KB request rows now show reviewer/client-visible feedback in a dedicated feedback block, making clarification or rejection notes visible from the client portal request history**
-- [ ] **T62 — IMPROVEMENT** Add tests for the KB request lifecycle: client submit, internal approve, edit-then-publish, reject with reason, permission boundaries, and reindex trigger.
+- [x] **T62 — IMPROVEMENT** Add tests for the KB request lifecycle: client submit, internal approve, edit-then-publish, reject with reason, permission boundaries, and reindex trigger. — **DONE (2026-05-19): added focused `KnowledgeChangeRequestService` lifecycle tests for client submission, client-boundary enforcement on edits, rejection feedback/audit events, approve-and-publish create flow, edit-then-publish flow, and the active publish call that drives embedding reindexing**
 
 ---
 
