@@ -20,38 +20,39 @@ enum TicketStatus {
 }
 
 model Client {
-  id                 String           @id
-  businessName       String
-  pageId             String           @unique
-  ownerName          String?
-  ownerEmail         String?
-  ownerPhone         String?
-  businessCategory   String?
-  onboardingStatus   String           @default("draft")
-  defaultLanguage    String
-  tone               String
-  escalationKeywords String[]
-  whatsappPoc        String?
-  digestEmail        String?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  knowledgeEntries   KnowledgeEntry[]
-  promptProfiles     PromptProfile[]
-  conversations      Conversation[]
-  tickets            Ticket[]
-  authChallenges     ClientAuthChallenge[]
+  id                      String                   @id
+  businessName            String
+  pageId                  String                   @unique
+  ownerName               String?
+  ownerEmail              String?
+  ownerPhone              String?
+  businessCategory        String?
+  onboardingStatus        String                   @default("draft")
+  defaultLanguage         String
+  tone                    String
+  escalationKeywords      String[]
+  whatsappPoc             String?
+  digestEmail             String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  knowledgeEntries        KnowledgeEntry[]
+  knowledgeChangeRequests KnowledgeChangeRequest[]
+  promptProfiles          PromptProfile[]
+  conversations           Conversation[]
+  tickets                 Ticket[]
+  authChallenges          ClientAuthChallenge[]
 }
 
 model ClientAuthChallenge {
-  id         String    @id
-  clientId   String
-  channel    String
+  id          String    @id
+  clientId    String
+  channel     String
   destination String
-  codeHash   String
-  expiresAt  DateTime
-  consumedAt DateTime?
-  createdAt  DateTime  @default(now())
-  client     Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  codeHash    String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([clientId])
   @@index([destination])
@@ -72,25 +73,26 @@ model InternalUser {
 }
 
 model KnowledgeEntry {
-  id              String   @id
+  id              String                   @id
   clientId        String
   title           String
   answer          String
   keywords        String[]
-  category        String   @default("general")
+  category        String                   @default("general")
   confidenceBoost Float?
-  status          String   @default("active")
-  version         Int      @default(1)
+  status          String                   @default("active")
+  version         Int                      @default(1)
   embedding       Unsupported("vector")?
   embeddingText   String?
   embeddedAt      DateTime?
   archivedAt      DateTime?
   sourceTicketId  String?
   templateKey     String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  client          Client                   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   versions        KnowledgeEntryVersion[]
+  changeRequests  KnowledgeChangeRequest[]
 
   @@index([clientId])
   @@index([clientId, category])
@@ -98,20 +100,55 @@ model KnowledgeEntry {
   @@index([templateKey])
 }
 
+model KnowledgeChangeRequest {
+  id                   String          @id
+  clientId             String
+  targetEntryId        String?
+  requestType          String
+  status               String          @default("submitted")
+  urgency              String          @default("normal")
+  proposedTitle        String
+  proposedAnswer       String
+  proposedKeywords     String[]        @default([])
+  proposedCategory     String          @default("general")
+  requesterNote        String?
+  reviewerNote         String?
+  clientVisibleMessage String?
+  internalNote         String?
+  submittedBy          String          @default("client")
+  reviewedBy           String?
+  publishedEntryId     String?
+  currentEntrySnapshot Json?
+  decisionSnapshot     Json?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  reviewedAt           DateTime?
+  publishedAt          DateTime?
+  closedAt             DateTime?
+  client               Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  targetEntry          KnowledgeEntry? @relation(fields: [targetEntryId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([clientId, status])
+  @@index([targetEntryId])
+  @@index([status, urgency])
+  @@index([createdAt])
+}
+
 model KnowledgeEntryVersion {
-  id              String   @id
+  id              String         @id
   entryId         String
   clientId        String
   version         Int
   title           String
   answer          String
   keywords        String[]
-  category        String   @default("general")
+  category        String         @default("general")
   confidenceBoost Float?
   status          String
   action          String
   actorId         String
-  createdAt       DateTime @default(now())
+  createdAt       DateTime       @default(now())
   entry           KnowledgeEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
   @@index([entryId])
@@ -120,7 +157,7 @@ model KnowledgeEntryVersion {
 }
 
 model PromptProfile {
-  id                 String   @id
+  id                 String                 @id
   clientId           String
   name               String
   systemInstructions String
@@ -128,12 +165,12 @@ model PromptProfile {
   escalationRules    String
   forbiddenClaims    String
   fallbackBehavior   String
-  status             String   @default("draft")
-  version            Int      @default(1)
+  status             String                 @default("draft")
+  version            Int                    @default(1)
   archivedAt         DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  client             Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  client             Client                 @relation(fields: [clientId], references: [id], onDelete: Cascade)
   versions           PromptProfileVersion[]
 
   @@index([clientId])
@@ -141,7 +178,7 @@ model PromptProfile {
 }
 
 model PromptProfileVersion {
-  id                 String   @id
+  id                 String        @id
   profileId          String
   clientId           String
   version            Int
@@ -154,7 +191,7 @@ model PromptProfileVersion {
   status             String
   action             String
   actorId            String
-  createdAt          DateTime @default(now())
+  createdAt          DateTime      @default(now())
   profile            PromptProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
@@ -179,7 +216,7 @@ model Conversation {
   gradedAt               DateTime?
   autoQaScore            Float?
   autoQaGrade            String?
-  autoQaDefects          String[]   @default([])
+  autoQaDefects          String[]  @default([])
   autoQaReason           String?
   autoQaAt               DateTime?
   autoQaVersion          String?
@@ -189,9 +226,9 @@ model Conversation {
   messages               Message[]
   tickets                Ticket[]
 
+  @@unique([clientId, channel, externalConversationId])
   @@index([clientId])
   @@index([clientId, autoQaGrade])
-  @@unique([clientId, channel, externalConversationId])
 }
 
 model Message {
@@ -206,23 +243,23 @@ model Message {
 }
 
 model Ticket {
-  id              String        @id
-  clientId        String
-  conversationId  String
-  assigneeId      String?
-  version         Int           @default(0)
-  priority        TicketPriority
-  status          TicketStatus
-  reason          String
-  customerMessage String
-  suggestedReply  String
-  salesRecoveredEstimate Float     @default(0)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  events          TicketEvent[]
-  comments        TicketComment[]
+  id                     String          @id
+  clientId               String
+  conversationId         String
+  assigneeId             String?
+  version                Int             @default(0)
+  priority               TicketPriority
+  status                 TicketStatus
+  reason                 String
+  customerMessage        String
+  suggestedReply         String
+  salesRecoveredEstimate Float           @default(0)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  client                 Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  conversation           Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  events                 TicketEvent[]
+  comments               TicketComment[]
 
   @@index([clientId])
   @@index([conversationId])

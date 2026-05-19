@@ -89,6 +89,46 @@ export interface KnowledgeEntryVersion {
   createdAt: string;
 }
 
+export type KnowledgeChangeRequestType = 'create' | 'edit';
+
+export type KnowledgeChangeRequestStatus =
+  | 'submitted'
+  | 'in_review'
+  | 'needs_clarification'
+  | 'approved'
+  | 'edited_then_published'
+  | 'rejected'
+  | 'published';
+
+export type KnowledgeChangeRequestUrgency = 'normal' | 'urgent';
+
+export interface KnowledgeChangeRequest {
+  id: string;
+  clientId: string;
+  targetEntryId?: string;
+  requestType: KnowledgeChangeRequestType;
+  status: KnowledgeChangeRequestStatus;
+  urgency: KnowledgeChangeRequestUrgency;
+  proposedTitle: string;
+  proposedAnswer: string;
+  proposedKeywords: string[];
+  proposedCategory: string;
+  requesterNote?: string;
+  reviewerNote?: string;
+  clientVisibleMessage?: string;
+  internalNote?: string;
+  submittedBy: string;
+  reviewedBy?: string;
+  publishedEntryId?: string;
+  currentEntrySnapshot?: Record<string, unknown>;
+  decisionSnapshot?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  reviewedAt?: string;
+  publishedAt?: string;
+  closedAt?: string;
+}
+
 export interface KnowledgeImportFileInput {
   fileName: string;
   contentType?: string;
