@@ -927,6 +927,127 @@ button {
   gap: 14px;
 }
 
+.kb-review-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.74fr) minmax(560px, 1.26fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.kb-review-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) repeat(3, minmax(120px, auto)) auto;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.kb-review-filters select {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.kb-review-row {
+  width: 100%;
+  min-height: 74px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: inherit;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.kb-review-row:hover,
+.kb-review-row[data-selected="true"] {
+  border-color: #b8c8d7;
+  background: #f7fafc;
+}
+
+.kb-review-row div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.kb-review-row strong,
+.kb-review-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kb-review-row strong {
+  font-size: 13px;
+}
+
+.kb-review-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kb-review-detail {
+  min-height: calc(100vh - 150px);
+}
+
+.kb-review-body {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.kb-diff-grid,
+.kb-review-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kb-diff-grid article {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.kb-diff-grid span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.kb-diff-grid strong {
+  font-size: 14px;
+}
+
+.kb-diff-grid p,
+.kb-diff-grid small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.kb-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .qa-list {
   display: grid;
   gap: 8px;
@@ -2354,6 +2475,10 @@ button {
   .client-channel-grid,
   .ticket-portal-grid,
   .conversation-portal-grid,
+  .kb-review-layout,
+  .kb-review-filters,
+  .kb-diff-grid,
+  .kb-review-form-row,
   .client-portal-grid,
   .team-portal-grid,
   .client-info-grid,
@@ -2398,6 +2523,10 @@ button {
   .triage-grid,
   .ticket-portal-grid,
   .conversation-portal-grid,
+  .kb-review-layout,
+  .kb-review-filters,
+  .kb-diff-grid,
+  .kb-review-form-row,
   .conversation-summary-strip,
   .client-portal-grid,
   .team-portal-grid,

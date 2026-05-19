@@ -1,6 +1,7 @@
 import {
   BotMessageSquare,
   Building2,
+  ClipboardCheck,
   DatabaseZap,
   LayoutDashboard,
   LogOut,
@@ -21,6 +22,7 @@ type ActiveView =
   | 'tickets'
   | 'conversations'
   | 'knowledge'
+  | 'kb-review'
   | 'agent-config';
 
 interface SidebarProps {
@@ -76,6 +78,10 @@ export function Sidebar({ activeView, onChangeView, health, healthError, onLogou
         <Link className="side-link" data-active={activeView === 'knowledge'} href="/internal/knowledge">
           <DatabaseZap size={17} />
           Knowledge
+        </Link>
+        <Link className="side-link" data-active={activeView === 'kb-review'} href="/internal/kb-review">
+          <ClipboardCheck size={17} />
+          KB Review
         </Link>
         <Link className="side-link" data-active={activeView === 'agent-config'} href="/internal/agent-config">
           <Settings2 size={17} />

@@ -28,8 +28,8 @@
 | 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| 9 — Improvement backlog | 7 | 5 | 12 |
-| **TOTAL** | **59** | **25** | **84** |
+| 9 — Improvement backlog | 8 | 4 | 12 |
+| **TOTAL** | **60** | **24** | **84** |
 
 ---
 
@@ -179,7 +179,7 @@
 - [x] **T55 — IMPROVEMENT** Add a client portal KB page for viewing approved knowledge, searching/filtering entries, and seeing pending/rejected/published request status. — **DONE (2026-05-19): added `/client/knowledge` with published KB search/category filters, request status filters, request feedback display, dashboard navigation, and responsive client-portal styling**
 - [x] **T56 — IMPROVEMENT** Add client portal request forms for "add knowledge" and "suggest edit", with urgency, business note, and clear validation/error states. — **DONE (2026-05-19): added add/edit request form to `/client/knowledge`, prefilled suggested edits from published entries, keyword parsing, urgency/category/note fields, validation messages, submit loading state, and success feedback**
 - [x] **T57 — IMPROVEMENT** Build internal review API endpoints for listing/filtering KB requests, viewing diffs, approving, editing-then-publishing, rejecting, and asking for clarification. — **DONE (2026-05-19): added internal KB request review controller, review detail/diff contract, list/detail endpoints, review action endpoints, and web API helpers for the upcoming internal queue UI**
-- [ ] **T58 — IMPROVEMENT** Add an internal KB review queue page with client/status/urgency filters, current-vs-proposed comparison, reviewer notes, and action buttons.
+- [x] **T58 — IMPROVEMENT** Add an internal KB review queue page with client/status/urgency filters, current-vs-proposed comparison, reviewer notes, and action buttons. — **DONE (2026-05-19): added `/internal/kb-review`, sidebar navigation, queue filters, current/proposed diff panel, final edit fields, reviewer/client/internal notes, and review action buttons wired to the internal review APIs**
 - [ ] **T59 — IMPROVEMENT** Implement publish behavior that updates or creates the live `KnowledgeEntry`, writes a version-history snapshot, marks the request as published, and triggers embedding reindexing.
 - [ ] **T60 — IMPROVEMENT** Add audit trail events for every KB request transition so internal users can see who submitted, reviewed, edited, rejected, or published each change.
 - [ ] **T61 — IMPROVEMENT** Surface internal feedback back to the client portal when a KB request is rejected or needs clarification.
