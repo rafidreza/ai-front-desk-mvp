@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert } from 'lucide-react';
+import { BookOpenText, CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { captureCsat, getClientDashboard } from '@/lib/api';
 import { ClientChannelSummary, ClientDashboardSummary } from '@/types/domain';
@@ -28,7 +28,8 @@ export default function ClientDashboardPage() {
     return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
   }, []);
 
-  const connectedChannelCount = dashboard?.channels.filter((channel) => channel.status !== 'needs_setup').length ?? 0;
+  const channels = dashboard?.channels ?? [];
+  const connectedChannelCount = channels.filter((channel) => channel.status !== 'needs_setup').length;
 
   async function loadDashboard() {
     setIsLoading(true);
@@ -74,6 +75,10 @@ export default function ClientDashboardPage() {
             <RefreshCw size={16} />
             Refresh
           </button>
+          <a className="icon-button" href={`/client/knowledge?clientId=${clientId}`}>
+            <BookOpenText size={16} />
+            Knowledge
+          </a>
           <button className="icon-button" type="button" onClick={() => void logout()}>
             Sign out
           </button>
@@ -122,7 +127,7 @@ export default function ClientDashboardPage() {
       </section>
 
       <section className="client-channel-grid" aria-label="Channel visibility">
-        {(dashboard?.channels ?? []).map((channel) => {
+        {channels.map((channel) => {
           const ChannelIcon = channelIcons[channel.channel];
           return (
             <article className="channel-card" data-status={channel.status} key={channel.channel}>

@@ -1409,7 +1409,8 @@ button {
 }
 
 .client-command-card,
-.client-ticket-command {
+.client-ticket-command,
+.client-knowledge-command {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
   gap: 18px;
@@ -1429,13 +1430,15 @@ button {
 }
 
 .client-command-main,
-.client-ticket-command > div:first-child {
+.client-ticket-command > div:first-child,
+.client-knowledge-command > div:first-child {
   display: grid;
   gap: 8px;
 }
 
 .client-command-card .eyebrow,
-.client-ticket-command .eyebrow {
+.client-ticket-command .eyebrow,
+.client-knowledge-command .eyebrow {
   color: #9db5c5;
 }
 
@@ -1445,19 +1448,23 @@ button {
 .client-account-card strong,
 .client-account-card small,
 .client-ticket-command h2,
-.client-ticket-command p {
+.client-ticket-command p,
+.client-knowledge-command h2,
+.client-knowledge-command p {
   margin: 0;
 }
 
 .client-command-card h2,
-.client-ticket-command h2 {
+.client-ticket-command h2,
+.client-knowledge-command h2 {
   max-width: 760px;
   font-size: 28px;
   line-height: 1.14;
 }
 
 .client-command-card p,
-.client-ticket-command p {
+.client-ticket-command p,
+.client-knowledge-command p {
   max-width: 760px;
   color: #d5e0e7;
   font-size: 14px;
@@ -1472,7 +1479,8 @@ button {
 }
 
 .client-account-card span,
-.ticket-command-stats span {
+.ticket-command-stats span,
+.knowledge-command-stats span {
   color: #a8bac8;
   font-size: 12px;
   font-weight: 750;
@@ -1582,6 +1590,13 @@ button {
 .client-grid {
   display: grid;
   grid-template-columns: minmax(340px, 0.9fr) minmax(440px, 1.2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.client-knowledge-grid {
+  display: grid;
+  grid-template-columns: minmax(480px, 1.2fr) minmax(340px, 0.8fr);
   gap: 16px;
   align-items: start;
 }
@@ -1787,13 +1802,15 @@ button {
   font-weight: 800;
 }
 
-.ticket-command-stats {
+.ticket-command-stats,
+.knowledge-command-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(96px, 1fr));
   gap: 10px;
 }
 
-.ticket-command-stats div {
+.ticket-command-stats div,
+.knowledge-command-stats div {
   min-height: 86px;
   display: grid;
   align-content: center;
@@ -1804,9 +1821,108 @@ button {
   border-radius: 8px;
 }
 
-.ticket-command-stats strong {
+.ticket-command-stats strong,
+.knowledge-command-stats strong {
   font-size: 26px;
   line-height: 1;
+}
+
+.client-knowledge-tools {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.knowledge-entry-list {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.knowledge-client-entry {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.knowledge-client-entry-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.knowledge-client-entry-head div,
+.knowledge-request-row div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.knowledge-client-entry strong,
+.knowledge-request-row strong {
+  font-size: 13px;
+}
+
+.knowledge-client-entry small,
+.knowledge-request-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.knowledge-client-entry p,
+.knowledge-request-row p {
+  margin: 0;
+  color: #2e3945;
+  font-size: 13px;
+  line-height: 1.48;
+}
+
+.keyword-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.keyword-row span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.knowledge-request-filter {
+  border-width: 0 0 1px;
+  border-radius: 0;
+}
+
+.knowledge-request-row {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.knowledge-request-row p {
+  grid-column: 1 / -1;
+  padding: 10px;
+  background: var(--surface-2);
+  border-radius: 8px;
 }
 
 .ticket-delegation-list {
@@ -2201,6 +2317,8 @@ button {
   .client-grid,
   .client-command-card,
   .client-ticket-command,
+  .client-knowledge-command,
+  .client-knowledge-grid,
   .client-channel-grid,
   .ticket-portal-grid,
   .conversation-portal-grid,
@@ -2253,6 +2371,8 @@ button {
   .team-portal-grid,
   .client-command-card,
   .client-ticket-command,
+  .client-knowledge-command,
+  .client-knowledge-grid,
   .client-channel-grid,
   .client-info-grid,
   .knowledge-client-strip,
@@ -2292,7 +2412,8 @@ button {
   }
 
   .client-command-card h2,
-  .client-ticket-command h2 {
+  .client-ticket-command h2,
+  .client-knowledge-command h2 {
     font-size: 24px;
   }
 
