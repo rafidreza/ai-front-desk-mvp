@@ -18,10 +18,18 @@ Prove the first real loop:
 
 ```bash
 npm install
+npm run db:generate -w @ai-front-desk/api
 npm run dev:api
+npm run dev:web
 ```
 
-Health check:
+Local app:
+
+```text
+http://localhost:3002
+```
+
+API health check:
 
 ```bash
 curl http://localhost:4000/health
