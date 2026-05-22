@@ -1,0 +1,33 @@
+{
+  "name": "@ai-front-desk/hono-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@ai-front-desk/shared": "*",
+    "@anthropic-ai/sdk": "^0.61.0",
+    "@neondatabase/serverless": "^1.0.1",
+    "drizzle-orm": "^0.44.7",
+    "hono": "^4.10.6",
+    "unpdf": "^1.3.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260519.0",
+    "drizzle-kit": "^0.31.7",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.16.1"
+  }
+}

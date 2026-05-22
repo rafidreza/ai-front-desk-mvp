@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ai-front-desk-hono-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "PORT": "8787",
+    "NODE_ENV": "development",
+    "WEB_APP_URL": "http://localhost:3002",
+    "API_BASE_URL": "http://localhost:8787",
+    "MESSENGER_GRAPH_VERSION": "v20.0",
+    "WHATSAPP_GRAPH_VERSION": "v20.0",
+    "ENABLE_MESSENGER": "false",
+    "ENABLE_WHATSAPP": "false",
+    "ENABLE_P1_WHATSAPP_PINGS": "true",
+    "POSTMARK_MESSAGE_STREAM": "outbound",
+    "ANTHROPIC_MODEL": "claude-3-5-haiku-latest",
+    "DEV_RETURN_AUTH_CODE": "false"
+  }
+}
