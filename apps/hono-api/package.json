@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:staging": "wrangler dev --env staging",
     "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
     "deploy:dry-run": "wrangler deploy --dry-run",
+    "deploy:dry-run:staging": "wrangler deploy --dry-run --env staging",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "lint": "eslint .",

@@ -128,3 +128,60 @@ npm test            # Vitest
 ```
 
 CI runs all four on every push (see `.github/workflows/ci.yml`).
+
+## Cloudflare Staging
+
+The Cloudflare staging path uses two Workers:
+
+- `ai-front-desk-hono-api-staging` for the Hono backend.
+- `ai-front-desk-web-staging` for the vinext web app.
+
+Authenticate Wrangler once before publishing:
+
+```bash
+npx wrangler login
+```
+
+Build and dry-run the Worker bundles locally:
+
+```bash
+npm run build:hono
+npm run build:web:vinext
+npm run deploy:dry-run:staging -w @ai-front-desk/hono-api
+npm run deploy:vinext:dry-run:staging -w @ai-front-desk/web
+```
+
+Set staging secrets before the first real deploy. The API Worker needs at least
+`DATABASE_URL`, `INTERNAL_API_TOKEN`, and `CLIENT_AUTH_CODE_SECRET` for database
+and authenticated route checks. Add Meta, Postmark, Vision, and Anthropic keys
+when those integrations should run in staging.
+
+The web Worker needs `API_BASE_URL`, the same `INTERNAL_API_TOKEN`, and the web
+session secrets: `INTERNAL_CONSOLE_PASSWORD`,
+`INTERNAL_CONSOLE_SESSION_SECRET`, and `CLIENT_SESSION_SECRET`.
+
+Set each secret per Worker environment from its app directory:
+
+```bash
+cd apps/hono-api
+npx wrangler secret put DATABASE_URL --env staging
+npx wrangler secret put INTERNAL_API_TOKEN --env staging
+npx wrangler secret put CLIENT_AUTH_CODE_SECRET --env staging
+npx wrangler secret put WEB_APP_URL --env staging
+
+cd ../web
+npx wrangler secret put API_BASE_URL --env staging
+npx wrangler secret put INTERNAL_API_TOKEN --env staging
+npx wrangler secret put INTERNAL_CONSOLE_PASSWORD --env staging
+npx wrangler secret put INTERNAL_CONSOLE_SESSION_SECRET --env staging
+npx wrangler secret put CLIENT_SESSION_SECRET --env staging
+```
+
+After the staging web URL is known, set the API Worker's `WEB_APP_URL` to that
+origin for direct browser CORS requests. Deploy the API first, use its Worker URL
+for the web Worker's `API_BASE_URL`, then publish the web Worker:
+
+```bash
+npm run deploy:staging:hono
+npm run deploy:staging:web
+```

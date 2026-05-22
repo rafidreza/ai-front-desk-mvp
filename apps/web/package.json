@@ -7,7 +7,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev:vinext": "vinext dev --port 3001",
+    "build:vinext": "vinext build",
+    "start:vinext": "vinext start",
+    "deploy:vinext": "vinext deploy",
+    "deploy:vinext:staging": "vinext deploy --env staging",
+    "deploy:vinext:dry-run:staging": "vinext deploy --dry-run --env staging"
   },
   "dependencies": {
     "@ai-front-desk/shared": "*",
@@ -17,12 +23,26 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.37.3",
     "@eslint/js": "^9.17.0",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "@unpic/react": "^1.0.2",
+    "@vercel/og": "^0.8.6",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vitejs/plugin-rsc": "^0.5.26",
     "eslint": "^9.17.0",
+    "image-size": "^2.0.2",
+    "ipaddr.js": "^2.4.0",
+    "magic-string": "^0.30.21",
+    "react-server-dom-webpack": "^19.2.6",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "vinext": "^0.0.51",
+    "vite": "^8.0.14",
+    "vite-plugin-commonjs": "^0.10.4",
+    "vite-tsconfig-paths": "^6.1.1",
+    "web-vitals": "^4.2.4"
   }
 }
