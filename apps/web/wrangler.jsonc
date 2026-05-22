@@ -3,7 +3,8 @@
   "name": "ai-front-desk-web",
   "compatibility_date": "2026-05-22",
   "compatibility_flags": [
-    "nodejs_compat"
+    "nodejs_compat",
+    "global_fetch_strictly_public"
   ],
   "main": "./worker/index.ts",
   "assets": {
@@ -18,6 +19,9 @@
     "staging": {
       "name": "ai-front-desk-web-staging",
       "workers_dev": true,
+      "images": {
+        "binding": "IMAGES"
+      },
       "vars": {
         "NODE_ENV": "production"
       }
