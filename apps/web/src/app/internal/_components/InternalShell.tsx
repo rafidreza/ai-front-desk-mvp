@@ -4,6 +4,7 @@ import { AlertTriangle } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
 import { getAiProviderHealth, getDatabaseHealth } from '@/lib/api';
 import { AiProviderHealth, ApiHealth } from '@/types/domain';
+import { P1AlertCenter } from './P1AlertCenter';
 import { Sidebar } from './Sidebar';
 
 interface InternalShellProps {
@@ -79,6 +80,7 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
         )}
         {children}
       </section>
+      <P1AlertCenter />
     </main>
   );
 }

@@ -5418,3 +5418,123 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* ============================================
+   P1 alert center — toast stack + permission nudge (T105)
+   ============================================ */
+
+.p1-alert-stack {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 80;
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 36px));
+}
+
+.p1-alert {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--coral);
+  border-left-width: 4px;
+  border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(28, 39, 52, 0.22);
+  animation: p1-slide-in 220ms ease-out;
+}
+
+.p1-alert header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--coral);
+  font-size: var(--text-small);
+}
+
+.p1-alert header strong {
+  flex: 1 1 auto;
+  font-weight: 700;
+}
+
+.p1-alert header button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--coral-soft);
+  border: 1px solid var(--coral);
+  color: var(--coral);
+  cursor: pointer;
+  padding: 0;
+}
+
+.p1-alert p {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.4;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.p1-alert footer a {
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.p1-alert footer a:hover {
+  text-decoration: underline;
+}
+
+@keyframes p1-slide-in {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.p1-permission-nudge {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--muted);
+  box-shadow: 0 8px 18px rgba(28, 39, 52, 0.14);
+}
+
+.p1-permission-nudge button {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--brand);
+  color: var(--brand-on);
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: var(--text-tiny);
+  cursor: pointer;
+}
+
+.p1-permission-nudge button:hover {
+  background: var(--brand-hover);
+}
