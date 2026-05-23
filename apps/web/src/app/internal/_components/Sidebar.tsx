@@ -23,6 +23,7 @@ type ActiveView =
   | 'conversations'
   | 'knowledge'
   | 'kb-review'
+  | 'data-sources'
   | 'agent-config';
 
 interface SidebarProps {
@@ -82,6 +83,10 @@ export function Sidebar({ activeView, onChangeView, health, healthError, onLogou
         <Link className="side-link" data-active={activeView === 'kb-review'} href="/internal/kb-review">
           <ClipboardCheck size={17} />
           KB Review
+        </Link>
+        <Link className="side-link" data-active={activeView === 'data-sources'} href="/internal/data-sources">
+          <DatabaseZap size={17} />
+          Data Sources
         </Link>
         <Link className="side-link" data-active={activeView === 'agent-config'} href="/internal/agent-config">
           <Settings2 size={17} />

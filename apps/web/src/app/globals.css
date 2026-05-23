@@ -1850,7 +1850,8 @@ button {
 
 .client-command-card,
 .client-ticket-command,
-.client-knowledge-command {
+.client-knowledge-command,
+.client-data-command {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
   gap: 18px;
@@ -1871,14 +1872,16 @@ button {
 
 .client-command-main,
 .client-ticket-command > div:first-child,
-.client-knowledge-command > div:first-child {
+.client-knowledge-command > div:first-child,
+.client-data-command > div:first-child {
   display: grid;
   gap: 8px;
 }
 
 .client-command-card .eyebrow,
 .client-ticket-command .eyebrow,
-.client-knowledge-command .eyebrow {
+.client-knowledge-command .eyebrow,
+.client-data-command .eyebrow {
   color: var(--green);
 }
 
@@ -1890,13 +1893,16 @@ button {
 .client-ticket-command h2,
 .client-ticket-command p,
 .client-knowledge-command h2,
-.client-knowledge-command p {
+.client-knowledge-command p,
+.client-data-command h2,
+.client-data-command p {
   margin: 0;
 }
 
 .client-command-card h2,
 .client-ticket-command h2,
-.client-knowledge-command h2 {
+.client-knowledge-command h2,
+.client-data-command h2 {
   max-width: 760px;
   font-size: 28px;
   line-height: 1.14;
@@ -1904,7 +1910,8 @@ button {
 
 .client-command-card p,
 .client-ticket-command p,
-.client-knowledge-command p {
+.client-knowledge-command p,
+.client-data-command p {
   max-width: 760px;
   color: #51606b;
   font-size: 14px;
@@ -2140,6 +2147,104 @@ button {
   grid-template-columns: minmax(480px, 1.2fr) minmax(340px, 0.8fr);
   gap: 16px;
   align-items: start;
+}
+
+.client-data-grid {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(340px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.data-source-panel {
+  display: grid;
+  align-content: start;
+}
+
+.data-source-form,
+.data-source-status,
+.data-record-list,
+.data-warning-list {
+  padding: 14px;
+}
+
+.data-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.data-form-row:has(label:nth-child(3)) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.data-source-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.data-source-status div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.data-source-status span,
+.data-record-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.data-source-status strong {
+  font-size: 16px;
+  text-transform: capitalize;
+}
+
+.data-record-list {
+  display: grid;
+  gap: 8px;
+}
+
+.data-record-row {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  border-radius: 8px;
+}
+
+.data-record-row div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.data-record-row strong,
+.data-record-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.data-warning-list {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.data-warning-list p {
+  margin: 0;
+  color: var(--amber);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .client-knowledge-side {
@@ -2956,7 +3061,11 @@ button {
   .client-command-card,
   .client-ticket-command,
   .client-knowledge-command,
+  .client-data-command,
   .client-knowledge-grid,
+  .client-data-grid,
+  .data-form-row,
+  .data-source-status,
   .knowledge-form-row,
   .client-channel-grid,
   .ticket-portal-grid,
@@ -3022,7 +3131,11 @@ button {
   .client-command-card,
   .client-ticket-command,
   .client-knowledge-command,
+  .client-data-command,
   .client-knowledge-grid,
+  .client-data-grid,
+  .data-form-row,
+  .data-source-status,
   .client-channel-grid,
   .client-info-grid,
   .knowledge-client-strip,
