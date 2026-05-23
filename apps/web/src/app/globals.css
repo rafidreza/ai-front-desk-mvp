@@ -1539,6 +1539,53 @@ button {
   justify-content: space-between;
 }
 
+.client-channel-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.client-channel-list {
+  display: grid;
+  gap: 8px;
+}
+
+.client-channel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.client-channel-row > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.client-channel-row strong,
+.client-channel-row small {
+  overflow-wrap: anywhere;
+}
+
+.client-channel-row small {
+  color: var(--muted);
+}
+
+.channel-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
 .sticky-save-bar {
   position: sticky;
   bottom: 0;
@@ -3510,6 +3557,7 @@ button {
   .kb-review-form-row,
   .client-portal-grid,
   .client-management-grid,
+  .channel-inline-form,
   .team-portal-grid,
   .client-info-grid,
   .client-ticket-workspace,

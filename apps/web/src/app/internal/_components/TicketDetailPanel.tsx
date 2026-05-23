@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 import { assigneeLabel, eventTitle, formatTime, priorityTone, statusLabels, statuses } from '../_lib/helpers';
+import { SlaBadge } from './SlaBadge';
 
 interface TicketDetailPanelProps {
   activeTicket?: Ticket;
@@ -79,9 +80,12 @@ export function TicketDetailPanel({
                   <p className="eyebrow">Ticket</p>
                   <h3>{activeTicket.customerMessage}</h3>
                 </div>
-                <span className="badge" data-tone={priorityTone(activeTicket.priority)}>
-                  {activeTicket.priority}
-                </span>
+                <div className="case-heading__meta">
+                  <span className="badge" data-tone={priorityTone(activeTicket.priority)}>
+                    {activeTicket.priority}
+                  </span>
+                  <SlaBadge ticket={activeTicket} size="md" />
+                </div>
               </div>
 
               {detailError !== null && (

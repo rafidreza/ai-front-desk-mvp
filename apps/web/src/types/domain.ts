@@ -49,6 +49,7 @@ export type {
   TicketComment,
   TicketDetail,
   TicketEvent,
+  TicketPriority,
   TicketStatus,
 } from '@ai-front-desk/shared';
 export { TAG_COLORS } from '@ai-front-desk/shared';

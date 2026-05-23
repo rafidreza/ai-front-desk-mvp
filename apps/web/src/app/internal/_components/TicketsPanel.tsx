@@ -4,6 +4,7 @@ import { assigneeLabel, priorityTone, statusLabels, statusTone } from '../_lib/h
 import { EmptyState } from './EmptyState';
 import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
+import { SlaBadge } from './SlaBadge';
 import { TagChip } from './TagChip';
 
 interface TicketsPanelProps {
@@ -147,6 +148,7 @@ export function TicketsPanel({
                       <span className="badge" data-tone={statusTone(ticket.status)}>
                         {statusLabels[ticket.status]}
                       </span>
+                      <SlaBadge ticket={ticket} />
                     </span>
                   </button>
                 </div>
