@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AiService } from './ai/ai.service';
+import { ChannelHealthController } from './channels/channel-health.controller';
+import { ChannelHealthService } from './channels/channel-health.service';
 import { ChannelSendService } from './channels/channel-send.service';
 import { MessengerController } from './channels/messenger.controller';
 import { MessengerSendService } from './channels/messenger-send.service';
@@ -49,6 +51,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
   controllers: [
     ClientController,
     ClientAuthController,
+    ChannelHealthController,
     ConversationController,
     HealthController,
     IndustryTemplateController,
@@ -66,6 +69,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
   providers: [
     AiService,
     AutoQaService,
+    ChannelHealthService,
     ChannelSendService,
     ConversationRepository,
     ConversationService,

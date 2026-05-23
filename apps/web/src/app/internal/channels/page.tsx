@@ -23,6 +23,25 @@ type WhatsAppTemplate = {
   updatedAt: string;
 };
 
+type ChannelHealthCheck = {
+  clientId: string;
+  businessName: string;
+  channel: 'messenger' | 'whatsapp';
+  status: 'healthy' | 'warning' | 'needs_setup';
+  setupLabel: string;
+  detail: string;
+  tokenExpiresAt?: string;
+  tokenDaysRemaining?: number;
+  webhookLastSeenAt?: string;
+  eventsLast24h: number;
+  failuresLast24h: number | null;
+  templateCounts?: {
+    approved: number;
+    pending: number;
+    rejected: number;
+  };
+};
+
 type TemplateForm = {
   name: string;
   languageCode: string;
@@ -47,6 +66,12 @@ function statusTone(status: WhatsAppTemplateStatus) {
   return 'amber';
 }
 
+function healthTone(status: ChannelHealthCheck['status']) {
+  if (status === 'healthy') return 'green';
+  if (status === 'warning') return 'amber';
+  return 'coral';
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/backend${path}`, {
     ...init,
@@ -65,6 +90,7 @@ export default function InternalChannelsPage() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [healthChecks, setHealthChecks] = useState<ChannelHealthCheck[]>([]);
   const [form, setForm] = useState<TemplateForm>(emptyTemplateForm);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -81,7 +107,9 @@ export default function InternalChannelsPage() {
     setError(null);
     try {
       const nextClients = await getClients();
+      const healthData = await apiFetch<{ generatedAt: string; checks: ChannelHealthCheck[] }>('/internal/channel-health');
       setClients(nextClients);
+      setHealthChecks(healthData.checks);
       const nextClientId = selectedClientId || nextClients[0]?.id || '';
       setSelectedClientId(nextClientId);
       if (nextClientId !== '') {
@@ -164,6 +192,33 @@ export default function InternalChannelsPage() {
     >
       {error !== null && <div className="inline-alert">{error}</div>}
       {notice !== null && <div className="inline-success">{notice}</div>}
+
+      <section className="metrics">
+        {healthChecks.map((check) => (
+          <article className="metric" key={`${check.clientId}:${check.channel}`}>
+            <span>{check.businessName}</span>
+            <strong>{check.channel === 'messenger' ? 'Messenger' : 'WhatsApp'}</strong>
+            <small>
+              <span className="badge" data-tone={healthTone(check.status)}>
+                {check.status.replace('_', ' ')}
+              </span>
+            </small>
+            <small>{check.setupLabel}</small>
+            <small>{check.detail}</small>
+            <small>
+              Webhook: {check.webhookLastSeenAt === undefined ? 'no recent traffic' : new Date(check.webhookLastSeenAt).toLocaleString('en-BD')}
+            </small>
+            <small>{check.eventsLast24h} events in 24h</small>
+          </article>
+        ))}
+        {!isLoading && healthChecks.length === 0 && (
+          <article className="metric">
+            <span>Channel health</span>
+            <strong>No clients</strong>
+            <small>Create a client before channel checks appear.</small>
+          </article>
+        )}
+      </section>
 
       <section className="client-portal-grid">
         <section className="panel">
