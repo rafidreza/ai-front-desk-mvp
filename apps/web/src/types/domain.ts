@@ -12,6 +12,7 @@ export type {
   ClientKnowledgeEntry,
   ClientOnboardingProfile,
   ClientProfile,
+  ClientStatus,
   ClientWhatsAppSetupPreference,
   ConversationAutoQaGrade,
   ConversationLog,

@@ -108,6 +108,10 @@ export class ClientAuthService {
       };
     }
 
+    if (client.status === 'inactive') {
+      throw new UnauthorizedException('Client account is inactive.');
+    }
+
     const channel = input.channel ?? (client.ownerEmail !== null || client.digestEmail !== null ? 'email' : 'whatsapp');
     const destination = channel === 'email' ? client.ownerEmail ?? client.digestEmail : client.ownerPhone ?? client.whatsappPoc;
 
@@ -164,6 +168,10 @@ export class ClientAuthService {
       data: { consumedAt: new Date() },
     });
 
-    return this.clients.findById(challenge.clientId);
+    const client = await this.clients.findById(challenge.clientId);
+    if (client.status === 'inactive') {
+      throw new UnauthorizedException('Client account is inactive.');
+    }
+    return client;
   }
 }

@@ -7,6 +7,7 @@ const client: ClientProfile = {
   id: 'pilot-client',
   businessName: 'Pilot Commerce',
   pageId: 'pilot-page',
+  status: 'active',
   onboardingStatus: 'active',
   defaultLanguage: 'mixed',
   tone: 'friendly',

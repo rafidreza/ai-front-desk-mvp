@@ -19,6 +19,8 @@ export type ConversationQaDefect =
   | 'incomplete_answer'
   | 'tone_risk';
 
+export type ClientStatus = 'active' | 'inactive';
+
 export type CalibrationQueueFilter =
   | 'needs_review'
   | 'failed'
@@ -35,6 +37,7 @@ export interface ClientProfile {
   ownerEmail?: string;
   ownerPhone?: string;
   businessCategory?: string;
+  status: ClientStatus;
   onboardingStatus: string;
   defaultLanguage: 'bangla' | 'english' | 'mixed';
   tone: string;

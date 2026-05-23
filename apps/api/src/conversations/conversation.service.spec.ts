@@ -14,6 +14,7 @@ const pilotClient: ClientProfile = {
   id: 'pilot-client',
   businessName: 'Pilot Commerce',
   pageId: 'pilot-page',
+  status: 'active',
   onboardingStatus: 'active',
   defaultLanguage: 'mixed',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',

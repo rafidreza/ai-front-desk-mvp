@@ -1,7 +1,8 @@
 'use client';
 
-import { ArrowLeft, BookOpenText, Filter, Pencil, Plus, RefreshCw, Search, Send, ShieldCheck } from 'lucide-react';
+import { BookOpenText, Filter, Pencil, Plus, RefreshCw, Search, Send, ShieldCheck } from 'lucide-react';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { ClientPortalNav } from '../_components/ClientPortalNav';
 import {
   getClientKnowledgeEntries,
   getClientKnowledgeRequests,
@@ -197,15 +198,15 @@ export default function ClientKnowledgePage() {
   return (
     <main className="client-shell">
       <header className="client-topbar">
-        <div>
-          <p className="eyebrow">Business knowledge</p>
-          <h1>Knowledge Base</h1>
+        <div className="client-title-lockup">
+          <span className="client-mark">KB</span>
+          <div>
+            <p className="eyebrow">Business knowledge</p>
+            <h1>Knowledge Base</h1>
+          </div>
         </div>
+        <ClientPortalNav active="knowledge" clientId={clientId} />
         <div className="panel-actions">
-          <a className="icon-button" href={`/client/dashboard?clientId=${clientId}`}>
-            <ArrowLeft size={16} />
-            Dashboard
-          </a>
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadKnowledge()}>
             <RefreshCw size={16} />
             Refresh

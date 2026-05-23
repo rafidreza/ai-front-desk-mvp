@@ -17,6 +17,31 @@ const SignupSchema = z.object({
   digestEmail: z.string().trim().email().optional(),
 });
 
+const ClientManagementSchema = z.object({
+  businessName: z.string().trim().min(2).max(120),
+  pageId: z.string().trim().min(2).max(180).optional(),
+  ownerName: z.string().trim().min(2).max(120).optional(),
+  ownerEmail: z.string().trim().email().optional(),
+  ownerPhone: z.string().trim().min(5).max(80).optional(),
+  businessCategory: z.string().trim().min(2).max(80).optional(),
+  defaultLanguage: z.enum(['bangla', 'english', 'mixed']).optional(),
+  tone: z.string().trim().min(5).max(500).optional(),
+  whatsappPoc: z.string().trim().min(5).max(80).optional(),
+  digestEmail: z.string().trim().email().optional(),
+  onboardingStatus: z.enum(['signup_started', 'profile_complete', 'channels_complete', 'onboarding_complete', 'live']).optional(),
+  onboardingProfile: z.object({
+    focusChannels: z.array(z.enum(['whatsapp', 'facebook', 'website'])).min(1).max(3).optional(),
+    websiteUrl: z.string().trim().url().optional(),
+    facebookPageUrl: z.string().trim().url().optional(),
+    whatsappSetup: z.enum(['self', 'assisted', 'skip']).optional(),
+    facebookSetup: z.enum(['oauth', 'assisted', 'skip']).optional(),
+  }).optional(),
+});
+
+const ClientStatusSchema = z.object({
+  status: z.enum(['active', 'inactive']),
+});
+
 const OnboardingProfilePatchSchema = z.object({
   focusChannels: z.array(z.enum(['whatsapp', 'facebook', 'website'])).min(1).max(3).optional(),
   websiteUrl: z.string().trim().url().optional(),
@@ -60,6 +85,24 @@ export class ClientController {
   async signup(@Body() body: unknown) {
     const parsed = SignupSchema.parse(body);
     return { client: await this.clients.create(parsed) };
+  }
+
+  @Post()
+  async createClient(@Body() body: unknown) {
+    const parsed = ClientManagementSchema.parse(body);
+    return { client: await this.clients.createInternal(parsed) };
+  }
+
+  @Patch(':clientId')
+  async updateClient(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = ClientManagementSchema.partial().parse(body);
+    return { client: await this.clients.updateProfile(clientId, parsed) };
+  }
+
+  @Patch(':clientId/status')
+  async updateClientStatus(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = ClientStatusSchema.parse(body);
+    return { client: await this.clients.setStatus(clientId, parsed.status) };
   }
 
   @Patch(':clientId/onboarding')

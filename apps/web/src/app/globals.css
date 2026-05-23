@@ -297,19 +297,19 @@ button {
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .metric {
-  min-height: 96px;
+  min-height: 106px;
   display: grid;
-  align-content: center;
-  gap: 7px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  align-content: space-between;
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid #d5ded9;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
-  box-shadow: 0 10px 28px rgba(28, 39, 52, 0.05);
+  box-shadow: 0 10px 26px rgba(28, 39, 52, 0.055);
 }
 
 .metric span,
@@ -319,7 +319,7 @@ button {
 }
 
 .metric strong {
-  font-size: 28px;
+  font-size: 30px;
   line-height: 1;
 }
 
@@ -1340,6 +1340,23 @@ button {
   text-transform: none;
 }
 
+.internal-client-form {
+  padding: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.client-management-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.client-management-actions {
+  justify-content: space-between;
+}
+
 .pricing-panel {
   display: grid;
   grid-template-columns: minmax(260px, 0.9fr) minmax(260px, 1.1fr);
@@ -1509,9 +1526,10 @@ button {
   min-height: 100vh;
   display: grid;
   align-content: start;
-  gap: 18px;
-  padding: 24px;
-  background: var(--bg);
+  gap: 16px;
+  padding: 18px clamp(16px, 2.2vw, 28px) 28px;
+  background:
+    linear-gradient(180deg, #f9faf7 0%, #eef3f1 42%, #edf0f2 100%);
 }
 
 .client-auth-shell {
@@ -1730,18 +1748,104 @@ button {
   line-height: 1.45;
 }
 
+.client-setup-brief {
+  max-width: 760px;
+  padding: 2px 4px 8px 58px;
+}
+
+.client-setup-brief p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .client-topbar {
-  min-height: 64px;
+  min-height: 70px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 10px 0;
+  background: linear-gradient(180deg, rgba(249, 250, 247, 0.96) 0%, rgba(249, 250, 247, 0.88) 82%, rgba(249, 250, 247, 0) 100%);
+  backdrop-filter: blur(14px);
+}
+
+.client-topbar .panel-actions {
+  flex-wrap: wrap;
 }
 
 .client-topbar h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: clamp(22px, 2.1vw, 30px);
   line-height: 1.12;
+}
+
+.client-title-lockup {
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.client-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid #b8c9bf;
+  background: #15372f;
+  color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(21, 55, 47, 0.16);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.client-nav {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid #d4ddd7;
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(28, 39, 52, 0.07);
+}
+
+.client-nav-link {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  color: #52606d;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 780;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.client-nav-link:hover {
+  border-color: #c8d4ce;
+  color: var(--ink);
+}
+
+.client-nav-link[data-active="true"] {
+  border-color: #15372f;
+  background: #15372f;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(21, 55, 47, 0.16);
 }
 
 .client-command-card,
@@ -1752,13 +1856,13 @@ button {
   gap: 18px;
   align-items: end;
   padding: 22px;
-  border: 1px solid #223140;
+  border: 1px solid #d1ddd7;
   background:
-    linear-gradient(135deg, rgba(16, 24, 32, 0.96), rgba(20, 48, 56, 0.92)),
-    var(--nav);
-  color: #ffffff;
-  border-radius: 10px;
-  box-shadow: var(--shadow);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(242, 247, 244, 0.9)),
+    var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(28, 39, 52, 0.09);
 }
 
 .client-ticket-command {
@@ -1775,7 +1879,7 @@ button {
 .client-command-card .eyebrow,
 .client-ticket-command .eyebrow,
 .client-knowledge-command .eyebrow {
-  color: #9db5c5;
+  color: var(--green);
 }
 
 .client-command-card h2,
@@ -1802,7 +1906,7 @@ button {
 .client-ticket-command p,
 .client-knowledge-command p {
   max-width: 760px;
-  color: #d5e0e7;
+  color: #51606b;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -1810,14 +1914,14 @@ button {
 .client-account-card {
   display: grid;
   justify-items: end;
-  gap: 6px;
+  gap: 7px;
   text-align: right;
 }
 
 .client-account-card span,
 .ticket-command-stats span,
 .knowledge-command-stats span {
-  color: #a8bac8;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 750;
   text-transform: uppercase;
@@ -1830,17 +1934,44 @@ button {
 .client-account-card small {
   max-width: 320px;
   overflow: hidden;
-  color: #d5e0e7;
+  color: var(--muted);
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.client-panel {
+.client-signal {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
   border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 10px;
-  box-shadow: 0 14px 38px rgba(28, 39, 52, 0.08);
+  background: #ffffff;
+  color: var(--muted);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.client-signal span {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--amber);
+}
+
+.client-signal[data-online="true"] span {
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(15, 122, 90, 0.12);
+}
+
+.client-panel {
+  border: 1px solid #d5ded9;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(28, 39, 52, 0.07);
   overflow: hidden;
 }
 
@@ -2029,10 +2160,10 @@ button {
   align-content: start;
   gap: 14px;
   padding: 16px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 10px;
-  box-shadow: 0 12px 32px rgba(28, 39, 52, 0.06);
+  border: 1px solid #d5ded9;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(28, 39, 52, 0.055);
 }
 
 .channel-card[data-status="connected"] {
@@ -2072,8 +2203,8 @@ button {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
+  border: 1px solid #d5ded9;
+  background: #f5f7f3;
   color: var(--green);
   border-radius: 8px;
 }
@@ -2160,9 +2291,16 @@ button {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid #d9e2dd;
+  background: #ffffff;
   border-radius: 8px;
+}
+
+.client-row:hover,
+.knowledge-client-entry:hover,
+.knowledge-request-row:hover,
+.delegation-card:hover {
+  border-color: #b9ccc3;
 }
 
 .client-row div:first-child {
@@ -2206,9 +2344,9 @@ button {
   justify-content: space-between;
   gap: 14px;
   padding: 12px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 10px;
+  border: 1px solid #d5ded9;
+  background: rgba(255, 255, 255, 0.86);
+  border-radius: 8px;
 }
 
 .client-filter-bar > div:first-child {
@@ -2232,8 +2370,8 @@ button {
   align-content: center;
   gap: 5px;
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid #d5ded9;
+  background: #ffffff;
   border-radius: 8px;
 }
 
@@ -2260,8 +2398,8 @@ button {
   display: grid;
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid #d9e2dd;
+  background: #ffffff;
   border-radius: 8px;
 }
 
@@ -2334,8 +2472,8 @@ button {
   align-items: center;
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid #d9e2dd;
+  background: #ffffff;
   border-radius: 8px;
 }
 
@@ -2344,7 +2482,8 @@ button {
   display: grid;
   gap: 5px;
   padding: 10px;
-  background: var(--surface-2);
+  border-left: 3px solid #c0674a;
+  background: #fbf4ef;
   border-radius: 8px;
 }
 
@@ -2387,10 +2526,10 @@ button {
   gap: 16px;
   align-items: center;
   padding: 16px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(28, 39, 52, 0.06);
+  border: 1px solid #d9e2dd;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(28, 39, 52, 0.055);
 }
 
 .delegation-card h2,
@@ -2779,6 +2918,7 @@ button {
   .kb-diff-grid,
   .kb-review-form-row,
   .client-portal-grid,
+  .client-management-grid,
   .team-portal-grid,
   .client-info-grid,
   .knowledge-client-strip,
@@ -2828,6 +2968,7 @@ button {
   .kb-review-form-row,
   .conversation-summary-strip,
   .client-portal-grid,
+  .client-management-grid,
   .team-portal-grid,
   .client-command-card,
   .client-ticket-command,
@@ -2895,13 +3036,30 @@ button {
   }
 
   .client-topbar {
-    align-items: flex-start;
+    align-items: stretch;
     flex-direction: column;
+  }
+
+  .client-title-lockup {
+    min-width: 0;
+  }
+
+  .client-nav {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .client-nav-link {
+    flex: 0 0 auto;
   }
 
   .client-account-card {
     justify-items: start;
     text-align: left;
+  }
+
+  .client-setup-brief {
+    padding-left: 0;
   }
 
   .client-command-card h2,

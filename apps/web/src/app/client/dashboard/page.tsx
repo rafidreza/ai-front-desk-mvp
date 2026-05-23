@@ -1,7 +1,8 @@
 'use client';
 
-import { BookOpenText, CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert } from 'lucide-react';
+import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { captureCsat, getClientDashboard } from '@/lib/api';
 import { ClientChannelSummary, ClientDashboardSummary } from '@/types/domain';
 
@@ -66,19 +67,19 @@ export default function ClientDashboardPage() {
   return (
     <main className="client-shell">
       <header className="client-topbar">
-        <div>
-          <p className="eyebrow">Client dashboard</p>
-          <h1>{dashboard?.client.businessName ?? 'AI Front Desk'}</h1>
+        <div className="client-title-lockup">
+          <span className="client-mark">AF</span>
+          <div>
+            <p className="eyebrow">Client dashboard</p>
+            <h1>{dashboard?.client.businessName ?? 'AI Front Desk'}</h1>
+          </div>
         </div>
+        <ClientPortalNav active="dashboard" clientId={clientId} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadDashboard()}>
             <RefreshCw size={16} />
             Refresh
           </button>
-          <a className="icon-button" href={`/client/knowledge?clientId=${clientId}`}>
-            <BookOpenText size={16} />
-            Knowledge
-          </a>
           <button className="icon-button" type="button" onClick={() => void logout()}>
             Sign out
           </button>
@@ -100,6 +101,10 @@ export default function ClientDashboardPage() {
           <span>Client account</span>
           <strong>{dashboard?.client.businessName ?? 'Loading account'}</strong>
           <small>{dashboard?.client.ownerEmail ?? dashboard?.client.ownerPhone ?? dashboard?.client.pageId ?? 'Contact details pending'}</small>
+          <div className="client-signal" data-online={connectedChannelCount > 0}>
+            <span />
+            {connectedChannelCount > 0 ? 'Channels online' : 'Setup needed'}
+          </div>
         </div>
       </section>
 

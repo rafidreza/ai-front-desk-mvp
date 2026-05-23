@@ -2,6 +2,7 @@
 
 import { BookOpenText, Building2, Link2, MessageCircle } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
+import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
 import {
   ClientFacebookSetupPreference,
@@ -154,12 +155,19 @@ export default function ClientOnboardingPage() {
 
   return (
     <main className="client-shell">
-      <section className="client-hero">
-        <div>
-          <p className="eyebrow">Client onboarding</p>
-          <h1>Set up your business</h1>
-          <p>Share the business context, channel setup path, and first knowledge notes for your workspace.</p>
+      <header className="client-topbar">
+        <div className="client-title-lockup">
+          <span className="client-mark">ST</span>
+          <div>
+            <p className="eyebrow">Client onboarding</p>
+            <h1>Set up your business</h1>
+          </div>
         </div>
+        <ClientPortalNav active="onboarding" clientId={clientId} />
+      </header>
+
+      <section className="client-setup-brief">
+        <p>Share the business context, channel setup path, and first knowledge notes for your workspace.</p>
       </section>
 
       <section className="client-panel onboarding-panel">

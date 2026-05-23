@@ -1,7 +1,8 @@
 'use client';
 
-import { ArrowLeft, CheckCircle2, Clock3, Filter, RefreshCw, TicketCheck } from 'lucide-react';
+import { CheckCircle2, Clock3, Filter, RefreshCw, TicketCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { getClientTickets, updateClientTicketStatus } from '@/lib/api';
 import { Ticket, TicketStatus } from '@/types/domain';
 
@@ -49,10 +50,14 @@ export default function ClientTicketsPage() {
   return (
     <main className="client-shell">
       <header className="client-topbar">
-        <div>
-          <p className="eyebrow">Client delegation</p>
-          <h1>Tickets</h1>
+        <div className="client-title-lockup">
+          <span className="client-mark">TK</span>
+          <div>
+            <p className="eyebrow">Client delegation</p>
+            <h1>Tickets</h1>
+          </div>
         </div>
+        <ClientPortalNav active="tickets" clientId={clientId} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadTickets()}>
             <RefreshCw size={16} />
@@ -68,10 +73,6 @@ export default function ClientTicketsPage() {
 
       <section className="client-ticket-command">
         <div>
-          <a className="mini-button" href={`/client/dashboard?clientId=${clientId}`}>
-            <ArrowLeft size={13} />
-            Dashboard
-          </a>
           <p className="eyebrow">Ticket queue</p>
           <h2>Customer issues waiting for client decision</h2>
           <p>Review delegated conversations, update ownership state, and keep the support team aligned on resolution.</p>

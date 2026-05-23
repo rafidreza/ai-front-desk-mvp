@@ -6,6 +6,7 @@ const baseClient: ClientProfile = {
   id: 'pilot-client',
   businessName: 'Test Seller',
   pageId: 'test-page',
+  status: 'active',
   defaultLanguage: 'mixed',
   tone: 'friendly',
   escalationKeywords: ['refund', 'cancel', 'রিফান্ড'],

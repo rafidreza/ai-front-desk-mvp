@@ -5,6 +5,7 @@ import {
   ClientDashboardSummary,
   ClientKnowledgeEntry,
   ClientProfile,
+  ClientStatus,
   ConversationLog,
   ConversationQaGrade,
   InternalUser,
@@ -83,6 +84,45 @@ export async function createInternalUser(input: {
 export async function getClients(): Promise<ClientProfile[]> {
   const data = await apiFetch<{ clients: ClientProfile[] }>('/clients');
   return data.clients;
+}
+
+export type ClientManagementInput = {
+  businessName?: string;
+  pageId?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  businessCategory?: string;
+  defaultLanguage?: ClientProfile['defaultLanguage'];
+  tone?: string;
+  whatsappPoc?: string;
+  digestEmail?: string;
+  onboardingStatus?: string;
+  onboardingProfile?: ClientProfile['onboardingProfile'];
+};
+
+export async function createClientFromInternal(input: ClientManagementInput & { businessName: string }): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>('/clients', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.client;
+}
+
+export async function updateClientFromInternal(clientId: string, input: ClientManagementInput): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+  return data.client;
+}
+
+export async function updateClientStatus(clientId: string, status: ClientStatus): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+  return data.client;
 }
 
 export async function signupClient(input: {

@@ -1,9 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
-import { ClientOnboardingProfile, ClientProfile } from '../types/domain';
+import { ClientOnboardingProfile, ClientProfile, ClientStatus } from '../types/domain';
 
 type ClientLanguage = ClientProfile['defaultLanguage'];
+type ClientMutationInput = {
+  businessName?: string;
+  pageId?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  businessCategory?: string;
+  defaultLanguage?: ClientProfile['defaultLanguage'];
+  tone?: string;
+  whatsappPoc?: string;
+  digestEmail?: string;
+  onboardingStatus?: string;
+  onboardingProfile?: ClientOnboardingProfile;
+};
 
 function toClientProfile(client: {
   id: string;
@@ -13,6 +28,7 @@ function toClientProfile(client: {
   ownerEmail: string | null;
   ownerPhone: string | null;
   businessCategory: string | null;
+  status?: string;
   onboardingStatus: string;
   onboardingProfile: unknown;
   defaultLanguage: string;
@@ -25,6 +41,7 @@ function toClientProfile(client: {
     client.defaultLanguage === 'bangla' || client.defaultLanguage === 'english' || client.defaultLanguage === 'mixed'
       ? client.defaultLanguage
       : 'mixed';
+  const status: ClientStatus = client.status === 'inactive' ? 'inactive' : 'active';
 
   return {
     id: client.id,
@@ -34,6 +51,7 @@ function toClientProfile(client: {
     ownerEmail: client.ownerEmail ?? undefined,
     ownerPhone: client.ownerPhone ?? undefined,
     businessCategory: client.businessCategory ?? undefined,
+    status,
     onboardingStatus: client.onboardingStatus,
     onboardingProfile: toOnboardingProfile(client.onboardingProfile),
     defaultLanguage,
@@ -56,6 +74,7 @@ const pilotClientFallback: ClientProfile = {
   defaultLanguage: 'mixed',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
   escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
+  status: 'active',
   onboardingStatus: 'live',
 };
 
@@ -101,6 +120,32 @@ export class PilotClientService {
         ownerPhone: input.ownerPhone,
         businessCategory: input.businessCategory,
         onboardingStatus: 'signup_started',
+        status: 'active',
+        defaultLanguage: input.defaultLanguage ?? 'mixed',
+        tone: input.tone ?? 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
+        escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
+        whatsappPoc: input.whatsappPoc,
+        digestEmail: input.digestEmail ?? input.ownerEmail,
+      },
+    });
+
+    return toClientProfile(client);
+  }
+
+  async createInternal(input: { businessName: string } & ClientMutationInput): Promise<ClientProfile> {
+    const id = `client-${randomUUID()}`;
+    const client = await this.requirePrisma().client.create({
+      data: {
+        id,
+        businessName: input.businessName,
+        pageId: input.pageId?.trim() || `${id}-page-pending`,
+        ownerName: input.ownerName,
+        ownerEmail: input.ownerEmail,
+        ownerPhone: input.ownerPhone,
+        businessCategory: input.businessCategory,
+        status: 'active',
+        onboardingStatus: input.onboardingStatus ?? 'onboarding_complete',
+        onboardingProfile: input.onboardingProfile as Prisma.InputJsonValue | undefined,
         defaultLanguage: input.defaultLanguage ?? 'mixed',
         tone: input.tone ?? 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
         escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
@@ -191,8 +236,57 @@ export class PilotClientService {
         pageId: input.pageId,
         whatsappPoc: input.whatsappPoc,
         onboardingStatus: input.onboardingStatus,
+        onboardingProfile: onboardingProfile as Prisma.InputJsonValue | undefined,
+      },
+    });
+    return toClientProfile(client);
+  }
+
+  async updateProfile(clientId: string, input: ClientMutationInput): Promise<ClientProfile> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+
+    const onboardingProfile =
+      input.onboardingProfile === undefined
+        ? undefined
+        : {
+            ...(toOnboardingProfile(existing.onboardingProfile) ?? {}),
+            ...input.onboardingProfile,
+          };
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        businessName: input.businessName,
+        pageId: input.pageId,
+        ownerName: input.ownerName,
+        ownerEmail: input.ownerEmail,
+        ownerPhone: input.ownerPhone,
+        businessCategory: input.businessCategory,
+        defaultLanguage: input.defaultLanguage,
+        tone: input.tone,
+        whatsappPoc: input.whatsappPoc,
+        digestEmail: input.digestEmail,
+        onboardingStatus: input.onboardingStatus,
         onboardingProfile,
       },
+    });
+
+    return toClientProfile(client);
+  }
+
+  async setStatus(clientId: string, status: ClientStatus): Promise<ClientProfile> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: { status },
     });
     return toClientProfile(client);
   }

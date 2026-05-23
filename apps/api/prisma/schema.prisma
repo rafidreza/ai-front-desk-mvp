@@ -27,6 +27,7 @@ model Client {
   ownerEmail              String?
   ownerPhone              String?
   businessCategory        String?
+  status                  String                   @default("active")
   onboardingStatus        String                   @default("draft")
   onboardingProfile       Json?
   defaultLanguage         String
@@ -42,6 +43,8 @@ model Client {
   conversations           Conversation[]
   tickets                 Ticket[]
   authChallenges          ClientAuthChallenge[]
+
+  @@index([status])
 }
 
 model ClientAuthChallenge {

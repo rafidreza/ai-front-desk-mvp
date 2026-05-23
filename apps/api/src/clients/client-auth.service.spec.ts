@@ -15,6 +15,7 @@ const client: ClientProfile & {
   id: 'pilot-client',
   businessName: 'Pilot Commerce',
   pageId: 'pilot-page',
+  status: 'active',
   onboardingStatus: 'active',
   defaultLanguage: 'mixed',
   tone: 'friendly',
@@ -35,13 +36,17 @@ type StoredChallenge = {
   consumedAt: Date | null;
 };
 
-function createService(delivery?: AuthCodeDeliveryService) {
+function createService(delivery?: AuthCodeDeliveryService, clientOverride: ClientProfile = client) {
   const challenges = new Map<string, StoredChallenge>();
   const prisma = {
     client: {
       findFirst: vi.fn(async ({ where }: { where: { OR: Array<Record<string, string>> } }) => {
         const values = where.OR.flatMap((item) => Object.values(item));
-        return values.includes(client.id) || values.includes(client.ownerEmail) || values.includes(client.ownerPhone ?? '') ? client : null;
+        return values.includes(clientOverride.id) ||
+          values.includes(clientOverride.ownerEmail ?? '') ||
+          values.includes(clientOverride.ownerPhone ?? '')
+          ? clientOverride
+          : null;
       }),
     },
     clientAuthChallenge: {
@@ -61,7 +66,7 @@ function createService(delivery?: AuthCodeDeliveryService) {
   } as unknown as PrismaService;
 
   const clients = {
-    findById: vi.fn(async () => client),
+    findById: vi.fn(async () => clientOverride),
   } as unknown as PilotClientService;
 
   return { challenges, service: new ClientAuthService(prisma, clients, delivery) };
@@ -111,6 +116,12 @@ describe('ClientAuthService', () => {
     expect(challenge.destination).toBe('u***@example.com');
     expect(challenge.devCode).toBeUndefined();
     expect(challenges.size).toBe(0);
+  });
+
+  it('blocks login code requests for inactive clients', async () => {
+    const { service } = createService(undefined, { ...client, status: 'inactive' });
+
+    await expect(service.requestCode({ identifier: 'owner@example.com', channel: 'email' })).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('uses a fixed development code when configured outside production', async () => {
