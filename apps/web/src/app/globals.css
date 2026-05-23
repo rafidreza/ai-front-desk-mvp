@@ -1606,6 +1606,23 @@ button {
   }
 }
 
+@keyframes lock-open {
+  0% {
+    opacity: 0.82;
+    transform: translateY(0) rotate(0deg) scale(0.96);
+  }
+
+  65% {
+    opacity: 1;
+    transform: translateY(-2px) rotate(-8deg) scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
 .login-screen {
   min-height: 100vh;
   display: grid;
@@ -1641,6 +1658,19 @@ button {
 .login-copy {
   display: grid;
   gap: 8px;
+}
+
+.login-lock {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--green);
+  transform-origin: 50% 62%;
+}
+
+.login-lock[data-unlocked="true"] {
+  animation: lock-open 200ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
 }
 
 .login-copy svg {

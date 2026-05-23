@@ -1,6 +1,6 @@
 'use client';
 
-import { BotMessageSquare, LockKeyhole } from 'lucide-react';
+import { BotMessageSquare, LockKeyhole, LockKeyholeOpen } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
@@ -15,6 +15,7 @@ export function InternalLoginForm() {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isUnlocked = feedback.tone === 'success';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,7 +35,8 @@ export function InternalLoginForm() {
       return;
     }
 
-    setFeedback({ tone: 'success', message: 'Unlocked. Loading console…' });
+    setFeedback({ tone: 'success', message: 'Unlocked. Opening operations console…' });
+    await new Promise((resolve) => setTimeout(resolve, 220));
     router.replace(searchParams.get('next') ?? '/internal');
     router.refresh();
   }
@@ -54,9 +56,11 @@ export function InternalLoginForm() {
       </div>
 
       <div className="login-copy">
-        <LockKeyhole size={24} />
+        <span className="login-lock" data-unlocked={isUnlocked}>
+          {isUnlocked ? <LockKeyholeOpen size={24} /> : <LockKeyhole size={24} />}
+        </span>
         <h2>Operations Console</h2>
-        <p>Enter the internal passcode to continue.</p>
+        <p>Sign in to manage conversations, tickets, knowledge, and client operations.</p>
       </div>
 
       <form className="login-form" onSubmit={handleSubmit}>
