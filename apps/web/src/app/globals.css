@@ -3923,3 +3923,30 @@ button {
   font-size: var(--text-tiny);
   font-weight: 700;
 }
+
+/* Auth redirect banner — shown on /client/login when middleware redirected
+   the user from a protected client surface. Info tone (blue) to distinguish
+   from .inline-alert (error / coral) and .inline-success (green). */
+.auth-redirect-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+  border-radius: 8px;
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: var(--lh-body);
+}
+
+.auth-redirect-banner svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.auth-redirect-banner strong {
+  font-weight: 800;
+}

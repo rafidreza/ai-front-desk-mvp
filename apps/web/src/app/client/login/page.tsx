@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, KeyRound, LogIn, Store } from 'lucide-react';
+import { BadgeCheck, Info, KeyRound, LogIn, Store } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
 import { ClientProfile } from '@/types/domain';
 
@@ -27,6 +27,16 @@ export default function ClientLoginPage() {
     return new URLSearchParams(window.location.search).get('next');
   }, []);
 
+  const redirectedFromLabel = useMemo(() => {
+    if (nextPath === null || nextPath === '' || nextPath === '/client/login') return null;
+    if (nextPath.startsWith('/client/dashboard')) return 'dashboard';
+    if (nextPath.startsWith('/client/tickets')) return 'ticket list';
+    if (nextPath.startsWith('/client/knowledge')) return 'knowledge base';
+    if (nextPath.startsWith('/client/data-sources')) return 'data sources';
+    if (nextPath.startsWith('/client/')) return 'client workspace';
+    return null;
+  }, [nextPath]);
+
   async function requestCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -43,11 +53,19 @@ export default function ClientLoginPage() {
       });
       const data = (await response.json()) as ChallengeResponse | { error?: string };
       if (!response.ok || !('challenge' in data)) {
-        throw new Error('error' in data && data.error !== undefined ? data.error : 'Unable to send login code.');
+        throw new Error(
+          'error' in data && data.error !== undefined
+            ? data.error
+            : 'Could not send your code. Check the email or phone is right, or switch the delivery channel and try again.',
+        );
       }
       setChallenge(data.challenge);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Unable to send login code.');
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Could not send your code. Check the email or phone is right, or switch the delivery channel and try again.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -70,12 +88,19 @@ export default function ClientLoginPage() {
       });
       const data = (await response.json()) as { client?: ClientProfile; error?: string };
       if (!response.ok || data.client === undefined) {
-        throw new Error(data.error ?? 'Unable to verify login code.');
+        throw new Error(
+          data.error ??
+            'That code did not match. Request a new code or check for typos — codes expire after a few minutes.',
+        );
       }
       setClient(data.client);
       window.location.href = nextPath ?? `/client/dashboard?clientId=${data.client.id}`;
     } catch (verifyError) {
-      setError(verifyError instanceof Error ? verifyError.message : 'Unable to verify login code.');
+      setError(
+        verifyError instanceof Error
+          ? verifyError.message
+          : 'That code did not match. Request a new code or check for typos — codes expire after a few minutes.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -112,6 +137,15 @@ export default function ClientLoginPage() {
         </div>
 
         <section className="client-panel auth-form-panel">
+          {challenge === null && redirectedFromLabel !== null && (
+            <div className="auth-redirect-banner" role="status">
+              <Info size={16} />
+              <span>
+                You were sent here from your <strong>{redirectedFromLabel}</strong>. Verify your
+                access code to continue.
+              </span>
+            </div>
+          )}
           {challenge === null ? (
             <form className="stack-form" onSubmit={requestCode}>
               <div className="section-label">

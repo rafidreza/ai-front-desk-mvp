@@ -38,7 +38,11 @@ export default function ClientDashboardPage() {
     try {
       setDashboard(await getClientDashboard(clientId));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load dashboard.');
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : 'Could not load your dashboard. Check your connection and tap Refresh. If it keeps failing, sign out and back in.',
+      );
     } finally {
       setIsLoading(false);
     }
