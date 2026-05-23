@@ -4,14 +4,16 @@ import { Archive, BotMessageSquare, History, Plus, RefreshCw, RotateCcw, Save, S
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   createPromptProfile,
+  getClients,
   getPromptProfiles,
   getPromptProfileVersions,
   rollbackPromptProfile,
   setPromptProfileStatus,
   updatePromptProfile,
 } from '@/lib/api';
-import { PromptProfile, PromptProfileVersion } from '@/types/domain';
+import { ClientProfile, PromptProfile, PromptProfileVersion } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
+import { UiSelect } from '../_components/UiSelect';
 import { FormErrorSummary, FormField, useFormErrors } from '../_components/form-validation';
 
 const CREATE_FIELD_LABELS: Record<string, string> = {
@@ -41,6 +43,8 @@ function profileFromForm(form: FormData) {
 }
 
 export default function AgentConfigPage() {
+  const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('pilot-client');
   const [profiles, setProfiles] = useState<PromptProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<PromptProfile | null>(null);
   const [versions, setVersions] = useState<PromptProfileVersion[]>([]);
@@ -55,21 +59,18 @@ export default function AgentConfigPage() {
     () => profiles.find((profile) => profile.status === 'active') ?? null,
     [profiles],
   );
-  const clientId = useMemo(() => {
-    if (typeof window === 'undefined') return 'pilot-client';
-    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
-  }, []);
+  const activeClient = clients.find((client) => client.id === selectedClientId);
 
-  async function loadProfiles(nextStatus = status, selectedId = selectedProfile?.id) {
+  async function loadProfiles(nextStatus = status, selectedId = selectedProfile?.id, nextClientId = selectedClientId) {
     setIsLoading(true);
     setError(null);
     try {
-      const loaded = await getPromptProfiles(clientId, nextStatus);
+      const loaded = await getPromptProfiles(nextClientId, nextStatus);
       setProfiles(loaded);
       const nextSelected = loaded.find((profile) => profile.id === selectedId) ?? loaded[0] ?? null;
       setSelectedProfile(nextSelected);
       if (nextSelected !== null) {
-        setVersions(await getPromptProfileVersions(clientId, nextSelected.id));
+        setVersions(await getPromptProfileVersions(nextClientId, nextSelected.id));
       } else {
         setVersions([]);
       }
@@ -84,11 +85,31 @@ export default function AgentConfigPage() {
     setSelectedProfile(profile);
     setError(null);
     setNotice(null);
-    setVersions(await getPromptProfileVersions(clientId, profile.id));
+    setVersions(await getPromptProfileVersions(selectedClientId, profile.id));
   }
 
   useEffect(() => {
-    void loadProfiles();
+    async function loadInitialData() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const clientData = await getClients();
+        const requestedClientId = new URLSearchParams(window.location.search).get('clientId');
+        const initialClientId =
+          clientData.find((client) => client.id === requestedClientId)?.id ??
+          clientData[0]?.id ??
+          'pilot-client';
+        setClients(clientData);
+        setSelectedClientId(initialClientId);
+        await loadProfiles(status, undefined, initialClientId);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load prompt profiles.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadInitialData();
   }, []);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
@@ -108,7 +129,7 @@ export default function AgentConfigPage() {
     setError(null);
     setNotice(null);
     try {
-      const created = await createPromptProfile(clientId, profileFromForm(formData));
+      const created = await createPromptProfile(selectedClientId, profileFromForm(formData));
       createErrors.clearAll();
       setCreateResetToken((token) => token + 1);
       setNotice('Prompt draft created.');
@@ -127,7 +148,7 @@ export default function AgentConfigPage() {
     setError(null);
     setNotice(null);
     try {
-      const updated = await updatePromptProfile(clientId, selectedProfile.id, profileFromForm(new FormData(event.currentTarget)));
+      const updated = await updatePromptProfile(selectedClientId, selectedProfile.id, profileFromForm(new FormData(event.currentTarget)));
       setNotice('Prompt saved as draft.');
       await loadProfiles(status, updated.id);
     } catch (saveError) {
@@ -143,7 +164,7 @@ export default function AgentConfigPage() {
     setError(null);
     setNotice(null);
     try {
-      const updated = await setPromptProfileStatus(clientId, selectedProfile.id, nextStatus);
+      const updated = await setPromptProfileStatus(selectedClientId, selectedProfile.id, nextStatus);
       setNotice(nextStatus === 'active' ? 'Prompt published.' : nextStatus === 'archived' ? 'Prompt archived.' : 'Prompt moved to draft.');
       await loadProfiles(status, updated.id);
     } catch (statusError) {
@@ -159,7 +180,7 @@ export default function AgentConfigPage() {
     setError(null);
     setNotice(null);
     try {
-      const updated = await rollbackPromptProfile(clientId, selectedProfile.id, versionId);
+      const updated = await rollbackPromptProfile(selectedClientId, selectedProfile.id, versionId);
       setNotice('Prompt version restored as a new draft.');
       await loadProfiles(status, updated.id);
     } catch (rollbackError) {
@@ -175,15 +196,55 @@ export default function AgentConfigPage() {
       eyebrow="Agent configuration"
       title="Conversation behavior setup"
       action={
-        <button className="icon-button" type="button" onClick={() => void loadProfiles()} disabled={isLoading}>
-          <RefreshCw size={16} />
-          Refresh
-        </button>
+        <div className="page-actions">
+          <UiSelect
+            aria-label="Select client for prompt profiles"
+            className="page-select"
+            disabled={clients.length === 0}
+            value={selectedClientId}
+            onChange={(event) => {
+              const nextClientId = event.target.value;
+              setSelectedClientId(nextClientId);
+              setSelectedProfile(null);
+              setVersions([]);
+              setNotice(null);
+              void loadProfiles(status, undefined, nextClientId);
+            }}
+          >
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.businessName}
+              </option>
+            ))}
+          </UiSelect>
+          <button className="icon-button" type="button" onClick={() => void loadProfiles()} disabled={isLoading}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+        </div>
       }
     >
 
       {error !== null && <div className="inline-alert">{error}</div>}
       {notice !== null && <div className="inline-success">{notice}</div>}
+
+      <section className="knowledge-client-strip">
+        <div>
+          <span>Client</span>
+          <strong>{activeClient?.businessName ?? selectedClientId}</strong>
+          <small>{activeClient?.pageId ?? 'No page ID'} | {activeClient?.businessCategory ?? 'No category'}</small>
+        </div>
+        <div>
+          <span>Prompt profiles</span>
+          <strong>{profiles.length}</strong>
+          <small>{activeProfile?.name ?? 'No active profile'}</small>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{status === 'all' ? 'All profiles' : status}</strong>
+          <small>{selectedProfile?.name ?? 'No profile selected'}</small>
+        </div>
+      </section>
 
       <section className="knowledge-layout">
         <section className="client-panel">

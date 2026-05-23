@@ -28,6 +28,7 @@ import {
 import { ClientProfile, KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
+import { UiSelect } from '../_components/UiSelect';
 
 const categoryOptions = [
   { value: 'general', label: 'General' },
@@ -291,8 +292,8 @@ export default function KnowledgePage() {
       title="Client knowledge libraries"
       action={
         <div className="page-actions">
-          <select
-            className="header-select"
+          <UiSelect
+            className="page-select"
             value={selectedClientId}
             onChange={(event) => {
               const nextClientId = event.target.value;
@@ -309,7 +310,7 @@ export default function KnowledgePage() {
                 {client.businessName}
               </option>
             ))}
-          </select>
+          </UiSelect>
           <button className="icon-button" type="button" onClick={() => void loadEntries()} disabled={isLoading}>
             <RefreshCw size={16} />
             Refresh

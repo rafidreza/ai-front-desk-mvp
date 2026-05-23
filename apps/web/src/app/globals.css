@@ -269,6 +269,14 @@ button {
   font-weight: 700;
 }
 
+.page-select {
+  min-width: min(100%, 240px);
+}
+
+.client-jump-select {
+  min-width: min(100%, 180px);
+}
+
 .icon-button,
 .status-button,
 .mini-button {
@@ -496,6 +504,14 @@ button {
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
+}
+
+.client-directory-tools {
+  min-width: min(100%, 420px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .owner-filter {
@@ -3559,6 +3575,17 @@ button {
   .client-filter-bar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .client-directory-tools {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-select,
+  .client-jump-select {
+    width: 100%;
   }
 
   .delegation-actions,

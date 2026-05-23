@@ -13,6 +13,7 @@ import {
 import { ClientDashboardSummary, ClientProfile, ClientStatus } from '@/types/domain';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
+import { UiSelect } from '../_components/UiSelect';
 
 const baseMonthlyFee = 1500;
 const conversationRate = 8;
@@ -286,13 +287,35 @@ export default function InternalClientsPage() {
               <Building2 size={16} />
               Client Directory
             </div>
-            <div className="search-control">
-              <Search size={14} />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search clients"
-              />
+            <div className="client-directory-tools">
+              <UiSelect
+                aria-label="Jump to client"
+                className="client-jump-select"
+                compact
+                disabled={clients.length === 0}
+                value={selectedClientId ?? ''}
+                onChange={(event) => {
+                  const nextClient = clients.find((client) => client.id === event.target.value);
+                  if (nextClient !== undefined) startEdit(nextClient);
+                }}
+              >
+                <option disabled value="">
+                  Choose client
+                </option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.businessName}
+                  </option>
+                ))}
+              </UiSelect>
+              <div className="search-control">
+                <Search size={14} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search clients"
+                />
+              </div>
             </div>
           </div>
           <div className="client-list">

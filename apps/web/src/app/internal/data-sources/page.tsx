@@ -3,6 +3,7 @@
 import { DatabaseZap, RefreshCw, Save } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { InternalShell } from '../_components/InternalShell';
+import { UiSelect } from '../_components/UiSelect';
 import {
   getClients,
   getExternalDataSources,
@@ -157,11 +158,11 @@ export default function InternalDataSourcesPage() {
       title="Google Sheet Data Sources"
       action={
         <div className="page-actions">
-          <select className="header-select" value={clientId} onChange={(event) => void switchClient(event.target.value)}>
+          <UiSelect className="page-select" value={clientId} onChange={(event) => void switchClient(event.target.value)}>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>{client.businessName}</option>
             ))}
-          </select>
+          </UiSelect>
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadData()}>
             <RefreshCw size={16} />
             Refresh
