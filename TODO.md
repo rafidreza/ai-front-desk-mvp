@@ -28,8 +28,8 @@
 | 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| 9 — Improvement backlog | 12 | 6 | 18 |
-| **TOTAL** | **64** | **26** | **90** |
+| 9 — Improvement backlog | 13 | 5 | 18 |
+| **TOTAL** | **65** | **25** | **90** |
 
 ---
 
@@ -187,7 +187,7 @@
 
 ### Google Sheet product/order data source
 
-- [ ] **T63 — IMPROVEMENT** Define the Google Sheet data-source contract/template: supported tabs, required columns, permissions, freshness rules, client setup copy, and safe fallback behavior.
+- [x] **T63 — IMPROVEMENT** Define the Google Sheet data-source contract/template: supported tabs, required columns, permissions, freshness rules, client setup copy, and safe fallback behavior. — **DONE (2026-05-23): added `docs/google-sheet-data-source-contract.md` with the MVP Sheet access decision, product/order tab templates, freshness rules, customer reply rules, client setup copy, validation rules, and first-version exclusions**
 - [ ] **T64 — IMPROVEMENT** Add data models/migrations for client external data sources, sync runs, product records, and order records derived from Google Sheets.
 - [ ] **T65 — IMPROVEMENT** Build Google Sheet fetch/parse/sync service with public CSV/export support, validation, stale-data handling, and manual sync endpoint.
 - [ ] **T66 — IMPROVEMENT** Add internal/client UI to attach a Google Sheet link, run "Sync now", see last sync status/errors, and map columns if needed.
