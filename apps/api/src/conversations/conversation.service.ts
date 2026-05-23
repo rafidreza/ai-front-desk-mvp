@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AiService } from '../ai/ai.service';
 import { PilotClientService } from '../clients/pilot-client.service';
+import { BlockedSenderService } from '../customers/blocked-sender.service';
 import { ExternalDataService } from '../external-data/external-data.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UrgentTicketNotificationService } from '../notifications/urgent-ticket-notification.service';
@@ -46,6 +47,7 @@ export class ConversationService {
     private readonly urgentNotifications?: UrgentTicketNotificationService,
     private readonly autoQa?: AutoQaService,
     private readonly externalData?: ExternalDataService,
+    private readonly blockedSenders?: BlockedSenderService,
   ) {}
 
   async handleIncomingMessage(message: IncomingMessage): Promise<HandleMessageResult> {
@@ -57,6 +59,31 @@ export class ConversationService {
     });
     const conversationId = conversation.id;
     const outboundMessageId = `reply:${message.id}`;
+
+    const senderBlocked = await this.blockedSenders?.isBlocked({
+      clientId: message.clientId,
+      channel: message.channel,
+      externalSenderId: message.externalSenderId,
+    });
+    if (senderBlocked === true) {
+      this.logger?.event('conversation.inbound.blocked', {
+        conversationId,
+        clientId: message.clientId,
+        channel: message.channel,
+        externalSenderId: maskRecipient(message.externalSenderId),
+        messageId: message.id,
+      });
+      return {
+        conversation,
+        reply: {
+          text: '',
+          confidence: 0,
+          matchedKnowledgeIds: [],
+          shouldEscalate: false,
+        },
+        alreadyProcessed: true,
+      };
+    }
 
     if (conversation.ticketId !== undefined) {
       try {

@@ -21,6 +21,7 @@ import {
   KnowledgeImportFileInput,
   KnowledgeImportResult,
   OrderRecord,
+  BlockedSender,
   ConversationSearchResult,
   ProductRecord,
   PromptProfile,
@@ -574,6 +575,26 @@ export async function searchConversations(query: string, limit = 30): Promise<Co
     `/conversations/search?${params.toString()}`,
   );
   return data.results;
+}
+
+export async function listBlockedSenders(clientId: string): Promise<BlockedSender[]> {
+  const data = await apiFetch<{ blocks: BlockedSender[] }>(`/clients/${clientId}/blocked-senders`);
+  return data.blocks;
+}
+
+export async function blockSender(
+  clientId: string,
+  input: { channel: 'messenger' | 'whatsapp' | 'web'; externalSenderId: string; reason?: string },
+): Promise<BlockedSender> {
+  const data = await apiFetch<{ block: BlockedSender }>(`/clients/${clientId}/blocked-senders`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.block;
+}
+
+export async function unblockSender(clientId: string, blockId: string): Promise<void> {
+  await apiFetch(`/clients/${clientId}/blocked-senders/${blockId}`, { method: 'DELETE' });
 }
 
 export async function gradeConversation(

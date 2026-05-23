@@ -22,6 +22,7 @@ export type {
   ConversationMessage,
   ConversationQaGrade,
   ConversationQaDefect,
+  BlockedSender,
   ConversationSearchResult,
   ExternalDataSource,
   ExternalDataSourceStatus,

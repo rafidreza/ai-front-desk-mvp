@@ -1,10 +1,17 @@
 'use client';
 
-import { Handshake, MessageSquareText, RefreshCw, Search, TicketCheck, X } from 'lucide-react';
+import { Ban, Handshake, MessageSquareText, RefreshCw, Search, TicketCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getConversations, searchConversations, takeOverConversation } from '@/lib/api';
-import { ConversationLog, ConversationSearchResult, Ticket } from '@/types/domain';
+import {
+  blockSender,
+  getConversations,
+  listBlockedSenders,
+  searchConversations,
+  takeOverConversation,
+  unblockSender,
+} from '@/lib/api';
+import { BlockedSender, ConversationLog, ConversationSearchResult, Ticket } from '@/types/domain';
 import { ConversationsPanel } from '../_components/ConversationsPanel';
 import { InternalShell } from '../_components/InternalShell';
 import { formatTime, getErrorMessage } from '../_lib/helpers';
@@ -22,6 +29,8 @@ export default function ConversationsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const searchTimerRef = useRef<number | null>(null);
+  const [blocksByClient, setBlocksByClient] = useState<Record<string, BlockedSender[]>>({});
+  const [isBlocking, setIsBlocking] = useState(false);
 
   async function loadConversations() {
     setIsLoading(true);
@@ -93,6 +102,79 @@ export default function ConversationsPage() {
   const linkedTicketId = createdTicket !== null && createdTicket.conversationId === selectedConversation?.id
     ? createdTicket.id
     : selectedConversation?.ticketId;
+
+  useEffect(() => {
+    if (selectedConversation === undefined) return;
+    const cid = selectedConversation.clientId;
+    if (blocksByClient[cid] !== undefined) return;
+    let cancelled = false;
+    void listBlockedSenders(cid)
+      .then((blocks) => {
+        if (!cancelled) setBlocksByClient((current) => ({ ...current, [cid]: blocks }));
+      })
+      .catch(() => {
+        if (!cancelled) setBlocksByClient((current) => ({ ...current, [cid]: [] }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedConversation, blocksByClient]);
+
+  const existingBlock = useMemo(() => {
+    if (selectedConversation === undefined) return null;
+    const list = blocksByClient[selectedConversation.clientId] ?? [];
+    return (
+      list.find(
+        (block) =>
+          block.channel === selectedConversation.channel &&
+          block.externalSenderId === selectedConversation.externalSenderId,
+      ) ?? null
+    );
+  }, [blocksByClient, selectedConversation]);
+
+  async function handleBlock() {
+    if (selectedConversation === undefined) return;
+    setIsBlocking(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const block = await blockSender(selectedConversation.clientId, {
+        channel: selectedConversation.channel,
+        externalSenderId: selectedConversation.externalSenderId,
+        reason: 'Blocked from conversation view',
+      });
+      setBlocksByClient((current) => ({
+        ...current,
+        [selectedConversation.clientId]: [...(current[selectedConversation.clientId] ?? []), block],
+      }));
+      setNotice('Sender blocked. Future messages from this customer will be ignored.');
+    } catch (blockError) {
+      setError(getErrorMessage(blockError, 'Could not block this sender.'));
+    } finally {
+      setIsBlocking(false);
+    }
+  }
+
+  async function handleUnblock() {
+    if (selectedConversation === undefined || existingBlock === null) return;
+    setIsBlocking(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await unblockSender(selectedConversation.clientId, existingBlock.id);
+      setBlocksByClient((current) => ({
+        ...current,
+        [selectedConversation.clientId]: (current[selectedConversation.clientId] ?? []).filter(
+          (block) => block.id !== existingBlock.id,
+        ),
+      }));
+      setNotice('Sender unblocked. Future messages will be processed again.');
+    } catch (unblockError) {
+      setError(getErrorMessage(unblockError, 'Could not unblock this sender.'));
+    } finally {
+      setIsBlocking(false);
+    }
+  }
 
   async function handleTakeover() {
     if (selectedConversation === undefined) return;
@@ -197,22 +279,46 @@ export default function ConversationsPage() {
               <MessageSquareText size={16} />
               Conversation detail
             </div>
-            {linkedTicketId === undefined ? (
-              <button
-                className="icon-button"
-                type="button"
-                disabled={isTakingOver || selectedConversation === undefined}
-                onClick={() => void handleTakeover()}
-              >
-                <Handshake size={16} />
-                Take over
-              </button>
-            ) : (
-              <Link className="icon-button" href={`/internal/tickets?ticketId=${linkedTicketId}`}>
-                <TicketCheck size={16} />
-                Open ticket
-              </Link>
-            )}
+            <div className="panel-actions">
+              {existingBlock !== null ? (
+                <button
+                  className="icon-button"
+                  data-tone="coral"
+                  disabled={isBlocking}
+                  onClick={() => void handleUnblock()}
+                  type="button"
+                >
+                  <Ban size={16} />
+                  Unblock sender
+                </button>
+              ) : (
+                <button
+                  className="icon-button"
+                  disabled={isBlocking || selectedConversation === undefined}
+                  onClick={() => void handleBlock()}
+                  type="button"
+                >
+                  <Ban size={16} />
+                  Block sender
+                </button>
+              )}
+              {linkedTicketId === undefined ? (
+                <button
+                  className="icon-button"
+                  type="button"
+                  disabled={isTakingOver || selectedConversation === undefined}
+                  onClick={() => void handleTakeover()}
+                >
+                  <Handshake size={16} />
+                  Take over
+                </button>
+              ) : (
+                <Link className="icon-button" href={`/internal/tickets?ticketId=${linkedTicketId}`}>
+                  <TicketCheck size={16} />
+                  Open ticket
+                </Link>
+              )}
+            </div>
           </div>
 
           {selectedConversation === undefined ? (
@@ -222,7 +328,15 @@ export default function ConversationsPage() {
               <section className="conversation-summary-strip">
                 <div>
                   <span>Customer</span>
-                  <strong>{selectedConversation.externalSenderId}</strong>
+                  <strong>
+                    {selectedConversation.externalSenderId}
+                    {existingBlock !== null && (
+                      <span className="block-badge" title={existingBlock.reason ?? 'Blocked'}>
+                        <Ban size={11} />
+                        Blocked
+                      </span>
+                    )}
+                  </strong>
                 </div>
                 <div>
                   <span>Channel</span>

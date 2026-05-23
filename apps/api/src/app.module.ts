@@ -40,6 +40,8 @@ import { UrgentTicketNotificationService } from './notifications/urgent-ticket-n
 import { StructuredLoggerService } from './observability/structured-logger.service';
 import { PromptProfileController } from './prompts/prompt-profile.controller';
 import { PromptProfileService } from './prompts/prompt-profile.service';
+import { BlockedSenderController } from './customers/blocked-sender.controller';
+import { BlockedSenderService } from './customers/blocked-sender.service';
 import { TagController } from './tags/tag.controller';
 import { TagService } from './tags/tag.service';
 import { TicketController } from './tickets/ticket.controller';
@@ -63,6 +65,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     WhatsAppController,
     WhatsAppTemplateController,
     PromptProfileController,
+    BlockedSenderController,
     TagController,
     TicketController,
   ],
@@ -92,6 +95,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     PromptProfileService,
     PrismaService,
     StructuredLoggerService,
+    BlockedSenderService,
     TagService,
     TicketService,
     UrgentTicketNotificationService,

@@ -51,6 +51,7 @@ model Client {
   tags                    Tag[]
   channels                ClientChannel[]
   whatsappTemplates       WhatsAppTemplate[]
+  blockedSenders          BlockedSender[]
 
   @@index([status])
 }
@@ -483,4 +484,18 @@ model TicketTag {
 
   @@id([ticketId, tagId])
   @@index([tagId])
+}
+
+model BlockedSender {
+  id               String   @id
+  clientId         String
+  channel          String
+  externalSenderId String
+  reason           String?
+  blockedBy        String
+  blockedAt        DateTime @default(now())
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, channel, externalSenderId])
+  @@index([clientId])
 }
