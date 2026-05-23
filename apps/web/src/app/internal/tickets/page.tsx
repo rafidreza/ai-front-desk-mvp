@@ -91,7 +91,7 @@ export default function TicketsPage() {
       setAssigneeOptions(userData);
       setSelectedTicketId((current) => current ?? nextRequestedTicketId ?? ticketData[0]?.id ?? null);
     } catch (error) {
-      setTicketsError(getErrorMessage(error, 'Unable to load tickets.'));
+      setTicketsError(getErrorMessage(error, 'Tickets could not load from the API. Fix: confirm the API server is running, then refresh.'));
     } finally {
       setIsTicketsLoading(false);
     }
@@ -103,7 +103,7 @@ export default function TicketsPage() {
     try {
       setSelectedTicketDetail(await getTicketDetail(ticketId));
     } catch (error) {
-      setDetailError(getErrorMessage(error, 'Unable to load ticket detail.'));
+      setDetailError(getErrorMessage(error, 'Ticket detail could not load. Fix: select the ticket again or refresh the queue.'));
     } finally {
       setIsDetailLoading(false);
     }
@@ -150,7 +150,7 @@ export default function TicketsPage() {
       setSelectedTicketDetail(detail);
       setUpdateNotice(`Status updated to ${statusLabels[status]}.`);
     } catch (error) {
-      setUpdateError(getErrorMessage(error, 'Unable to update ticket.'));
+      setUpdateError(getErrorMessage(error, 'Ticket status could not be saved. Fix: refresh to get the latest ticket version, then retry.'));
     } finally {
       setIsUpdating(false);
     }
@@ -172,7 +172,7 @@ export default function TicketsPage() {
       setSelectedTicketDetail(detail);
       setUpdateNotice(`Assignee updated to ${assigneeLabel(assigneeOptions, updated.assigneeId)}.`);
     } catch (error) {
-      setUpdateError(getErrorMessage(error, 'Unable to update assignee.'));
+      setUpdateError(getErrorMessage(error, 'Ticket owner could not be saved. Fix: refresh owners and retry.'));
     } finally {
       setIsUpdating(false);
     }
@@ -189,7 +189,7 @@ export default function TicketsPage() {
       setCommentDraft('');
       setUpdateNotice('Internal note added.');
     } catch (error) {
-      setUpdateError(getErrorMessage(error, 'Unable to add comment.'));
+      setUpdateError(getErrorMessage(error, 'Internal note could not be saved. Fix: check the API connection, then retry.'));
     } finally {
       setIsCommenting(false);
     }

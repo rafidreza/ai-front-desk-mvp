@@ -17,6 +17,7 @@ import {
   KnowledgeChangeRequestUrgency,
 } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
+import { getErrorMessage } from '../_lib/helpers';
 
 const urgencies: Array<KnowledgeChangeRequestUrgency | 'all'> = ['all', 'urgent', 'normal'];
 type QueueTab = 'pending' | 'approved' | 'rejected' | 'needs_info';
@@ -89,7 +90,7 @@ export default function InternalKbReviewPage() {
         setDetail(null);
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load KB review queue.');
+      setError(getErrorMessage(loadError, 'KB review queue could not load. Fix: check the client filter and API server, then refresh.'));
     } finally {
       setIsLoading(false);
     }
@@ -98,19 +99,24 @@ export default function InternalKbReviewPage() {
   async function selectRequest(requestId: string) {
     setError(null);
     setNotice(null);
-    const loaded = await getInternalKnowledgeRequestDetail(requestId);
-    setDetail(loaded);
-    setReviewerNote(loaded.request.reviewerNote ?? '');
-    setClientVisibleMessage(loaded.request.clientVisibleMessage ?? '');
-    setInternalNote(loaded.request.internalNote ?? '');
-    setFinalTitle(String(loaded.request.decisionSnapshot?.proposedTitle ?? loaded.proposed.title));
-    setFinalAnswer(String(loaded.request.decisionSnapshot?.proposedAnswer ?? loaded.proposed.answer));
-    setFinalKeywords(
-      Array.isArray(loaded.request.decisionSnapshot?.proposedKeywords)
-        ? loaded.request.decisionSnapshot.proposedKeywords.filter((item): item is string => typeof item === 'string').join(', ')
-        : loaded.proposed.keywords.join(', '),
-    );
-    setFinalCategory(String(loaded.request.decisionSnapshot?.proposedCategory ?? loaded.proposed.category));
+    try {
+      const loaded = await getInternalKnowledgeRequestDetail(requestId);
+      setDetail(loaded);
+      setReviewerNote(loaded.request.reviewerNote ?? '');
+      setClientVisibleMessage(loaded.request.clientVisibleMessage ?? '');
+      setInternalNote(loaded.request.internalNote ?? '');
+      setFinalTitle(String(loaded.request.decisionSnapshot?.proposedTitle ?? loaded.proposed.title));
+      setFinalAnswer(String(loaded.request.decisionSnapshot?.proposedAnswer ?? loaded.proposed.answer));
+      setFinalKeywords(
+        Array.isArray(loaded.request.decisionSnapshot?.proposedKeywords)
+          ? loaded.request.decisionSnapshot.proposedKeywords.filter((item): item is string => typeof item === 'string').join(', ')
+          : loaded.proposed.keywords.join(', '),
+      );
+      setFinalCategory(String(loaded.request.decisionSnapshot?.proposedCategory ?? loaded.proposed.category));
+    } catch (detailError) {
+      setDetail(null);
+      setError(getErrorMessage(detailError, 'KB request detail could not load. Fix: refresh the queue, then select the request again.'));
+    }
   }
 
   useEffect(() => {
@@ -153,7 +159,7 @@ export default function InternalKbReviewPage() {
       setNotice(`Request marked ${formatLabel(updated.status)}.`);
       await loadRequests(updated.id);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Unable to update request.');
+      setError(getErrorMessage(actionError, 'KB request status was not updated. Fix: refresh the request, confirm review notes, then retry.'));
     } finally {
       setIsSaving(false);
     }
@@ -179,7 +185,7 @@ export default function InternalKbReviewPage() {
       setNotice(`Request marked ${formatLabel(updated.status)}.`);
       await loadRequests(updated.id);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Unable to save review decision.');
+      setError(getErrorMessage(actionError, 'KB review decision was not saved. Fix: verify final title, answer, keywords, and category, then retry.'));
     } finally {
       setIsSaving(false);
     }

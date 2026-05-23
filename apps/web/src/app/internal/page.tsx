@@ -76,7 +76,7 @@ export default function InternalConsole() {
       setHealth(databaseHealth);
       setAiHealth(providerHealth);
     } catch (loadError) {
-      setHealthError(getErrorMessage(loadError, 'Unable to load database health.'));
+      setHealthError(getErrorMessage(loadError, 'Database health check failed. Fix: confirm the API server and database connection are running, then refresh.'));
     } finally {
       setIsHealthLoading(false);
     }
@@ -90,7 +90,7 @@ export default function InternalConsole() {
       setConversations(conversationData);
       setSelectedConversationId((current) => current ?? conversationData[0]?.id ?? null);
     } catch (loadError) {
-      setConversationsError(getErrorMessage(loadError, 'Unable to load conversations.'));
+      setConversationsError(getErrorMessage(loadError, 'Conversations could not load from the API. Fix: confirm the API server is running, then refresh.'));
     } finally {
       setIsConversationsLoading(false);
     }
@@ -104,7 +104,7 @@ export default function InternalConsole() {
       setCalibrationConversations(queue.conversations);
       setQueueSummary(queue.summary);
     } catch (loadError) {
-      setConversationsError(getErrorMessage(loadError, 'Unable to load calibration queue.'));
+      setConversationsError(getErrorMessage(loadError, 'QA calibration queue could not load. Fix: refresh the selected filter after confirming the API server is running.'));
     } finally {
       setIsConversationsLoading(false);
     }
@@ -118,7 +118,7 @@ export default function InternalConsole() {
       setTickets(ticketData);
       setSelectedTicketId((current) => current ?? ticketData[0]?.id ?? null);
     } catch (loadError) {
-      setTicketsError(getErrorMessage(loadError, 'Unable to load tickets.'));
+      setTicketsError(getErrorMessage(loadError, 'Tickets could not load from the API. Fix: confirm the API server is running, then refresh.'));
     } finally {
       setIsTicketsLoading(false);
     }
@@ -149,7 +149,7 @@ export default function InternalConsole() {
     try {
       setSelectedTicketDetail(await getTicketDetail(ticketId));
     } catch (detailLoadError) {
-      setDetailError(getErrorMessage(detailLoadError, 'Unable to load ticket detail.'));
+      setDetailError(getErrorMessage(detailLoadError, 'Ticket detail could not load. Fix: select the ticket again or refresh the queue.'));
     } finally {
       setIsDetailLoading(false);
     }
@@ -179,7 +179,7 @@ export default function InternalConsole() {
       })
       .catch((detailLoadError) => {
         if (isActive) {
-          setDetailError(getErrorMessage(detailLoadError, 'Unable to load ticket detail.'));
+          setDetailError(getErrorMessage(detailLoadError, 'Ticket detail could not load. Fix: select the ticket again or refresh the queue.'));
         }
       })
       .finally(() => {
@@ -259,7 +259,7 @@ export default function InternalConsole() {
       setSelectedTicketDetail(detail);
       setUpdateNotice(`Status updated to ${statusLabels[status]}.`);
     } catch (statusError) {
-      setUpdateError(getErrorMessage(statusError, 'Unable to update ticket.'));
+      setUpdateError(getErrorMessage(statusError, 'Ticket status could not be saved. Fix: refresh to get the latest ticket version, then retry.'));
     } finally {
       setIsUpdating(false);
     }
@@ -281,7 +281,7 @@ export default function InternalConsole() {
       setSelectedTicketDetail(detail);
       setUpdateNotice(`Assignee updated to ${assigneeLabel(assigneeOptions, updated.assigneeId)}.`);
     } catch (assigneeError) {
-      setUpdateError(getErrorMessage(assigneeError, 'Unable to update assignee.'));
+      setUpdateError(getErrorMessage(assigneeError, 'Ticket owner could not be saved. Fix: refresh owners and retry.'));
     } finally {
       setIsUpdating(false);
     }
@@ -299,7 +299,7 @@ export default function InternalConsole() {
       setCommentDraft('');
       setUpdateNotice('Internal note added.');
     } catch (commentError) {
-      setUpdateError(getErrorMessage(commentError, 'Unable to add comment.'));
+      setUpdateError(getErrorMessage(commentError, 'Internal note could not be saved. Fix: check the API connection, then retry.'));
     } finally {
       setIsCommenting(false);
     }
@@ -325,7 +325,7 @@ export default function InternalConsole() {
       );
       setQaNotice('Conversation grading saved.');
     } catch (gradeError) {
-      setConversationsError(getErrorMessage(gradeError, 'Unable to save QA grade.'));
+      setConversationsError(getErrorMessage(gradeError, 'QA grade could not be saved. Fix: refresh the queue, then retry the grade.'));
     } finally {
       setIsGrading(false);
     }

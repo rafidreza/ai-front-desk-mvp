@@ -7,7 +7,7 @@ import { getConversations, takeOverConversation } from '@/lib/api';
 import { ConversationLog, Ticket } from '@/types/domain';
 import { ConversationsPanel } from '../_components/ConversationsPanel';
 import { InternalShell } from '../_components/InternalShell';
-import { formatTime } from '../_lib/helpers';
+import { formatTime, getErrorMessage } from '../_lib/helpers';
 
 export default function ConversationsPage() {
   const [conversations, setConversations] = useState<ConversationLog[]>([]);
@@ -26,7 +26,7 @@ export default function ConversationsPage() {
       setConversations(data);
       setSelectedConversationId((current) => current ?? data[0]?.id ?? null);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load conversations.');
+      setError(getErrorMessage(loadError, 'Conversations could not load from the API. Fix: confirm the API server is running, then refresh.'));
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +63,7 @@ export default function ConversationsPage() {
       );
       setNotice(`Takeover started. Ticket ${ticket.id.slice(0, 8)} is ready for the support team.`);
     } catch (takeoverError) {
-      setError(takeoverError instanceof Error ? takeoverError.message : 'Unable to take over conversation.');
+      setError(getErrorMessage(takeoverError, 'Conversation takeover could not start. Fix: refresh the conversation and retry.'));
     } finally {
       setIsTakingOver(false);
     }

@@ -44,5 +44,12 @@ export function eventTitle(eventType: string) {
 }
 
 export function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
+  if (!(error instanceof Error) || error.message.trim().length === 0) return fallback;
+
+  const detail = error.message.trim();
+  if (/^(API request failed|Backend request failed|Signup failed)/i.test(detail)) {
+    return fallback;
+  }
+
+  return `${fallback} Detail: ${detail}`;
 }

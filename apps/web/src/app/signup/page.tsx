@@ -17,6 +17,17 @@ interface Challenge {
   devCode?: string;
 }
 
+function signupErrorMessage(error: unknown, fallback: string) {
+  if (!(error instanceof Error) || error.message.trim().length === 0) return fallback;
+
+  const detail = error.message.trim();
+  if (/^(Signup failed|Unable to send verification code|Unable to verify signup code)/i.test(detail)) {
+    return fallback;
+  }
+
+  return `${fallback} Detail: ${detail}`;
+}
+
 export default function SignupPage() {
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -32,7 +43,7 @@ export default function SignupPage() {
     });
     const data = (await response.json()) as { challenge?: Challenge; error?: string };
     if (!response.ok || data.challenge === undefined) {
-      throw new Error(data.error ?? 'Unable to send verification code.');
+      throw new Error(data.error ?? 'Verification code could not be sent.');
     }
     setChallenge(data.challenge);
   }
@@ -52,7 +63,7 @@ export default function SignupPage() {
       setClient(created);
       await requestCode(created.id, deliveryChannel);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Signup failed.');
+      setError(signupErrorMessage(submitError, 'Workspace was not created. Fix: verify business name, owner email, and WhatsApp number, then try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -65,7 +76,7 @@ export default function SignupPage() {
     try {
       await requestCode(client.id, deliveryChannel);
     } catch (resendError) {
-      setError(resendError instanceof Error ? resendError.message : 'Unable to resend verification code.');
+      setError(signupErrorMessage(resendError, 'Verification code could not be resent. Fix: check the selected delivery channel and destination, then retry.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -88,11 +99,11 @@ export default function SignupPage() {
       });
       const data = (await response.json()) as { client?: ClientProfile; error?: string };
       if (!response.ok || data.client === undefined) {
-        throw new Error(data.error ?? 'Unable to verify signup code.');
+        throw new Error(data.error ?? 'Signup code could not be verified.');
       }
       window.location.href = `/client/onboarding?clientId=${data.client.id}`;
     } catch (verifyError) {
-      setError(verifyError instanceof Error ? verifyError.message : 'Unable to verify signup code.');
+      setError(signupErrorMessage(verifyError, 'Signup code was not accepted. Fix: enter the latest 6-digit code or resend a fresh code.'));
     } finally {
       setIsSubmitting(false);
     }

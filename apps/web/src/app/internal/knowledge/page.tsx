@@ -30,6 +30,7 @@ import { EmptyState } from '../_components/EmptyState';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
 import { UiSelect } from '../_components/UiSelect';
+import { getErrorMessage } from '../_lib/helpers';
 
 const categoryOptions = [
   { value: 'general', label: 'General' },
@@ -103,7 +104,7 @@ export default function KnowledgePage() {
         setVersions([]);
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load knowledge.');
+      setError(getErrorMessage(loadError, 'Knowledge entries could not load. Fix: check the selected client and API server, then refresh.'));
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +132,7 @@ export default function KnowledgePage() {
         setSelectedClientId(initialClientId);
         await loadEntries(status, undefined, initialClientId);
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : 'Unable to load knowledge.');
+        setError(getErrorMessage(loadError, 'Knowledge entries could not load. Fix: check the selected client and API server, then refresh.'));
       } finally {
         setIsLoading(false);
       }
@@ -186,7 +187,7 @@ export default function KnowledgePage() {
       setNotice('Draft created.');
       await loadEntries(status, created.id);
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Unable to create draft.');
+      setError(getErrorMessage(createError, 'Knowledge draft was not created. Fix: confirm title, answer, and keywords are filled, then retry.'));
     } finally {
       setIsSaving(false);
     }
@@ -211,7 +212,7 @@ export default function KnowledgePage() {
       setNotice('Saved as draft.');
       await loadEntries(status, updated.id);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to save entry.');
+      setError(getErrorMessage(saveError, 'Knowledge entry was not saved. Fix: refresh this entry, verify required fields, then retry.'));
     } finally {
       setIsSaving(false);
     }
@@ -222,7 +223,7 @@ export default function KnowledgePage() {
     const form = new FormData(event.currentTarget);
     const files = form.getAll('files').filter((file): file is File => file instanceof File && file.size > 0);
     if (files.length === 0) {
-      setError('Choose at least one knowledge file to import.');
+      setError('No file selected. Fix: choose at least one supported knowledge file, then import drafts.');
       return;
     }
 
@@ -248,7 +249,7 @@ export default function KnowledgePage() {
       await loadEntries('draft', result.imported[0]?.entry.id);
       setStatus('draft');
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : 'Unable to import files.');
+      setError(getErrorMessage(importError, 'Knowledge import failed. Fix: use a supported file type or check OCR/parser configuration, then retry.'));
     } finally {
       setIsImporting(false);
     }
@@ -264,7 +265,7 @@ export default function KnowledgePage() {
       setNotice(nextStatus === 'active' ? 'Published.' : nextStatus === 'archived' ? 'Archived.' : 'Moved to draft.');
       await loadEntries(status, updated.id);
     } catch (statusError) {
-      setError(statusError instanceof Error ? statusError.message : 'Unable to update status.');
+      setError(getErrorMessage(statusError, 'Knowledge status was not updated. Fix: refresh the entry version, then retry.'));
     } finally {
       setIsSaving(false);
     }
@@ -280,7 +281,7 @@ export default function KnowledgePage() {
       setNotice('Version restored as a new draft.');
       await loadEntries(status, updated.id);
     } catch (rollbackError) {
-      setError(rollbackError instanceof Error ? rollbackError.message : 'Unable to roll back entry.');
+      setError(getErrorMessage(rollbackError, 'Knowledge version was not restored. Fix: refresh version history, then retry.'));
     } finally {
       setIsSaving(false);
     }
