@@ -33,7 +33,25 @@ function isRateLimited(key: string) {
 function isSameOrigin(request: NextRequest) {
   const origin = request.headers.get('origin');
   if (origin === null) return true;
-  return origin === request.nextUrl.origin;
+
+  const forwardedProtocol = request.headers.get('x-forwarded-proto') ?? request.nextUrl.protocol.replace(':', '');
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const host = request.headers.get('host');
+  const allowedOrigins = new Set([
+    request.nextUrl.origin,
+    host === null ? undefined : `${forwardedProtocol}://${host}`,
+    forwardedHost === null ? undefined : `${forwardedProtocol}://${forwardedHost}`,
+    ...(process.env.WEB_APP_URL ?? '').split(',').map((value) => value.trim()).filter(Boolean),
+  ].filter((value): value is string => value !== undefined));
+
+  if (allowedOrigins.has(origin)) return true;
+
+  if (process.env.NODE_ENV !== 'production') {
+    const hostname = new URL(origin).hostname;
+    return hostname.endsWith('.trycloudflare.com') || hostname.endsWith('.loca.lt');
+  }
+
+  return false;
 }
 
 function passwordMatches(received: string, expected: string) {
