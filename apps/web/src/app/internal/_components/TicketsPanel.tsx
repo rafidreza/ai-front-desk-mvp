@@ -4,6 +4,7 @@ import { assigneeLabel, priorityTone, statusLabels, statusTone } from '../_lib/h
 import { EmptyState } from './EmptyState';
 import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
+import { TagChip } from './TagChip';
 
 interface TicketsPanelProps {
   tickets: Ticket[];
@@ -12,9 +13,12 @@ interface TicketsPanelProps {
   activeTicketId?: string;
   isTicketsLoading: boolean;
   ticketsError: string | null;
+  selectedIds?: Set<string>;
   onChangeFilter: (value: string) => void;
   onReload: () => void;
   onSelectTicket: (ticket: Ticket) => void;
+  onToggleSelect?: (ticketId: string, selected: boolean) => void;
+  onToggleSelectAll?: (selected: boolean) => void;
 }
 
 export function TicketsPanel({
@@ -24,10 +28,17 @@ export function TicketsPanel({
   activeTicketId,
   isTicketsLoading,
   ticketsError,
+  selectedIds,
   onChangeFilter,
   onReload,
   onSelectTicket,
+  onToggleSelect,
+  onToggleSelectAll,
 }: TicketsPanelProps) {
+  const selectionEnabled = selectedIds !== undefined && onToggleSelect !== undefined;
+  const allSelected = selectionEnabled && tickets.length > 0 && tickets.every((ticket) => selectedIds.has(ticket.id));
+  const someSelected = selectionEnabled && !allSelected && tickets.some((ticket) => selectedIds.has(ticket.id));
+
   return (
     <aside className="panel">
       <div className="panel-header">
@@ -36,6 +47,19 @@ export function TicketsPanel({
           Tickets
         </div>
         <div className="panel-actions">
+          {selectionEnabled && tickets.length > 0 && onToggleSelectAll !== undefined && (
+            <label className="ticket-select-all" title={allSelected ? 'Clear all' : 'Select all'}>
+              <input
+                aria-label="Select all visible tickets"
+                checked={allSelected}
+                onChange={(event) => onToggleSelectAll(event.target.checked)}
+                ref={(input) => {
+                  if (input !== null) input.indeterminate = someSelected;
+                }}
+                type="checkbox"
+              />
+            </label>
+          )}
           <select
             className="owner-filter"
             value={assigneeFilter}
@@ -78,31 +102,56 @@ export function TicketsPanel({
                 action={<a className="mini-button" href="/internal/conversations">Check conversations</a>}
               />
             )}
-            {tickets.map((ticket) => (
-              <button
-                className="ticket-row"
-                data-selected={ticket.id === activeTicketId}
-                key={ticket.id}
-                type="button"
-                onClick={() => onSelectTicket(ticket)}
-              >
-                <span className="priority-dot" data-priority={ticket.priority} />
-                <span className="ticket-main">
-                  <strong>{ticket.customerMessage}</strong>
-                  <small>
-                    {assigneeLabel(assigneeOptions, ticket.assigneeId)} | {ticket.reason}
-                  </small>
-                </span>
-                <span className="ticket-meta">
-                  <span className="badge" data-tone={priorityTone(ticket.priority)}>
-                    {ticket.priority}
-                  </span>
-                  <span className="badge" data-tone={statusTone(ticket.status)}>
-                    {statusLabels[ticket.status]}
-                  </span>
-                </span>
-              </button>
-            ))}
+            {tickets.map((ticket) => {
+              const isSelected = selectedIds?.has(ticket.id) ?? false;
+              return (
+                <div
+                  className="ticket-row"
+                  data-selected={ticket.id === activeTicketId}
+                  data-checked={isSelected ? 'true' : undefined}
+                  key={ticket.id}
+                >
+                  {selectionEnabled && (
+                    <label className="ticket-row__checkbox" onClick={(event) => event.stopPropagation()}>
+                      <input
+                        aria-label={`Select ticket ${ticket.id}`}
+                        checked={isSelected}
+                        onChange={(event) => onToggleSelect(ticket.id, event.target.checked)}
+                        type="checkbox"
+                      />
+                    </label>
+                  )}
+                  <button
+                    className="ticket-row__main"
+                    onClick={() => onSelectTicket(ticket)}
+                    type="button"
+                  >
+                    <span className="priority-dot" data-priority={ticket.priority} />
+                    <span className="ticket-main">
+                      <strong>{ticket.customerMessage}</strong>
+                      <small>
+                        {assigneeLabel(assigneeOptions, ticket.assigneeId)} | {ticket.reason}
+                      </small>
+                      {ticket.tags !== undefined && ticket.tags.length > 0 && (
+                        <span className="ticket-tags">
+                          {ticket.tags.map((tag) => (
+                            <TagChip key={tag.id} tag={tag} />
+                          ))}
+                        </span>
+                      )}
+                    </span>
+                    <span className="ticket-meta">
+                      <span className="badge" data-tone={priorityTone(ticket.priority)}>
+                        {ticket.priority}
+                      </span>
+                      <span className="badge" data-tone={statusTone(ticket.status)}>
+                        {statusLabels[ticket.status]}
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
           </>
         )}
       </div>

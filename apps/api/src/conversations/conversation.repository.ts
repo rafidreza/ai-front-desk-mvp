@@ -11,12 +11,27 @@ import {
   ConversationMessage,
   ConversationQaDefect,
   ConversationQaGrade,
+  Tag,
+  TagColor,
   Ticket,
   TicketComment,
   TicketDetail,
   TicketEvent,
   TicketStatus,
 } from '../types/domain';
+
+function mapTagRows(
+  rows: { tag: { id: string; clientId: string; name: string; color: string; createdAt: Date; updatedAt: Date } }[],
+): Tag[] {
+  return rows.map((row) => ({
+    id: row.tag.id,
+    clientId: row.tag.clientId,
+    name: row.tag.name,
+    color: row.tag.color as TagColor,
+    createdAt: row.tag.createdAt.toISOString(),
+    updatedAt: row.tag.updatedAt.toISOString(),
+  }));
+}
 
 @Injectable()
 export class ConversationRepository {
@@ -330,7 +345,15 @@ export class ConversationRepository {
 
   async listTickets(): Promise<Ticket[]> {
     if (this.prisma?.enabled === true) {
-      const tickets = await this.prisma.ticket.findMany({ orderBy: { updatedAt: 'desc' } });
+      const tickets = await this.prisma.ticket.findMany({
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          tags: {
+            include: { tag: true },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      });
       return tickets.map((ticket) => ({
         id: ticket.id,
         clientId: ticket.clientId,
@@ -345,6 +368,7 @@ export class ConversationRepository {
         salesRecoveredEstimate: ticket.salesRecoveredEstimate,
         createdAt: ticket.createdAt.toISOString(),
         updatedAt: ticket.updatedAt.toISOString(),
+        tags: mapTagRows(ticket.tags),
       }));
     }
 
@@ -361,6 +385,10 @@ export class ConversationRepository {
           },
           comments: {
             orderBy: { createdAt: 'desc' },
+          },
+          tags: {
+            include: { tag: true },
+            orderBy: { createdAt: 'asc' },
           },
         },
       });
@@ -384,6 +412,7 @@ export class ConversationRepository {
           salesRecoveredEstimate: ticket.salesRecoveredEstimate,
           createdAt: ticket.createdAt.toISOString(),
           updatedAt: ticket.updatedAt.toISOString(),
+          tags: mapTagRows(ticket.tags),
         },
         events: ticket.events.map((event) => ({
           id: event.id,

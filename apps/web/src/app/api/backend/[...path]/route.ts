@@ -57,3 +57,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   return proxy(request, context);
 }
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  return proxy(request, context);
+}

@@ -4512,3 +4512,426 @@ button {
 .auth-redirect-banner strong {
   font-weight: 800;
 }
+
+/* ============================================
+   Ticket row: selection checkbox + nested button
+   ============================================ */
+
+.ticket-row {
+  position: relative;
+}
+
+.ticket-row[data-checked="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.ticket-row__checkbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+
+.ticket-row__checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--brand);
+}
+
+.ticket-row:has(.ticket-row__checkbox) {
+  grid-template-columns: 30px minmax(0, 1fr);
+  padding-left: 6px;
+}
+
+.ticket-row__main {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ticket-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.ticket-select-all {
+  display: grid;
+  place-items: center;
+}
+
+.ticket-select-all input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--brand);
+}
+
+/* ============================================
+   Tag chips (per-color)
+   Tokens: existing --coral, --amber, --green, --blue, plus new violet + slate
+   ============================================ */
+
+:root {
+  --violet: #6d3e9b;
+  --violet-soft: #ece2f6;
+  --slate: #475467;
+  --slate-soft: #e7ebf0;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid currentColor;
+  background: var(--surface-2);
+}
+
+.tag-chip[data-size="md"] {
+  padding: 4px 10px;
+  font-size: var(--text-small);
+}
+
+.tag-chip[data-color="coral"] {
+  color: var(--coral);
+  background: var(--coral-soft);
+  border-color: var(--coral);
+}
+
+.tag-chip[data-color="amber"] {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
+.tag-chip[data-color="green"] {
+  color: var(--green);
+  background: var(--green-soft);
+  border-color: var(--green);
+}
+
+.tag-chip[data-color="blue"] {
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-color: var(--blue);
+}
+
+.tag-chip[data-color="violet"] {
+  color: var(--violet);
+  background: var(--violet-soft);
+  border-color: var(--violet);
+}
+
+.tag-chip[data-color="slate"] {
+  color: var(--slate);
+  background: var(--slate-soft);
+  border-color: var(--slate);
+}
+
+.tag-chip__remove {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tag-chip__remove:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================
+   Tag picker (dropdown)
+   ============================================ */
+
+.tag-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.tag-picker-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  display: grid;
+  gap: 10px;
+  min-width: 260px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(28, 39, 52, 0.18);
+}
+
+.tag-picker-list {
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.tag-picker-empty {
+  margin: 0;
+  padding: 8px 6px;
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+
+.tag-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tag-picker-row:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.tag-picker-row:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.tag-picker-row__applied {
+  font-size: var(--text-tiny);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.tag-picker-create-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px dashed var(--line-strong);
+  background: transparent;
+  color: var(--brand);
+  border-radius: 6px;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tag-picker-create-toggle:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.tag-picker-create {
+  display: grid;
+  gap: 10px;
+}
+
+.tag-picker-create label {
+  display: grid;
+  gap: 4px;
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tag-picker-create input {
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: var(--text-small);
+  outline: none;
+}
+
+.tag-picker-create input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.tag-picker-color-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag-picker-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 80ms ease, border-color 80ms ease;
+}
+
+.tag-picker-color-swatch[data-color="coral"] {
+  background: var(--coral);
+}
+
+.tag-picker-color-swatch[data-color="amber"] {
+  background: var(--amber);
+}
+
+.tag-picker-color-swatch[data-color="green"] {
+  background: var(--green);
+}
+
+.tag-picker-color-swatch[data-color="blue"] {
+  background: var(--blue);
+}
+
+.tag-picker-color-swatch[data-color="violet"] {
+  background: var(--violet);
+}
+
+.tag-picker-color-swatch[data-color="slate"] {
+  background: var(--slate);
+}
+
+.tag-picker-color-swatch[data-selected="true"] {
+  border-color: var(--ink);
+  transform: scale(1.1);
+}
+
+.tag-picker-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.tag-picker-error {
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--coral-soft);
+  color: var(--coral);
+  border: 1px solid var(--coral);
+  border-radius: 6px;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+}
+
+/* ============================================
+   Bulk action bar
+   ============================================ */
+
+.bulk-action-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--brand);
+  color: var(--brand-on);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(31, 110, 84, 0.28);
+  flex-wrap: wrap;
+}
+
+.bulk-action-bar__count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--text-small);
+}
+
+.bulk-action-bar__count strong {
+  font-size: var(--text-h3);
+  font-weight: 700;
+}
+
+.bulk-action-bar__warning {
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+}
+
+.bulk-action-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+.bulk-action-bar__actions .mini-button {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--brand);
+  border-color: transparent;
+}
+
+.bulk-action-bar__actions .mini-button:hover:not(:disabled) {
+  background: #ffffff;
+}
+
+.bulk-action-bar__assign {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 6px;
+  color: var(--brand);
+}
+
+.bulk-action-bar__assign select {
+  border: none;
+  background: transparent;
+  padding: 6px 4px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--brand);
+  cursor: pointer;
+  outline: none;
+}
+
+.bulk-action-bar__close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: var(--brand-on);
+  cursor: pointer;
+}
+
+.bulk-action-bar__close:hover {
+  background: rgba(0, 0, 0, 0.15);
+}

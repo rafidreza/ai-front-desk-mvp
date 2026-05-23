@@ -24,6 +24,8 @@ import {
   ProductRecord,
   PromptProfile,
   PromptProfileVersion,
+  Tag,
+  TagColor,
   Ticket,
   TicketComment,
   TicketDetail,
@@ -520,6 +522,49 @@ export async function addTicketComment(ticketId: string, body: string): Promise<
     body: JSON.stringify({ body, authorId: 'internal-console' }),
   });
   return data.comment;
+}
+
+export async function getTags(clientId: string): Promise<Tag[]> {
+  const data = await apiFetch<{ tags: Tag[] }>(`/clients/${clientId}/tags`);
+  return data.tags;
+}
+
+export async function createTag(clientId: string, name: string, color: TagColor): Promise<Tag> {
+  const data = await apiFetch<{ tag: Tag }>(`/clients/${clientId}/tags`, {
+    method: 'POST',
+    body: JSON.stringify({ name, color }),
+  });
+  return data.tag;
+}
+
+export async function deleteTag(clientId: string, tagId: string): Promise<void> {
+  await apiFetch(`/clients/${clientId}/tags/${tagId}`, { method: 'DELETE' });
+}
+
+export async function addTagToTicket(ticketId: string, tagId: string): Promise<Tag[]> {
+  const data = await apiFetch<{ tags: Tag[] }>(`/tickets/${ticketId}/tags`, {
+    method: 'POST',
+    body: JSON.stringify({ tagId }),
+  });
+  return data.tags;
+}
+
+export async function removeTagFromTicket(ticketId: string, tagId: string): Promise<Tag[]> {
+  const data = await apiFetch<{ tags: Tag[] }>(`/tickets/${ticketId}/tags/${tagId}`, {
+    method: 'DELETE',
+  });
+  return data.tags;
+}
+
+export async function bulkApplyTag(
+  clientId: string,
+  ticketIds: string[],
+  tagId: string,
+): Promise<{ applied: number }> {
+  return apiFetch<{ applied: number }>(`/clients/${clientId}/tags/bulk-apply`, {
+    method: 'POST',
+    body: JSON.stringify({ ticketIds, tagId }),
+  });
 }
 
 export async function gradeConversation(

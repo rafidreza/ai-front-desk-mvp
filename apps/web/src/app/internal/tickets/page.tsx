@@ -4,15 +4,19 @@ import { Download, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   addTicketComment,
+  bulkApplyTag,
+  createTag,
   getConversations,
   getInternalUsers,
+  getTags,
   getTicketDetail,
   getTickets,
   updateTicketAssignee,
   updateTicketStatus,
 } from '@/lib/api';
-import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
+import { ConversationLog, InternalUser, Tag, TagColor, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
+import { BulkActionBar } from '../_components/BulkActionBar';
 import { TicketDetailPanel } from '../_components/TicketDetailPanel';
 import { TicketsPanel } from '../_components/TicketsPanel';
 import { assigneeLabel, getErrorMessage, statusLabels } from '../_lib/helpers';
@@ -76,6 +80,9 @@ export default function TicketsPage() {
   const [detailError, setDetailError] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateNotice, setUpdateNotice] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [tagsByClient, setTagsByClient] = useState<Record<string, Tag[]>>({});
+  const [isBulkBusy, setIsBulkBusy] = useState(false);
 
   async function loadTicketsData(nextRequestedTicketId = requestedTicketId) {
     setIsTicketsLoading(true);
@@ -128,6 +135,120 @@ export default function TicketsPage() {
     if (assigneeFilter === 'unassigned') return tickets.filter((ticket) => ticket.assigneeId === undefined);
     return tickets.filter((ticket) => ticket.assigneeId === assigneeFilter);
   }, [assigneeFilter, tickets]);
+
+  const selectedTickets = useMemo(
+    () => tickets.filter((ticket) => selectedIds.has(ticket.id)),
+    [tickets, selectedIds],
+  );
+  const selectedClientIds = useMemo(
+    () => new Set(selectedTickets.map((ticket) => ticket.clientId)),
+    [selectedTickets],
+  );
+  const sameClient = selectedClientIds.size === 1;
+  const sharedClientId = sameClient ? Array.from(selectedClientIds)[0] : null;
+  const availableTags = sharedClientId !== null ? tagsByClient[sharedClientId] ?? [] : [];
+
+  useEffect(() => {
+    if (sharedClientId === null || tagsByClient[sharedClientId] !== undefined) return;
+    let cancelled = false;
+    void getTags(sharedClientId)
+      .then((tags) => {
+        if (!cancelled) {
+          setTagsByClient((current) => ({ ...current, [sharedClientId]: tags }));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTagsByClient((current) => ({ ...current, [sharedClientId]: [] }));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sharedClientId, tagsByClient]);
+
+  function toggleSelect(ticketId: string, selected: boolean) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (selected) next.add(ticketId);
+      else next.delete(ticketId);
+      return next;
+    });
+  }
+
+  function toggleSelectAll(selected: boolean) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      for (const ticket of filteredTickets) {
+        if (selected) next.add(ticket.id);
+        else next.delete(ticket.id);
+      }
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  async function runBulk<T>(label: string, fn: () => Promise<T>) {
+    setIsBulkBusy(true);
+    setUpdateError(null);
+    setUpdateNotice(null);
+    try {
+      const result = await fn();
+      setUpdateNotice(label);
+      await loadTicketsData();
+      return result;
+    } catch (error) {
+      setUpdateError(getErrorMessage(error, `Could not complete bulk ${label.toLowerCase()}.`));
+      throw error;
+    } finally {
+      setIsBulkBusy(false);
+    }
+  }
+
+  async function handleBulkClose() {
+    if (selectedTickets.length === 0) return;
+    await runBulk(`Marked ${selectedTickets.length} ticket(s) resolved.`, async () => {
+      await Promise.all(
+        selectedTickets
+          .filter((ticket) => ticket.status !== 'resolved')
+          .map((ticket) => updateTicketStatus(ticket.id, 'resolved', ticket.version)),
+      );
+      clearSelection();
+    });
+  }
+
+  async function handleBulkAssign(assigneeId: string) {
+    if (selectedTickets.length === 0) return;
+    const nextAssignee = assigneeId === 'unassigned' ? undefined : assigneeId;
+    await runBulk(`Assigned ${selectedTickets.length} ticket(s).`, async () => {
+      await Promise.all(
+        selectedTickets.map((ticket) => updateTicketAssignee(ticket.id, nextAssignee, ticket.version)),
+      );
+      clearSelection();
+    });
+  }
+
+  async function handleBulkApplyTag(tagId: string) {
+    if (sharedClientId === null || selectedTickets.length === 0) return;
+    await runBulk(`Tag applied to ${selectedTickets.length} ticket(s).`, async () => {
+      await bulkApplyTag(sharedClientId, selectedTickets.map((ticket) => ticket.id), tagId);
+    });
+  }
+
+  async function handleCreateTagForBulk(name: string, color: TagColor): Promise<Tag> {
+    if (sharedClientId === null) {
+      throw new Error('Pick tickets from a single client to create a tag.');
+    }
+    const tag = await createTag(sharedClientId, name, color);
+    setTagsByClient((current) => ({
+      ...current,
+      [sharedClientId]: [...(current[sharedClientId] ?? []), tag],
+    }));
+    return tag;
+  }
 
   const activeTicket = useMemo(
     () => selectedTicketDetail?.ticket ?? tickets.find((ticket) => ticket.id === selectedTicketId),
@@ -214,6 +335,18 @@ export default function TicketsPage() {
       }
     >
       {updateError !== null && <div className="inline-alert">{updateError}</div>}
+      <BulkActionBar
+        selectedCount={selectedTickets.length}
+        sameClient={sameClient}
+        isBusy={isBulkBusy}
+        assigneeOptions={assigneeOptions}
+        availableTags={availableTags}
+        onClose={() => void handleBulkClose()}
+        onAssign={(assigneeId) => void handleBulkAssign(assigneeId)}
+        onApplyTag={(tagId) => void handleBulkApplyTag(tagId)}
+        onCreateTag={handleCreateTagForBulk}
+        onClearSelection={clearSelection}
+      />
       <section className="ticket-portal-grid">
         <TicketsPanel
           tickets={filteredTickets}
@@ -222,9 +355,12 @@ export default function TicketsPage() {
           activeTicketId={activeTicket?.id}
           isTicketsLoading={isTicketsLoading}
           ticketsError={ticketsError}
+          selectedIds={selectedIds}
           onChangeFilter={setAssigneeFilter}
           onReload={() => void loadTicketsData()}
           onSelectTicket={(ticket) => setSelectedTicketId(ticket.id)}
+          onToggleSelect={toggleSelect}
+          onToggleSelectAll={toggleSelectAll}
         />
         <TicketDetailPanel
           activeTicket={activeTicket}
