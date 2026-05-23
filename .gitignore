@@ -11,3 +11,5 @@ apps/web/.next
 coverage
 *.log
 .run/
+.agents/
+*.tsbuildinfo

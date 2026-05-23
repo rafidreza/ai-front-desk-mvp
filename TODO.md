@@ -29,7 +29,10 @@
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
-| **TOTAL** | **70** | **20** | **90** |
+| 10 — UX Audit P0 | 0 | 9 | 9 |
+| 11 — UX Audit P1 | 0 | 10 | 10 |
+| 12 — Use case backlog | 0 | 38 | 38 |
+| **TOTAL** | **70** | **77** | **147** |
 
 ---
 
@@ -193,6 +196,99 @@
 - [x] **T66 — IMPROVEMENT** Add internal/client UI to attach a Google Sheet link, run "Sync now", see last sync status/errors, and map columns if needed. — **DONE (2026-05-23): added `/client/data-sources` and `/internal/data-sources` for Sheet setup, tab naming, save/sync actions, last sync status/errors, validation warning display, and synced product/order previews; client portal navigation and backend proxy allowlist now include data sources**
 - [x] **T67 — IMPROVEMENT** Add product availability/order-status lookup path in the message pipeline before AI response, with safe fallback when data is stale or missing. — **DONE (2026-05-23): conversation handling now checks synced Sheet records before the general AI/KB path for product availability and order-status intents, answers from fresh cached product/order rows, asks clarifying or verification questions when needed, and escalates when Sheet data is stale or missing**
 - [x] **T68 — IMPROVEMENT** Add tests and QA fixtures for Sheet parsing, sync failures, product availability answers, and order-status privacy boundaries. — **DONE (2026-05-23): added focused `ExternalDataService` tests for quoted CSV parsing, failed sync cache preservation, fresh product availability answers, and order-status privacy verification before exposing status**
+
+---
+
+## Tier 10 — UX Audit P0 (front door + trust)
+
+Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiable).
+
+- [ ] **T69 — UX** Make `/internal/login` "Unlock console" CTA solid brand-green (`#1f6e54`, white text, no border, darker hover); remove ghost outline style.
+- [ ] **T70 — UX** Add inline loading/error/success states to passcode submit: reserve fixed-height feedback slot, disable button + swap label to "Unlocking…" + spinner on submit, render "Incorrect passcode" inline without layout jump.
+- [ ] **T71 — UX** Split root route: serve public landing at `/` (product explainer + screenshot of tickets queue + customer-chat-widget demo); move passcode gate to `/internal/login` with "Internal access" link from landing footer.
+- [ ] **T72 — UX** Replace HTML5 `:invalid` browser tooltip on `/internal/agent-config` "Create draft" form with inline required-field markers + app-level error summary listing missing fields above the CTA.
+- [ ] **T73 — UX** Pre-populate new prompt-profile draft from currently active profile so operator only edits the delta (not from blank form).
+- [ ] **T74 — UX** Show inline banner on `/client/dashboard?clientId=…` when unauthenticated ("Please verify your access code to continue") instead of silently re-rendering request-code form; preserve `clientId` in restored verification state.
+- [ ] **T75 — UX** Establish typography scale tokens (body 16px, h2 24px / 1.5×, h1 32–40px / 2–2.5×); apply across internal console + client portal.
+- [ ] **T76 — UX** Audit copy for marketing buzzwords flagged by uxaudit; replace each with concrete claim (delete-test: if sentence works without word, drop word).
+- [ ] **T77 — UX** Add signature delight animation to `/internal/login`: 200ms cubic-bezier lock-icon-opening on successful passcode; rewrite subcopy with voice (vs flat "Enter the internal passcode to continue.").
+
+---
+
+## Tier 11 — UX Audit P1 (daily-use friction)
+
+- [ ] **T78 — UX** Add Pending / Approved / Rejected / Needs-info filter tabs to `/internal/kb-review` queue.
+- [ ] **T79 — UX** Standardize client picker: replace inconsistent custom dropdowns with shadcn `Select` component everywhere clients are selected (KB import, manage-clients, agent-config).
+- [ ] **T80 — UX** Replace native `<select>` on `/internal/team` role field with shadcn `Select` component.
+- [ ] **T81 — UX** Add inline Good / Bad / Hallucination action buttons per row on `/internal/qa` (keep drill-down as secondary).
+- [ ] **T82 — UX** Add sticky-bottom save bar to `/internal/clients/[id]` with disabled-until-dirty state.
+- [ ] **T83 — UX** Add top-of-page degradation banner: detect Anthropic API failure rate > threshold, show "AI is slow right now — using fallback replies" with link to internal status.
+- [ ] **T84 — UX** Add loading skeletons to tickets list, KB list, clients list, QA list, conversations list.
+- [ ] **T85 — UX** Empty state guidance on every list page (tickets, KB, clients, QA): icon + 1-line explainer + primary action (e.g. "No tickets yet. Connect a Facebook Page to start receiving messages → ").
+- [ ] **T86 — UX** Replace generic "something went wrong" errors with actionable messages naming the cause + the fix link (e.g. "Page token expired. Reconnect Meta integration → ").
+- [ ] **T87 — UX** Mobile-responsive sweep of `/internal/*` console (sidebar collapses, KPI strip stacks, ticket detail fits 390px).
+
+---
+
+## Tier 12 — Use Case Backlog (domain gaps surfaced by audit)
+
+Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
+
+### Channel + messaging
+
+- [ ] **T88 — USECASE** Bangla / Banglish UI strings (i18n via next-intl); switch internal + client portal + digest emails.
+- [ ] **T89 — USECASE** Multi-FB-Page-per-seller: relax "1 client = 1 page" assumption; data model + UI for `ClientChannel[]`.
+- [ ] **T90 — USECASE** WhatsApp template approval status UI: list templates with `pending` / `approved` / `rejected` state from Meta; block send if not approved.
+- [ ] **T91 — USECASE** Channel health dashboard: Meta page token TTL countdown, WhatsApp number status, webhook deliverability stats.
+- [ ] **T92 — USECASE** Holiday / off-hours auto-reply calendar (Eid, Puja, custom dates) with per-client override.
+- [ ] **T93 — USECASE** Voice note ingest UI in chat (operator can play customer voice + see transcribed text inline).
+- [ ] **T94 — USECASE** Image OCR ingest UI in chat (customer photos product → operator sees extracted text + matched product candidates).
+- [ ] **T95 — USECASE** Unified customer history view across pages (same phone number → one timeline).
+
+### Ticket operations
+
+- [ ] **T96 — USECASE** Bulk ticket actions (multi-select rows → close / assign / tag in one click).
+- [ ] **T97 — USECASE** SLA timer + overdue flag on ticket list ("waiting 4h 12m" badge with color escalation).
+- [ ] **T98 — USECASE** AI confidence + reason chips on tickets (why AI escalated: low confidence / sensitive intent / unknown product).
+- [ ] **T99 — USECASE** Re-open closed ticket flow when customer messages back.
+- [ ] **T100 — USECASE** Internal private-note panel on ticket for operator-to-operator handoff.
+- [ ] **T101 — USECASE** Search across all conversations (text + filter by date / customer / intent).
+- [ ] **T102 — USECASE** Customer block / spam button with block list per client.
+- [ ] **T103 — USECASE** "Mark as test customer" toggle to exclude from QA scores + daily digests.
+- [ ] **T104 — USECASE** Tag / label system for tickets (`VIP`, `complaint`, `high-value`).
+- [ ] **T105 — USECASE** In-app P1 alert (toast + sound) in addition to WhatsApp ping.
+
+### Knowledge Base
+
+- [ ] **T106 — USECASE** KB version diff + 1-click rollback UI (highlight what changed between versions).
+- [ ] **T107 — USECASE** KB freshness alerts: surface entries not updated in 90 days, prompt operator to re-verify.
+- [ ] **T108 — USECASE** Seller-facing read-only KB view (client portal) so seller sees what AI knows. Trust signal.
+- [ ] **T109 — USECASE** Suggest new KB entries from unresolved tickets (auto-draft from ticket text → operator approves).
+
+### Billing + auth + RBAC
+
+- [ ] **T110 — USECASE** Billing surface: plan picker, invoice list, payment method (SSLCOMMERZ + bKash UI).
+- [ ] **T111 — USECASE** Trial countdown ("12 days left") + monthly quota meter ("8,400 / 10,000 msgs").
+- [ ] **T112 — USECASE** Internal per-client LLM cost dashboard (USD spend per client per day, alert > threshold).
+- [ ] **T113 — USECASE** RBAC: admin / operator / read-only roles (replace single shared `INTERNAL_CONSOLE_PASSWORD`).
+- [ ] **T114 — USECASE** Audit log: who deleted KB entry, who changed prompt profile, who closed ticket (compliance + DPA).
+- [ ] **T115 — USECASE** Magic-link expiry + clear re-request CTA on failure page.
+- [ ] **T116 — USECASE** WhatsApp OTP fallback when SMS fails (voice call / alt-channel option).
+- [ ] **T117 — USECASE** Session idle-timeout + warning modal on internal console (security on shared laptops).
+
+### Onboarding + lifecycle (internal)
+
+- [ ] **T118 — USECASE** Internal onboarding pipeline screen: per-seller card showing stage (call scheduled / Meta connected / KB v1 building / shadow / live).
+- [ ] **T119 — USECASE** Shadow-mode QA dashboard: side-by-side AI reply vs operator-edited reply before go-live.
+- [ ] **T120 — USECASE** Onboarding bot Q&A review screen: see + edit collected answers before generating KB v1.0.
+- [ ] **T121 — USECASE** Pilot → paid conversion checklist (per-client gating UI).
+
+### Compliance + Bangladesh-specific
+
+- [ ] **T122 — USECASE** DPA signing flow: send template → seller signs → store countersigned PDF per client.
+- [ ] **T123 — USECASE** Per-client data retention controls ("delete chats older than 90 days").
+- [ ] **T124 — USECASE** Bangla number formatting (১২,৩৪৫) + BDT currency (৳) on all numeric surfaces.
+- [ ] **T125 — USECASE** PDPA consent banner on embeddable customer chat widget (collects phone / address PII).
 
 ---
 

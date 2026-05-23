@@ -4,17 +4,22 @@ import { BotMessageSquare, LockKeyhole } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
+type FeedbackTone = 'idle' | 'info' | 'error' | 'success';
+
 export function InternalLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: FeedbackTone; message: string }>({
+    tone: 'idle',
+    message: '',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
-    setError(null);
+    setFeedback({ tone: 'info', message: 'Checking passcode…' });
 
     const response = await fetch('/api/internal-login', {
       method: 'POST',
@@ -24,14 +29,17 @@ export function InternalLoginForm() {
 
     if (!response.ok) {
       const data = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(data?.error ?? 'Password did not match.');
+      setFeedback({ tone: 'error', message: data?.error ?? 'Password did not match.' });
       setIsSubmitting(false);
       return;
     }
 
+    setFeedback({ tone: 'success', message: 'Unlocked. Loading console…' });
     router.replace(searchParams.get('next') ?? '/internal');
     router.refresh();
   }
+
+  const isDisabled = isSubmitting || password.length === 0;
 
   return (
     <section className="login-panel">
@@ -56,6 +64,7 @@ export function InternalLoginForm() {
         <input
           autoComplete="current-password"
           autoFocus
+          disabled={isSubmitting}
           id="password"
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Enter passcode"
@@ -63,10 +72,29 @@ export function InternalLoginForm() {
           value={password}
         />
 
-        {error !== null && <div className="login-error">{error}</div>}
+        <div
+          aria-live="polite"
+          className="login-feedback"
+          data-tone={feedback.tone === 'idle' ? undefined : feedback.tone}
+          role="status"
+        >
+          {feedback.message}
+        </div>
 
-        <button className="icon-button" disabled={isSubmitting || password.length === 0} type="submit">
-          {isSubmitting ? 'Checking...' : 'Unlock console'}
+        <button
+          className="btn-primary"
+          data-loading={isSubmitting ? 'true' : undefined}
+          disabled={isDisabled}
+          type="submit"
+        >
+          {isSubmitting ? (
+            <>
+              <span aria-hidden="true" className="btn-spinner" />
+              Unlocking…
+            </>
+          ) : (
+            'Unlock console'
+          )}
         </button>
       </form>
     </section>
