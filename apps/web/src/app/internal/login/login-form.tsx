@@ -35,7 +35,7 @@ export function InternalLoginForm() {
       return;
     }
 
-    setFeedback({ tone: 'success', message: 'Unlocked. Opening operations console…' });
+    setFeedback({ tone: 'success', message: 'Access confirmed. Opening operations console…' });
     await new Promise((resolve) => setTimeout(resolve, 220));
     router.replace(searchParams.get('next') ?? '/internal');
     router.refresh();
@@ -94,10 +94,10 @@ export function InternalLoginForm() {
           {isSubmitting ? (
             <>
               <span aria-hidden="true" className="btn-spinner" />
-              Unlocking…
+              Opening…
             </>
           ) : (
-            'Unlock console'
+            'Open console'
           )}
         </button>
       </form>

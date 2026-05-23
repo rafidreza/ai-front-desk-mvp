@@ -29,10 +29,10 @@
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
-| 10 — UX Audit P0 | 8 | 1 | 9 |
+| 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 5 | 5 | 10 |
 | 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **83** | **64** | **147** |
+| **TOTAL** | **84** | **63** | **147** |
 
 ---
 
@@ -210,7 +210,7 @@ Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiabl
 - [x] **T73 — UX** Pre-populate new prompt-profile draft from currently active profile so operator only edits the delta (not from blank form). — **DONE (2026-05-24, commit `c8eef70`): `activeProfile` memo + every Create-form field receives `defaultValue` from active profile + green dashed `.form-prefill-hint` banner; form key includes `activeProfile?.id` + `createResetToken` so remount stays clean.**
 - [x] **T74 — UX** Show inline banner on `/client/dashboard?clientId=…` when unauthenticated ("Please verify your access code to continue") instead of silently re-rendering request-code form; preserve `clientId` in restored verification state. — **DONE (2026-05-24, commit `0e2c64b`): middleware already preserves `?next=…` (verified); `/client/login` now derives a human label from the `next` param and renders a blue `.auth-redirect-banner` ("You were sent here from your <label>. Verify your access code to continue.") above the request form; banner hidden on direct visits; verify-success already bounces back via `nextPath`.**
 - [x] **T75 — UX** Establish typography scale tokens (body 16px, h2 24px / 1.5×, h1 32–40px / 2–2.5×); apply across internal console + client portal. — **DONE (2026-05-24): main page titles, command headings, login copy, client portal headings, metrics, and dense body copy now use shared `--text-*`, `--lh-*`, and `--fw-*` tokens across internal console + client portal. Compact labels remain intentionally small for scan density.**
-- [ ] **T76 — UX** Audit copy for marketing buzzwords flagged by uxaudit; replace each with concrete claim (delete-test: if sentence works without word, drop word). — **NOTE: only flagged buzzword was "unlock" on login CTA — literal usage, not marketing. Defer until additional surfaces (landing copy, dashboard headers) get a sweep.**
+- [x] **T76 — UX** Audit copy for marketing buzzwords flagged by uxaudit; replace each with concrete claim (delete-test: if sentence works without word, drop word). — **DONE (2026-05-24): visible login CTA/feedback now uses concrete access language ("Open console", "Access confirmed") instead of the flagged "unlock" phrasing; broader copy sweep found no high-risk marketing buzzwords in internal/client surfaces.**
 - [x] **T77 — UX** Add signature delight animation to `/internal/login`: 200ms cubic-bezier lock-icon-opening on successful passcode; rewrite subcopy with voice (vs flat "Enter the internal passcode to continue."). — **DONE (2026-05-24): successful passcode now swaps to an open-lock icon with a 200ms cubic-bezier motion before redirect; subcopy now uses professional internal-ops language.**
 
 ---
