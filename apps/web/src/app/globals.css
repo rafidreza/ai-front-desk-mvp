@@ -1008,7 +1008,7 @@ button {
 
 .kb-review-filters {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) repeat(3, minmax(120px, auto)) auto;
+  grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(120px, auto)) auto;
   gap: 8px;
   padding: 10px;
   border-bottom: 1px solid var(--line);
@@ -1024,6 +1024,31 @@ button {
   font: inherit;
   font-size: 12px;
   font-weight: 700;
+}
+
+.kb-review-status-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfd;
+}
+
+.kb-review-status-tabs .status-button {
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.kb-review-status-tabs .status-button span {
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: var(--text-tiny);
+  line-height: 1;
 }
 
 .kb-review-row {
@@ -3267,6 +3292,10 @@ button {
   .delegation-actions,
   .comment-form {
     grid-template-columns: 1fr;
+  }
+
+  .kb-review-status-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .client-auth-shell {

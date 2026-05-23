@@ -18,18 +18,15 @@ import {
 } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
 
-const statuses: Array<KnowledgeChangeRequestStatus | 'all'> = [
-  'all',
-  'submitted',
-  'in_review',
-  'needs_clarification',
-  'approved',
-  'edited_then_published',
-  'rejected',
-  'published',
-];
-
 const urgencies: Array<KnowledgeChangeRequestUrgency | 'all'> = ['all', 'urgent', 'normal'];
+type QueueTab = 'pending' | 'approved' | 'rejected' | 'needs_info';
+
+const queueTabs: Array<{ value: QueueTab; label: string; statuses: KnowledgeChangeRequestStatus[] }> = [
+  { value: 'pending', label: 'Pending', statuses: ['submitted', 'in_review'] },
+  { value: 'approved', label: 'Approved', statuses: ['approved', 'edited_then_published', 'published'] },
+  { value: 'rejected', label: 'Rejected', statuses: ['rejected'] },
+  { value: 'needs_info', label: 'Needs-info', statuses: ['needs_clarification'] },
+];
 
 function formatLabel(value: string) {
   return value.replace(/_/g, ' ');
@@ -54,7 +51,7 @@ export default function InternalKbReviewPage() {
   const [requests, setRequests] = useState<KnowledgeChangeRequest[]>([]);
   const [detail, setDetail] = useState<KnowledgeChangeRequestReviewDetail | null>(null);
   const [selectedClientId, setSelectedClientId] = useState('all');
-  const [status, setStatus] = useState<KnowledgeChangeRequestStatus | 'all'>('all');
+  const [queueTab, setQueueTab] = useState<QueueTab>('pending');
   const [urgency, setUrgency] = useState<KnowledgeChangeRequestUrgency | 'all'>('all');
   const [query, setQuery] = useState('');
   const [reviewerNote, setReviewerNote] = useState('');
@@ -77,13 +74,15 @@ export default function InternalKbReviewPage() {
         clients.length === 0 ? getClients() : Promise.resolve(clients),
         getInternalKnowledgeRequests({
           clientId: selectedClientId === 'all' ? undefined : selectedClientId,
-          status,
           urgency,
         }),
       ]);
       setClients(clientData);
       setRequests(requestData);
-      const nextSelected = requestData.find((request) => request.id === nextSelectedId) ?? requestData[0];
+      const activeStatuses = queueTabs.find((tab) => tab.value === queueTab)?.statuses ?? [];
+      const visibleRequests = requestData.filter((request) => activeStatuses.includes(request.status));
+      const nextSelected =
+        visibleRequests.find((request) => request.id === nextSelectedId) ?? visibleRequests[0];
       if (nextSelected !== undefined) {
         await selectRequest(nextSelected.id);
       } else {
@@ -118,14 +117,26 @@ export default function InternalKbReviewPage() {
     void loadRequests();
   }, []);
 
+  const tabbedRequests = useMemo(() => {
+    const activeStatuses = queueTabs.find((tab) => tab.value === queueTab)?.statuses ?? [];
+    return requests.filter((request) => activeStatuses.includes(request.status));
+  }, [queueTab, requests]);
+
   const filteredRequests = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (normalized === '') return requests;
-    return requests.filter((request) =>
+    if (normalized === '') return tabbedRequests;
+    return tabbedRequests.filter((request) =>
       [request.proposedTitle, request.proposedAnswer, request.proposedCategory, request.status, request.urgency]
         .some((value) => value.toLowerCase().includes(normalized)),
     );
-  }, [query, requests]);
+  }, [query, tabbedRequests]);
+
+  const queueCounts = useMemo(() => {
+    return queueTabs.reduce<Record<QueueTab, number>>((counts, tab) => {
+      counts[tab.value] = requests.filter((request) => tab.statuses.includes(request.status)).length;
+      return counts;
+    }, { pending: 0, approved: 0, rejected: 0, needs_info: 0 });
+  }, [requests]);
 
   async function runAction(action: 'in-review' | 'approve' | 'reject' | 'clarify') {
     if (detail === null) return;
@@ -174,6 +185,19 @@ export default function InternalKbReviewPage() {
     }
   }
 
+  function handleQueueTabChange(nextTab: QueueTab) {
+    setQueueTab(nextTab);
+    const nextStatuses = queueTabs.find((tab) => tab.value === nextTab)?.statuses ?? [];
+    if (detail !== null && nextStatuses.includes(detail.request.status)) return;
+
+    const nextRequest = requests.find((request) => nextStatuses.includes(request.status));
+    if (nextRequest !== undefined) {
+      void selectRequest(nextRequest.id);
+    } else {
+      setDetail(null);
+    }
+  }
+
   return (
     <InternalShell
       activeView="kb-review"
@@ -212,13 +236,6 @@ export default function InternalKbReviewPage() {
                 </option>
               ))}
             </select>
-            <select value={status} onChange={(event) => setStatus(event.target.value as KnowledgeChangeRequestStatus | 'all')}>
-              {statuses.map((item) => (
-                <option value={item} key={item}>
-                  {formatLabel(item)}
-                </option>
-              ))}
-            </select>
             <select value={urgency} onChange={(event) => setUrgency(event.target.value as KnowledgeChangeRequestUrgency | 'all')}>
               {urgencies.map((item) => (
                 <option value={item} key={item}>
@@ -229,6 +246,23 @@ export default function InternalKbReviewPage() {
             <button className="mini-button" type="button" onClick={() => void loadRequests()}>
               Apply
             </button>
+          </div>
+
+          <div className="kb-review-status-tabs" role="tablist" aria-label="Review queue status">
+            {queueTabs.map((tab) => (
+              <button
+                aria-selected={queueTab === tab.value}
+                className="status-button"
+                data-active={queueTab === tab.value}
+                key={tab.value}
+                role="tab"
+                type="button"
+                onClick={() => handleQueueTabChange(tab.value)}
+              >
+                {tab.label}
+                <span>{queueCounts[tab.value]}</span>
+              </button>
+            ))}
           </div>
 
           <div className="client-list">

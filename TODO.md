@@ -30,9 +30,9 @@
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 7 | 2 | 9 |
-| 11 — UX Audit P1 | 0 | 10 | 10 |
+| 11 — UX Audit P1 | 1 | 9 | 10 |
 | 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **77** | **70** | **147** |
+| **TOTAL** | **78** | **69** | **147** |
 
 ---
 
@@ -217,7 +217,7 @@ Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiabl
 
 ## Tier 11 — UX Audit P1 (daily-use friction)
 
-- [ ] **T78 — UX** Add Pending / Approved / Rejected / Needs-info filter tabs to `/internal/kb-review` queue.
+- [x] **T78 — UX** Add Pending / Approved / Rejected / Needs-info filter tabs to `/internal/kb-review` queue. — **DONE (2026-05-24): queue now has operator-friendly tabs with counts; Pending groups `submitted` + `in_review`, Approved groups `approved` + `edited_then_published` + `published`, Rejected shows `rejected`, Needs-info shows `needs_clarification`.**
 - [ ] **T79 — UX** Standardize client picker: replace inconsistent custom dropdowns with shadcn `Select` component everywhere clients are selected (KB import, manage-clients, agent-config).
 - [ ] **T80 — UX** Replace native `<select>` on `/internal/team` role field with shadcn `Select` component.
 - [ ] **T81 — UX** Add inline Good / Bad / Hallucination action buttons per row on `/internal/qa` (keep drill-down as secondary).
