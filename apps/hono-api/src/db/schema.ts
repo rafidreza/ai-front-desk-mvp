@@ -66,6 +66,115 @@ export const clientAuthChallenges = pgTable(
   }),
 );
 
+export const externalDataSources = pgTable(
+  'ExternalDataSource',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    sourceType: text('sourceType').notNull().default('google_sheet'),
+    status: text('status').notNull().default('active'),
+    name: text('name').notNull(),
+    sheetUrl: text('sheetUrl').notNull(),
+    spreadsheetId: text('spreadsheetId'),
+    productsTabName: text('productsTabName').notNull().default('Products'),
+    ordersTabName: text('ordersTabName'),
+    syncIntervalMinutes: integer('syncIntervalMinutes').notNull().default(15),
+    productFreshnessMinutes: integer('productFreshnessMinutes').notNull().default(15),
+    orderFreshnessMinutes: integer('orderFreshnessMinutes').notNull().default(5),
+    lastSyncStatus: text('lastSyncStatus'),
+    lastSyncError: text('lastSyncError'),
+    lastSyncAt: timestamp('lastSyncAt', { mode: 'date' }),
+    lastSuccessfulSyncAt: timestamp('lastSuccessfulSyncAt', { mode: 'date' }),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('ExternalDataSource_clientId_idx').on(table.clientId),
+    clientStatusIdx: index('ExternalDataSource_clientId_status_idx').on(table.clientId, table.status),
+    lastSyncAtIdx: index('ExternalDataSource_lastSyncAt_idx').on(table.lastSyncAt),
+  }),
+);
+
+export const externalDataSyncRuns = pgTable(
+  'ExternalDataSyncRun',
+  {
+    id: text('id').primaryKey(),
+    dataSourceId: text('dataSourceId').notNull().references(() => externalDataSources.id, { onDelete: 'cascade' }),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    status: text('status').notNull(),
+    startedAt: timestamp('startedAt', { mode: 'date' }).notNull().defaultNow(),
+    finishedAt: timestamp('finishedAt', { mode: 'date' }),
+    productsSeen: integer('productsSeen').notNull().default(0),
+    productsImported: integer('productsImported').notNull().default(0),
+    ordersSeen: integer('ordersSeen').notNull().default(0),
+    ordersImported: integer('ordersImported').notNull().default(0),
+    validationWarnings: jsonb('validationWarnings').$type<Record<string, unknown>[]>().notNull().default(sql`'[]'::jsonb`),
+    errorMessage: text('errorMessage'),
+  },
+  (table) => ({
+    dataSourceIdIdx: index('ExternalDataSyncRun_dataSourceId_idx').on(table.dataSourceId),
+    clientIdIdx: index('ExternalDataSyncRun_clientId_idx').on(table.clientId),
+    statusStartedAtIdx: index('ExternalDataSyncRun_status_startedAt_idx').on(table.status, table.startedAt),
+  }),
+);
+
+export const productRecords = pgTable(
+  'ProductRecord',
+  {
+    id: text('id').primaryKey(),
+    dataSourceId: text('dataSourceId').notNull().references(() => externalDataSources.id, { onDelete: 'cascade' }),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    rowKey: text('rowKey').notNull(),
+    sku: text('sku'),
+    productName: text('productName').notNull(),
+    variant: text('variant'),
+    availabilityStatus: text('availabilityStatus').notNull(),
+    stockQuantity: integer('stockQuantity'),
+    price: doublePrecision('price'),
+    currency: text('currency'),
+    productUrl: text('productUrl'),
+    availabilityNote: text('availabilityNote'),
+    sourceUpdatedAt: timestamp('sourceUpdatedAt', { mode: 'date' }),
+    lastSyncedAt: timestamp('lastSyncedAt', { mode: 'date' }).notNull().defaultNow(),
+    rawRow: jsonb('rawRow').$type<Record<string, unknown>>().notNull().default({}),
+  },
+  (table) => ({
+    dataSourceRowKeyUnique: uniqueIndex('ProductRecord_dataSourceId_rowKey_key').on(table.dataSourceId, table.rowKey),
+    clientIdIdx: index('ProductRecord_clientId_idx').on(table.clientId),
+    clientSkuIdx: index('ProductRecord_clientId_sku_idx').on(table.clientId, table.sku),
+    clientProductNameIdx: index('ProductRecord_clientId_productName_idx').on(table.clientId, table.productName),
+    clientAvailabilityIdx: index('ProductRecord_clientId_availabilityStatus_idx').on(table.clientId, table.availabilityStatus),
+  }),
+);
+
+export const orderRecords = pgTable(
+  'OrderRecord',
+  {
+    id: text('id').primaryKey(),
+    dataSourceId: text('dataSourceId').notNull().references(() => externalDataSources.id, { onDelete: 'cascade' }),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    rowKey: text('rowKey').notNull(),
+    orderId: text('orderId').notNull(),
+    customerPhone: text('customerPhone'),
+    customerEmail: text('customerEmail'),
+    customerName: text('customerName'),
+    orderStatus: text('orderStatus').notNull(),
+    paymentStatus: text('paymentStatus'),
+    trackingUrl: text('trackingUrl'),
+    orderNote: text('orderNote'),
+    sourceUpdatedAt: timestamp('sourceUpdatedAt', { mode: 'date' }),
+    lastSyncedAt: timestamp('lastSyncedAt', { mode: 'date' }).notNull().defaultNow(),
+    rawRow: jsonb('rawRow').$type<Record<string, unknown>>().notNull().default({}),
+  },
+  (table) => ({
+    dataSourceRowKeyUnique: uniqueIndex('OrderRecord_dataSourceId_rowKey_key').on(table.dataSourceId, table.rowKey),
+    dataSourceOrderIdUnique: uniqueIndex('OrderRecord_dataSourceId_orderId_key').on(table.dataSourceId, table.orderId),
+    clientIdIdx: index('OrderRecord_clientId_idx').on(table.clientId),
+    clientOrderIdIdx: index('OrderRecord_clientId_orderId_idx').on(table.clientId, table.orderId),
+    clientOrderStatusIdx: index('OrderRecord_clientId_orderStatus_idx').on(table.clientId, table.orderStatus),
+  }),
+);
+
 export const internalUsers = pgTable(
   'InternalUser',
   {
@@ -348,6 +457,31 @@ export const clientRelations = relations(clients, ({ many }) => ({
   conversations: many(conversations),
   tickets: many(tickets),
   knowledgeEntries: many(knowledgeEntries),
+  externalDataSources: many(externalDataSources),
+  productRecords: many(productRecords),
+  orderRecords: many(orderRecords),
+}));
+
+export const externalDataSourceRelations = relations(externalDataSources, ({ many, one }) => ({
+  client: one(clients, { fields: [externalDataSources.clientId], references: [clients.id] }),
+  syncRuns: many(externalDataSyncRuns),
+  productRecords: many(productRecords),
+  orderRecords: many(orderRecords),
+}));
+
+export const externalDataSyncRunRelations = relations(externalDataSyncRuns, ({ one }) => ({
+  dataSource: one(externalDataSources, { fields: [externalDataSyncRuns.dataSourceId], references: [externalDataSources.id] }),
+  client: one(clients, { fields: [externalDataSyncRuns.clientId], references: [clients.id] }),
+}));
+
+export const productRecordRelations = relations(productRecords, ({ one }) => ({
+  dataSource: one(externalDataSources, { fields: [productRecords.dataSourceId], references: [externalDataSources.id] }),
+  client: one(clients, { fields: [productRecords.clientId], references: [clients.id] }),
+}));
+
+export const orderRecordRelations = relations(orderRecords, ({ one }) => ({
+  dataSource: one(externalDataSources, { fields: [orderRecords.dataSourceId], references: [externalDataSources.id] }),
+  client: one(clients, { fields: [orderRecords.clientId], references: [clients.id] }),
 }));
 
 export const conversationRelations = relations(conversations, ({ many, one }) => ({
@@ -379,6 +513,10 @@ export const schema = {
   clients,
   clientAuthChallenges,
   internalUsers,
+  externalDataSources,
+  externalDataSyncRuns,
+  productRecords,
+  orderRecords,
   knowledgeEntries,
   knowledgeEntryVersions,
   knowledgeChangeRequests,

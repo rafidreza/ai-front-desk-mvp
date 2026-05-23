@@ -39,6 +39,10 @@ model Client {
   updatedAt               DateTime                 @updatedAt
   knowledgeEntries        KnowledgeEntry[]
   knowledgeChangeRequests KnowledgeChangeRequest[]
+  externalDataSources     ExternalDataSource[]
+  externalDataSyncRuns    ExternalDataSyncRun[]
+  productRecords          ProductRecord[]
+  orderRecords            OrderRecord[]
   promptProfiles          PromptProfile[]
   conversations           Conversation[]
   tickets                 Ticket[]
@@ -61,6 +65,109 @@ model ClientAuthChallenge {
   @@index([clientId])
   @@index([destination])
   @@index([expiresAt])
+}
+
+model ExternalDataSource {
+  id                       String                @id
+  clientId                 String
+  sourceType               String                @default("google_sheet")
+  status                   String                @default("active")
+  name                     String
+  sheetUrl                 String
+  spreadsheetId            String?
+  productsTabName          String                @default("Products")
+  ordersTabName            String?
+  syncIntervalMinutes      Int                   @default(15)
+  productFreshnessMinutes  Int                   @default(15)
+  orderFreshnessMinutes    Int                   @default(5)
+  lastSyncStatus           String?
+  lastSyncError            String?
+  lastSyncAt               DateTime?
+  lastSuccessfulSyncAt     DateTime?
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
+  client                   Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  syncRuns                 ExternalDataSyncRun[]
+  productRecords           ProductRecord[]
+  orderRecords             OrderRecord[]
+
+  @@index([clientId])
+  @@index([clientId, status])
+  @@index([lastSyncAt])
+}
+
+model ExternalDataSyncRun {
+  id                 String             @id
+  dataSourceId       String
+  clientId           String
+  status             String
+  startedAt          DateTime           @default(now())
+  finishedAt         DateTime?
+  productsSeen       Int                @default(0)
+  productsImported   Int                @default(0)
+  ordersSeen         Int                @default(0)
+  ordersImported     Int                @default(0)
+  validationWarnings Json               @default("[]")
+  errorMessage       String?
+  client             Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dataSource         ExternalDataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@index([dataSourceId])
+  @@index([clientId])
+  @@index([status, startedAt])
+}
+
+model ProductRecord {
+  id                 String             @id
+  dataSourceId       String
+  clientId           String
+  rowKey             String
+  sku                String?
+  productName        String
+  variant            String?
+  availabilityStatus String
+  stockQuantity      Int?
+  price              Float?
+  currency           String?
+  productUrl         String?
+  availabilityNote   String?
+  sourceUpdatedAt    DateTime?
+  lastSyncedAt       DateTime           @default(now())
+  rawRow             Json               @default("{}")
+  client             Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dataSource         ExternalDataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, rowKey])
+  @@index([clientId])
+  @@index([clientId, sku])
+  @@index([clientId, productName])
+  @@index([clientId, availabilityStatus])
+}
+
+model OrderRecord {
+  id              String             @id
+  dataSourceId    String
+  clientId        String
+  rowKey          String
+  orderId         String
+  customerPhone   String?
+  customerEmail   String?
+  customerName    String?
+  orderStatus     String
+  paymentStatus   String?
+  trackingUrl     String?
+  orderNote       String?
+  sourceUpdatedAt DateTime?
+  lastSyncedAt    DateTime           @default(now())
+  rawRow          Json               @default("{}")
+  client          Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dataSource      ExternalDataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, rowKey])
+  @@unique([dataSourceId, orderId])
+  @@index([clientId])
+  @@index([clientId, orderId])
+  @@index([clientId, orderStatus])
 }
 
 model InternalUser {

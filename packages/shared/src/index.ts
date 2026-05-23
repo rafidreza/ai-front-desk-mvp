@@ -74,6 +74,105 @@ export interface ClientChannelSummary {
   actionHref?: string;
 }
 
+export type ExternalDataSourceType = 'google_sheet';
+
+export type ExternalDataSourceStatus = 'active' | 'paused' | 'error';
+
+export type ExternalDataSyncStatus = 'running' | 'succeeded' | 'failed';
+
+export type ProductAvailabilityStatus =
+  | 'in_stock'
+  | 'low_stock'
+  | 'out_of_stock'
+  | 'preorder'
+  | 'discontinued'
+  | 'unknown';
+
+export type OrderStatus =
+  | 'received'
+  | 'confirmed'
+  | 'packed'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'returned'
+  | 'unknown';
+
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'refunded' | 'unknown';
+
+export interface ExternalDataSource {
+  id: string;
+  clientId: string;
+  sourceType: ExternalDataSourceType;
+  status: ExternalDataSourceStatus;
+  name: string;
+  sheetUrl: string;
+  spreadsheetId?: string;
+  productsTabName: string;
+  ordersTabName?: string;
+  syncIntervalMinutes: number;
+  productFreshnessMinutes: number;
+  orderFreshnessMinutes: number;
+  lastSyncStatus?: ExternalDataSyncStatus;
+  lastSyncError?: string;
+  lastSyncAt?: string;
+  lastSuccessfulSyncAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExternalDataSyncRun {
+  id: string;
+  dataSourceId: string;
+  clientId: string;
+  status: ExternalDataSyncStatus;
+  startedAt: string;
+  finishedAt?: string;
+  productsSeen: number;
+  productsImported: number;
+  ordersSeen: number;
+  ordersImported: number;
+  validationWarnings: Record<string, unknown>[];
+  errorMessage?: string;
+}
+
+export interface ProductRecord {
+  id: string;
+  dataSourceId: string;
+  clientId: string;
+  rowKey: string;
+  sku?: string;
+  productName: string;
+  variant?: string;
+  availabilityStatus: ProductAvailabilityStatus;
+  stockQuantity?: number;
+  price?: number;
+  currency?: string;
+  productUrl?: string;
+  availabilityNote?: string;
+  sourceUpdatedAt?: string;
+  lastSyncedAt: string;
+  rawRow: Record<string, unknown>;
+}
+
+export interface OrderRecord {
+  id: string;
+  dataSourceId: string;
+  clientId: string;
+  rowKey: string;
+  orderId: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerName?: string;
+  orderStatus: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  trackingUrl?: string;
+  orderNote?: string;
+  sourceUpdatedAt?: string;
+  lastSyncedAt: string;
+  rawRow: Record<string, unknown>;
+}
+
 export interface KnowledgeEntry {
   id: string;
   clientId: string;
