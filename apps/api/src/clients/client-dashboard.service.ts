@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { Channel, ClientChannelSummary, ClientDashboardSummary, ClientProfile, ConversationLog, Ticket, TicketDetail, TicketStatus } from '../types/domain';
+import { buildChannelCopy, buildDigestNarrative, buildDigestSubject } from './client-language-copy';
 import { PilotClientService } from './pilot-client.service';
 
 @Injectable()
@@ -68,13 +69,17 @@ export class ClientDashboardService {
     return {
       cadence,
       clientId,
-      subject:
-        cadence === 'weekly'
-          ? `${dashboard.client.businessName} weekly support recovery report`
-          : `${dashboard.client.businessName} daily support summary`,
+      subject: buildDigestSubject({
+        businessName: dashboard.client.businessName,
+        cadence,
+        language: dashboard.client.defaultLanguage,
+      }),
       generatedAt: new Date().toISOString(),
       summary: dashboard.totals,
-      narrative: `${dashboard.totals.conversations} conversations handled, ${dashboard.totals.openTickets} open tickets, estimated BDT ${dashboard.totals.salesRecoveredEstimate} sales protected.`,
+      narrative: buildDigestNarrative({
+        language: dashboard.client.defaultLanguage,
+        summary: dashboard.totals,
+      }),
     };
   }
 
@@ -329,6 +334,7 @@ export class ClientDashboardService {
     const messengerConnected = client.pageId.trim().length > 0 && !client.pageId.endsWith('-page-pending');
     const whatsappContact = client.whatsappPoc ?? client.ownerPhone;
     const whatsappConnected = whatsappContact !== undefined && whatsappContact.trim().length > 0;
+    const copy = buildChannelCopy(client.defaultLanguage);
 
     return [
       {
@@ -336,27 +342,27 @@ export class ClientDashboardService {
         label: 'Messenger',
         status: messengerConnected ? 'connected' : 'needs_setup',
         conversations: conversationsByChannel.get('messenger') ?? 0,
-        setupLabel: messengerConnected ? 'Page linked' : 'Page setup needed',
-        detail: messengerConnected ? `Page ID: ${client.pageId}` : 'Add the Facebook Page ID before Messenger traffic can go live.',
-        actionLabel: messengerConnected ? 'Ready for inbox automation' : 'Connect Facebook Page',
+        setupLabel: messengerConnected ? copy.messengerLinked : copy.messengerSetupNeeded,
+        detail: messengerConnected ? copy.messengerDetail(client.pageId) : copy.messengerMissing,
+        actionLabel: messengerConnected ? copy.messengerReady : copy.messengerConnect,
       },
       {
         channel: 'whatsapp',
         label: 'WhatsApp',
         status: whatsappConnected ? 'connected' : 'needs_setup',
         conversations: conversationsByChannel.get('whatsapp') ?? 0,
-        setupLabel: whatsappConnected ? 'Business contact set' : 'Business contact needed',
-        detail: whatsappConnected ? `Support contact: ${whatsappContact}` : 'Add a WhatsApp POC or owner phone number for handoff routing.',
-        actionLabel: whatsappConnected ? 'Ready for WhatsApp support' : 'Add WhatsApp contact',
+        setupLabel: whatsappConnected ? copy.whatsappLinked : copy.whatsappSetupNeeded,
+        detail: whatsappConnected ? copy.whatsappDetail(whatsappContact) : copy.whatsappMissing,
+        actionLabel: whatsappConnected ? copy.whatsappReady : copy.whatsappConnect,
       },
       {
         channel: 'web',
         label: 'Web widget',
         status: 'available',
         conversations: conversationsByChannel.get('web') ?? 0,
-        setupLabel: 'Widget available',
+        setupLabel: copy.widgetAvailable,
         detail: `Embed URL: /widget?clientId=${client.id}`,
-        actionLabel: 'Copy embed link',
+        actionLabel: copy.widgetCopy,
         actionHref: `/widget?clientId=${client.id}`,
       },
     ];

@@ -3,21 +3,17 @@
 import { Activity, AlertTriangle, CheckCircle2, Clock3, Filter, History, MessageSquareText, RefreshCw, Send, TicketCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { getClientTicketDetail, getClientTickets, updateClientTicketStatus } from '@/lib/api';
-import { ConversationLog, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
+import { getClientDashboard, getClientTicketDetail, getClientTickets, updateClientTicketStatus } from '@/lib/api';
+import { getClientPortalCopy, priorityTone } from '@/lib/client-portal-copy';
+import { ClientProfile, ConversationLog, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 
 const statuses: TicketStatus[] = ['assigned', 'waiting_client', 'resolved'];
-const statusLabels: Record<TicketStatus, string> = {
-  open: 'Open',
-  assigned: 'Assigned',
-  waiting_client: 'Waiting on you',
-  resolved: 'Resolved',
-};
+const filters: Array<'all' | 'open' | TicketStatus> = ['all', 'open', 'assigned', 'waiting_client', 'resolved'];
 
 type ClientTicketDetail = TicketDetail & { conversation?: ConversationLog };
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat('en', {
+function formatTime(value: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -25,25 +21,12 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-function eventTitle(eventType: string) {
-  if (eventType === 'ticket.created') return 'Ticket raised';
-  if (eventType === 'ticket.status_updated') return 'Status updated';
-  if (eventType === 'ticket.assignee_updated') return 'Owner updated';
-  if (eventType === 'ticket.comment_added') return 'Operations note added';
-  return eventType.replaceAll('.', ' ');
-}
-
-function priorityTone(priority: Ticket['priority']) {
-  if (priority === 'P1') return 'coral';
-  if (priority === 'P2') return 'amber';
-  return 'blue';
-}
-
 export default function ClientTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketDetail, setTicketDetail] = useState<ClientTicketDetail | null>(null);
   const [filter, setFilter] = useState('all');
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
   const [error, setError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,12 +36,14 @@ export default function ClientTicketsPage() {
     if (typeof window === 'undefined') return 'pilot-client';
     return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
   }, []);
+  const copy = getClientPortalCopy(language);
 
   async function loadTickets(nextFilter = filter) {
     setIsLoading(true);
     setError(null);
     try {
-      const nextTickets = await getClientTickets(clientId, nextFilter);
+      const [nextTickets, dashboard] = await Promise.all([getClientTickets(clientId, nextFilter), getClientDashboard(clientId)]);
+      setLanguage(dashboard.client.defaultLanguage);
       setTickets(nextTickets);
       setSelectedTicketId((current) => {
         if (current !== null && nextTickets.some((ticket) => ticket.id === current)) return current;
@@ -129,18 +114,18 @@ export default function ClientTicketsPage() {
         <div className="client-title-lockup">
           <span className="client-mark">TK</span>
           <div>
-            <p className="eyebrow">Client delegation</p>
-            <h1>Tickets</h1>
+            <p className="eyebrow">{copy.tickets.eyebrow}</p>
+            <h1>{copy.tickets.title}</h1>
           </div>
         </div>
-        <ClientPortalNav active="tickets" clientId={clientId} />
+        <ClientPortalNav active="tickets" clientId={clientId} language={language} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadTickets()}>
             <RefreshCw size={16} />
-            Refresh
+            {copy.common.refresh}
           </button>
           <button className="icon-button" type="button" onClick={() => void logout()}>
-            Sign out
+            {copy.common.signOut}
           </button>
         </div>
       </header>
@@ -149,17 +134,17 @@ export default function ClientTicketsPage() {
 
       <section className="client-ticket-command">
         <div>
-          <p className="eyebrow">Ticket queue</p>
-          <h2>Customer issues waiting for client decision</h2>
-          <p>Review delegated conversations, update ownership state, and keep the support team aligned on resolution.</p>
+          <p className="eyebrow">{copy.tickets.queueEyebrow}</p>
+          <h2>{copy.tickets.queueTitle}</h2>
+          <p>{copy.tickets.queueDescription}</p>
         </div>
         <div className="ticket-command-stats">
           <div>
-            <span>Open</span>
+            <span>{copy.tickets.open}</span>
             <strong>{openTickets}</strong>
           </div>
           <div>
-            <span>P1</span>
+            <span>{copy.tickets.p1}</span>
             <strong>{urgentTickets}</strong>
           </div>
         </div>
@@ -168,10 +153,10 @@ export default function ClientTicketsPage() {
       <div className="client-filter-bar">
         <div>
           <Filter size={15} />
-          Status
+          {copy.tickets.status}
         </div>
         <div className="filter-row">
-          {['all', 'open', 'assigned', 'waiting_client', 'resolved'].map((item) => (
+          {filters.map((item) => (
             <button
               className="status-button"
               data-active={filter === item}
@@ -182,14 +167,14 @@ export default function ClientTicketsPage() {
                 void loadTickets(item);
               }}
             >
-              {item.replace('_', ' ')}
+              {copy.filterLabels[item]}
             </button>
           ))}
         </div>
       </div>
 
       <section className="client-ticket-workspace">
-        <section className="ticket-delegation-list" aria-label="Delegated tickets">
+        <section className="ticket-delegation-list" aria-label={copy.tickets.delegatedTickets}>
           {tickets.map((ticket) => (
             <article className="delegation-card" data-selected={selectedTicketId === ticket.id} key={ticket.id}>
               <button className="delegation-select" type="button" onClick={() => setSelectedTicketId(ticket.id)}>
@@ -199,12 +184,12 @@ export default function ClientTicketsPage() {
                   </span>
                   <span>
                     <TicketCheck size={13} />
-                    {statusLabels[ticket.status]}
+                    {copy.statusLabels[ticket.status]}
                   </span>
                 </div>
                 <h2>{ticket.customerMessage}</h2>
                 <p>{ticket.reason}</p>
-                <small>BDT {ticket.salesRecoveredEstimate.toLocaleString('en')} protected estimate</small>
+                <small>{copy.tickets.protectedEstimate(ticket.salesRecoveredEstimate)}</small>
               </button>
               <div className="delegation-actions">
                 {statuses.map((status) => (
@@ -217,23 +202,23 @@ export default function ClientTicketsPage() {
                     onClick={() => void delegate(ticket, status)}
                   >
                     {status === 'resolved' ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}
-                    {statusLabels[status]}
+                    {copy.statusLabels[status]}
                   </button>
                 ))}
               </div>
             </article>
           ))}
-          {tickets.length === 0 && <div className="empty">No tickets</div>}
+          {tickets.length === 0 && <div className="empty">{copy.tickets.noTickets}</div>}
         </section>
 
         <section className="detail-panel client-ticket-detail">
           <div className="panel-header">
             <div className="panel-title">
               <Activity size={16} />
-              Ticket detail
+              {copy.tickets.ticketDetail}
             </div>
             <div className="panel-actions">
-              {isDetailLoading && <span className="badge">Loading</span>}
+              {isDetailLoading && <span className="badge">{copy.common.loading}</span>}
               {selectedTicketId !== null && (
                 <button className="mini-button" disabled={isDetailLoading} type="button" onClick={() => void loadTicketDetail(selectedTicketId)} aria-label="Refresh ticket detail">
                   <RefreshCw size={14} />
@@ -243,13 +228,13 @@ export default function ClientTicketsPage() {
           </div>
 
           {selectedTicket === undefined ? (
-            <div className="empty">Select a ticket to view details</div>
+            <div className="empty">{copy.tickets.selectTicket}</div>
           ) : (
             <div className="case-layout client-case-layout">
               <section className="case-summary">
                 <div className="case-heading">
                   <div>
-                    <p className="eyebrow">Raised from customer conversation</p>
+                    <p className="eyebrow">{copy.tickets.raisedFromConversation}</p>
                     <h3>{selectedTicket.customerMessage}</h3>
                   </div>
                   <span className="badge" data-tone={priorityTone(selectedTicket.priority)}>
@@ -266,23 +251,23 @@ export default function ClientTicketsPage() {
 
                 <div className="detail-grid">
                   <div className="field">
-                    <span>Current state</span>
-                    <strong>{statusLabels[selectedTicket.status]}</strong>
+                    <span>{copy.tickets.currentState}</span>
+                    <strong>{copy.statusLabels[selectedTicket.status]}</strong>
                   </div>
                   <div className="field">
-                    <span>Raised</span>
-                    <strong>{formatTime(selectedTicket.createdAt)}</strong>
+                    <span>{copy.tickets.raised}</span>
+                    <strong>{formatTime(selectedTicket.createdAt, copy.locale)}</strong>
                   </div>
                   <div className="field">
-                    <span>Last updated</span>
-                    <strong>{formatTime(selectedTicket.updatedAt)}</strong>
+                    <span>{copy.tickets.lastUpdated}</span>
+                    <strong>{formatTime(selectedTicket.updatedAt, copy.locale)}</strong>
                   </div>
                   <div className="field">
-                    <span>Protected sale</span>
-                    <strong>BDT {selectedTicket.salesRecoveredEstimate.toLocaleString('en')}</strong>
+                    <span>{copy.tickets.protectedSale}</span>
+                    <strong>BDT {selectedTicket.salesRecoveredEstimate.toLocaleString(copy.locale)}</strong>
                   </div>
                   <div className="field field-wide">
-                    <span>Why this ticket was raised</span>
+                    <span>{copy.tickets.raisedReason}</span>
                     <strong>{selectedTicket.reason}</strong>
                   </div>
                 </div>
@@ -298,7 +283,7 @@ export default function ClientTicketsPage() {
                       onClick={() => void delegate(selectedTicket, status)}
                     >
                       {status === 'resolved' ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}
-                      {statusLabels[status]}
+                      {copy.statusLabels[status]}
                     </button>
                   ))}
                 </div>
@@ -307,7 +292,7 @@ export default function ClientTicketsPage() {
               <section className="reply-panel">
                 <div className="section-label">
                   <Send size={15} />
-                  Suggested reply
+                  {copy.tickets.suggestedReply}
                 </div>
                 <p>{selectedTicket.suggestedReply}</p>
               </section>
@@ -315,20 +300,20 @@ export default function ClientTicketsPage() {
               <section className="timeline-panel">
                 <div className="section-label">
                   <History size={15} />
-                  Ticket timeline
+                  {copy.tickets.timeline}
                 </div>
                 {isDetailLoading ? (
-                  <div className="timeline-empty">Loading timeline</div>
+                  <div className="timeline-empty">{copy.tickets.loadingTimeline}</div>
                 ) : (
                   <div className="timeline">
                     {visibleTimelineEvents.map((event) => (
                       <article className="timeline-item" key={event.id}>
                         <span className="timeline-dot" />
                         <div>
-                          <strong>{eventTitle(event.eventType)}</strong>
-                          <small>{formatTime(event.createdAt)}</small>
+                          <strong>{copy.eventTitle(event.eventType)}</strong>
+                          <small>{formatTime(event.createdAt, copy.locale)}</small>
                           {'status' in event.payload && typeof event.payload.status === 'string' && (
-                            <p>{statusLabels[event.payload.status as TicketStatus] ?? event.payload.status}</p>
+                            <p>{copy.statusLabels[event.payload.status as TicketStatus] ?? event.payload.status}</p>
                           )}
                           {'reason' in event.payload && typeof event.payload.reason === 'string' && (
                             <p>{event.payload.reason}</p>
@@ -336,7 +321,7 @@ export default function ClientTicketsPage() {
                         </div>
                       </article>
                     ))}
-                    {visibleTimelineEvents.length === 0 && <div className="timeline-empty">No timeline events yet</div>}
+                    {visibleTimelineEvents.length === 0 && <div className="timeline-empty">{copy.tickets.noTimeline}</div>}
                   </div>
                 )}
               </section>
@@ -344,16 +329,16 @@ export default function ClientTicketsPage() {
               <section className="thread client-ticket-thread">
                 <div className="section-label">
                   <MessageSquareText size={15} />
-                  Customer conversation
+                  {copy.tickets.customerConversation}
                 </div>
                 {(ticketDetail?.conversation?.messages ?? []).map((message) => (
                   <article className="bubble" data-direction={message.direction} key={message.id}>
                     <p>{message.text}</p>
-                    <time>{formatTime(message.createdAt)}</time>
+                    <time>{formatTime(message.createdAt, copy.locale)}</time>
                   </article>
                 ))}
                 {(ticketDetail?.conversation?.messages ?? []).length === 0 && (
-                  <div className="timeline-empty">Conversation transcript will appear here when loaded</div>
+                  <div className="timeline-empty">{copy.tickets.transcriptPending}</div>
                 )}
               </section>
             </div>

@@ -20,6 +20,7 @@
     "@swc/helpers": "^0.5.15",
     "lucide-react": "^0.475.0",
     "next": "^15.5.18",
+    "next-intl": "^4.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "styled-jsx": "^5.1.6"

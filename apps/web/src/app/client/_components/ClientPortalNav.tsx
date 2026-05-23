@@ -1,18 +1,20 @@
 import { BookOpenText, ClipboardList, DatabaseZap, LayoutDashboard, TicketCheck } from 'lucide-react';
+import { getClientPortalCopy } from '@/lib/client-portal-copy';
+import { ClientProfile } from '@/types/domain';
 
 type ClientPortalView = 'dashboard' | 'tickets' | 'knowledge' | 'data-sources' | 'onboarding';
 
 const navItems: Array<{
   id: ClientPortalView;
-  label: string;
+  labelKey: 'overview' | 'tickets' | 'knowledge' | 'data' | 'setup';
   href: string;
   icon: typeof LayoutDashboard;
 }> = [
-  { id: 'dashboard', label: 'Overview', href: '/client/dashboard', icon: LayoutDashboard },
-  { id: 'tickets', label: 'Tickets', href: '/client/tickets', icon: TicketCheck },
-  { id: 'knowledge', label: 'Knowledge', href: '/client/knowledge', icon: BookOpenText },
-  { id: 'data-sources', label: 'Data', href: '/client/data-sources', icon: DatabaseZap },
-  { id: 'onboarding', label: 'Setup', href: '/client/onboarding', icon: ClipboardList },
+  { id: 'dashboard', labelKey: 'overview', href: '/client/dashboard', icon: LayoutDashboard },
+  { id: 'tickets', labelKey: 'tickets', href: '/client/tickets', icon: TicketCheck },
+  { id: 'knowledge', labelKey: 'knowledge', href: '/client/knowledge', icon: BookOpenText },
+  { id: 'data-sources', labelKey: 'data', href: '/client/data-sources', icon: DatabaseZap },
+  { id: 'onboarding', labelKey: 'setup', href: '/client/onboarding', icon: ClipboardList },
 ];
 
 function withClientId(path: string, clientId: string) {
@@ -20,15 +22,17 @@ function withClientId(path: string, clientId: string) {
   return `${path}?clientId=${encodeURIComponent(clientId)}`;
 }
 
-export function ClientPortalNav({ active, clientId }: { active: ClientPortalView; clientId: string }) {
+export function ClientPortalNav({ active, clientId, language }: { active: ClientPortalView; clientId: string; language?: ClientProfile['defaultLanguage'] }) {
+  const copy = getClientPortalCopy(language);
+
   return (
-    <nav className="client-nav" aria-label="Client portal">
+    <nav className="client-nav" aria-label={copy.nav.aria}>
       {navItems.map((item) => {
         const Icon = item.icon;
         return (
           <a className="client-nav-link" data-active={active === item.id} href={withClientId(item.href, clientId)} key={item.id}>
             <Icon size={15} />
-            {item.label}
+            {copy.nav[item.labelKey]}
           </a>
         );
       })}

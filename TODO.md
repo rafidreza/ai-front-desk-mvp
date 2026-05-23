@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **89** | **58** | **147** |
+| 12 — Use case backlog | 1 | 37 | 38 |
+| **TOTAL** | **90** | **57** | **147** |
 
 ---
 
@@ -236,7 +236,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 
 ### Channel + messaging
 
-- [ ] **T88 — USECASE** Bangla / Banglish UI strings (i18n via next-intl); switch internal + client portal + digest emails.
+- [x] **T88 — USECASE** Bangla / Banglish UI strings (i18n via next-intl); switch internal + client portal + digest emails. — **DONE (2026-05-24): added next-intl provider foundation, localized high-value client portal dashboard/ticket/nav copy from `defaultLanguage`, localized client channel labels/details, and switched digest subjects, narrative, metrics, fallback CSAT, and CTA copy across English, Bangla, and Banglish.**
 - [ ] **T89 — USECASE** Multi-FB-Page-per-seller: relax "1 client = 1 page" assumption; data model + UI for `ClientChannel[]`.
 - [ ] **T90 — USECASE** WhatsApp template approval status UI: list templates with `pending` / `approved` / `rejected` state from Meta; block send if not approved.
 - [ ] **T91 — USECASE** Channel health dashboard: Meta page token TTL countdown, WhatsApp number status, webhook deliverability stats.

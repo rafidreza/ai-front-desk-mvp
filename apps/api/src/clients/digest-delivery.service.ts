@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { EmailDeliveryService, EmailDeliveryResult } from '../notifications/email-delivery.service';
 import { StructuredLoggerService } from '../observability/structured-logger.service';
 import { ClientDashboardService } from './client-dashboard.service';
+import { getClientLanguageCopy } from './client-language-copy';
 import { PilotClientService } from './pilot-client.service';
 
 type DigestCadence = 'daily' | 'weekly';
@@ -17,6 +18,7 @@ export interface DigestDeliveryResult {
 
 function buildDigestText(input: {
   businessName: string;
+  language: 'bangla' | 'english' | 'mixed';
   subject: string;
   narrative: string;
   summary: {
@@ -31,22 +33,24 @@ function buildDigestText(input: {
     salesRecoveredEstimate: number;
   };
 }) {
+  const copy = getClientLanguageCopy(input.language).digest;
+
   return [
     input.subject,
     '',
     input.narrative,
     '',
-    `Conversations handled: ${input.summary.conversations}`,
-    `Tickets created: ${input.summary.tickets}`,
-    `Open tickets: ${input.summary.openTickets}`,
-    `Resolved tickets: ${input.summary.resolvedTickets}`,
-    `P1 tickets: ${input.summary.p1Tickets}`,
-    `Containment: ${input.summary.containmentRate}%`,
-    `Average confidence: ${input.summary.averageConfidence}%`,
-    `Average CSAT: ${input.summary.averageCsat ?? 'Not enough ratings yet'}`,
-    `Estimated sales protected: BDT ${input.summary.salesRecoveredEstimate}`,
+    `${copy.conversations}: ${input.summary.conversations}`,
+    `${copy.tickets}: ${input.summary.tickets}`,
+    `${copy.openTickets}: ${input.summary.openTickets}`,
+    `${copy.resolvedTickets}: ${input.summary.resolvedTickets}`,
+    `${copy.p1Tickets}: ${input.summary.p1Tickets}`,
+    `${copy.containment}: ${input.summary.containmentRate}%`,
+    `${copy.averageConfidence}: ${input.summary.averageConfidence}%`,
+    `${copy.averageCsat}: ${input.summary.averageCsat ?? copy.noCsat}`,
+    `${copy.salesProtected}: BDT ${input.summary.salesRecoveredEstimate}`,
     '',
-    'Open your AI Front Desk dashboard to review pending handoffs.',
+    copy.cta,
   ].join('\n');
 }
 
@@ -78,6 +82,7 @@ export class DigestDeliveryService {
 
     const textBody = buildDigestText({
       businessName: client.businessName,
+      language: client.defaultLanguage,
       subject: preview.subject,
       narrative: preview.narrative,
       summary: preview.summary,

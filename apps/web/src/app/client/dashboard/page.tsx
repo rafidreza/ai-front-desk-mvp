@@ -4,19 +4,14 @@ import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw,
 import { useEffect, useMemo, useState } from 'react';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { captureCsat, getClientDashboard } from '@/lib/api';
-import { ClientChannelSummary, ClientDashboardSummary } from '@/types/domain';
+import { getClientPortalCopy } from '@/lib/client-portal-copy';
+import { ClientDashboardSummary } from '@/types/domain';
 
 const channelIcons = {
   messenger: MessageSquareText,
   whatsapp: MessageCircle,
   web: Code2,
 };
-
-function formatChannelStatus(status: ClientChannelSummary['status']) {
-  if (status === 'connected') return 'Connected';
-  if (status === 'available') return 'Available';
-  return 'Needs setup';
-}
 
 export default function ClientDashboardPage() {
   const [dashboard, setDashboard] = useState<ClientDashboardSummary | null>(null);
@@ -31,6 +26,7 @@ export default function ClientDashboardPage() {
 
   const channels = dashboard?.channels ?? [];
   const connectedChannelCount = channels.filter((channel) => channel.status !== 'needs_setup').length;
+  const copy = getClientPortalCopy(dashboard?.client.defaultLanguage);
 
   async function loadDashboard() {
     setIsLoading(true);
@@ -74,18 +70,18 @@ export default function ClientDashboardPage() {
         <div className="client-title-lockup">
           <span className="client-mark">AF</span>
           <div>
-            <p className="eyebrow">Client dashboard</p>
+            <p className="eyebrow">{copy.dashboard.eyebrow}</p>
             <h1>{dashboard?.client.businessName ?? 'AI Front Desk'}</h1>
           </div>
         </div>
-        <ClientPortalNav active="dashboard" clientId={clientId} />
+        <ClientPortalNav active="dashboard" clientId={clientId} language={dashboard?.client.defaultLanguage} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadDashboard()}>
             <RefreshCw size={16} />
-            Refresh
+            {copy.common.refresh}
           </button>
           <button className="icon-button" type="button" onClick={() => void logout()}>
-            Sign out
+            {copy.common.signOut}
           </button>
         </div>
       </header>
@@ -94,48 +90,45 @@ export default function ClientDashboardPage() {
 
       <section className="client-command-card">
         <div className="client-command-main">
-          <p className="eyebrow">Support coverage</p>
-          <h2>AI assistance is active across {connectedChannelCount} of 3 customer channels</h2>
-          <p>
-            Messenger, WhatsApp, and the web widget are tracked separately so your team can see which channels are live,
-            which need setup, and where customers are already talking.
-          </p>
+          <p className="eyebrow">{copy.dashboard.supportCoverage}</p>
+          <h2>{copy.dashboard.coverageTitle(connectedChannelCount)}</h2>
+          <p>{copy.dashboard.coverageDescription}</p>
         </div>
         <div className="client-account-card">
-          <span>Client account</span>
-          <strong>{dashboard?.client.businessName ?? 'Loading account'}</strong>
-          <small>{dashboard?.client.ownerEmail ?? dashboard?.client.ownerPhone ?? dashboard?.client.pageId ?? 'Contact details pending'}</small>
+          <span>{copy.dashboard.clientAccount}</span>
+          <strong>{dashboard?.client.businessName ?? copy.dashboard.loadingAccount}</strong>
+          <small>{dashboard?.client.ownerEmail ?? dashboard?.client.ownerPhone ?? dashboard?.client.pageId ?? copy.dashboard.contactPending}</small>
           <div className="client-signal" data-online={connectedChannelCount > 0}>
             <span />
-            {connectedChannelCount > 0 ? 'Channels online' : 'Setup needed'}
+            {connectedChannelCount > 0 ? copy.dashboard.channelsOnline : copy.dashboard.setupNeeded}
           </div>
         </div>
       </section>
 
       <section className="metrics">
         <article className="metric">
-          <span>Conversations</span>
+          <span>{copy.dashboard.conversations}</span>
           <strong>{dashboard?.totals.conversations ?? 0}</strong>
-          <small>Handled by AI</small>
+          <small>{copy.dashboard.handledByAi}</small>
         </article>
         <article className="metric">
-          <span>Containment</span>
+          <span>{copy.dashboard.containment}</span>
           <strong>{dashboard?.totals.containmentRate ?? 0}%</strong>
-          <small>No handoff needed</small>
+          <small>{copy.dashboard.noHandoffNeeded}</small>
         </article>
         <article className="metric">
-          <span>Open Tickets</span>
+          <span>{copy.dashboard.openTickets}</span>
           <strong>{dashboard?.totals.openTickets ?? 0}</strong>
           <small>P1: {dashboard?.totals.p1Tickets ?? 0}</small>
         </article>
         <article className="metric">
-          <span>Sales Protected</span>
+          <span>{copy.dashboard.salesProtected}</span>
           <strong>{dashboard?.totals.salesRecoveredEstimate ?? 0}</strong>
-          <small>BDT estimate</small>
+          <small>{copy.dashboard.bdtEstimate}</small>
         </article>
       </section>
 
-      <section className="client-channel-grid" aria-label="Channel visibility">
+      <section className="client-channel-grid" aria-label={copy.dashboard.channelVisibility}>
         {channels.map((channel) => {
           const ChannelIcon = channelIcons[channel.channel];
           return (
@@ -152,23 +145,23 @@ export default function ClientDashboardPage() {
                 </div>
                 <span className="status-pill" data-status={channel.status}>
                   {channel.status === 'needs_setup' ? <TriangleAlert size={13} /> : <CheckCircle2 size={13} />}
-                  {formatChannelStatus(channel.status)}
+                  {copy.channelStatus(channel.status)}
                 </span>
               </div>
               <div className="channel-count">
                 <strong>{channel.conversations}</strong>
-                <span>conversations</span>
+                <span>{copy.dashboard.channelConversations}</span>
               </div>
               <p>{channel.detail}</p>
               <div className="channel-action-row">
                 {channel.actionHref !== undefined ? (
                   <>
                     <a className="mini-button" href={channel.actionHref} target="_blank" rel="noreferrer">
-                      Open widget
+                      {copy.dashboard.openWidget}
                     </a>
                     <button className="mini-button" type="button" onClick={() => void copyWidgetUrl(channel.actionHref ?? '')}>
                       <Copy size={13} />
-                      Copy
+                      {copy.common.copy}
                     </button>
                   </>
                 ) : (
@@ -185,10 +178,10 @@ export default function ClientDashboardPage() {
           <div className="panel-header">
             <div className="panel-title">
               <TicketCheck size={16} />
-              Recent tickets
+              {copy.dashboard.recentTickets}
             </div>
             <a className="mini-button" href={`/client/tickets?clientId=${clientId}`}>
-              Delegate
+              {copy.dashboard.delegate}
             </a>
           </div>
           <div className="client-list">
@@ -200,7 +193,7 @@ export default function ClientDashboardPage() {
                 </div>
               </article>
             ))}
-            {dashboard !== null && dashboard.recentTickets.length === 0 && <div className="empty">No tickets yet</div>}
+            {dashboard !== null && dashboard.recentTickets.length === 0 && <div className="empty">{copy.dashboard.noTicketsYet}</div>}
           </div>
         </section>
 
@@ -208,7 +201,7 @@ export default function ClientDashboardPage() {
           <div className="panel-header">
             <div className="panel-title">
               <MessageSquareText size={16} />
-              Recent conversations
+              {copy.dashboard.recentConversations}
             </div>
           </div>
           <div className="client-list">
@@ -218,7 +211,7 @@ export default function ClientDashboardPage() {
                 <article className="client-row" key={conversation.id}>
                   <div>
                     <strong>{conversation.externalSenderId}</strong>
-                    <small>{last?.text ?? 'No messages'}</small>
+                    <small>{last?.text ?? copy.common.noMessages}</small>
                   </div>
                   <div className="csat-buttons">
                     {[1, 2, 3, 4, 5].map((score) => (
