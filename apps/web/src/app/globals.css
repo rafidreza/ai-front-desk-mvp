@@ -3724,6 +3724,199 @@ button {
   }
 }
 
+@media (max-width: 520px) {
+  .sidebar {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .brand {
+    padding-bottom: 4px;
+    border-bottom: 0;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+  }
+
+  .side-status {
+    display: none;
+  }
+
+  .logout-button {
+    min-width: 38px;
+    padding: 0 10px;
+    font-size: 0;
+  }
+
+  .logout-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .workspace {
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .page-head {
+    min-height: auto;
+    gap: 10px;
+  }
+
+  .page-head h2 {
+    font-size: var(--text-h2);
+  }
+
+  .page-actions,
+  .panel-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .page-actions > *,
+  .panel-actions > .icon-button,
+  .panel-actions > .mini-button {
+    flex: 1 1 140px;
+  }
+
+  .panel,
+  .detail-panel,
+  .conversation-detail-panel,
+  .client-detail-panel,
+  .kb-review-detail {
+    min-height: auto;
+    border-radius: 8px;
+  }
+
+  .panel-header {
+    min-height: auto;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .metrics {
+    gap: 8px;
+  }
+
+  .metric {
+    min-height: 88px;
+    padding: 12px;
+  }
+
+  .metric strong {
+    font-size: var(--text-h2);
+  }
+
+  .ticket-list,
+  .conversation-list,
+  .client-list,
+  .qa-list,
+  .version-list {
+    padding: 6px;
+  }
+
+  .ticket-row {
+    grid-template-columns: 8px minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .priority-dot {
+    height: 48px;
+  }
+
+  .ticket-meta {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-items: start;
+    justify-content: flex-start;
+  }
+
+  .conversation-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .confidence {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .case-layout,
+  .conversation-detail {
+    min-height: auto;
+    grid-template-rows: auto;
+  }
+
+  .case-summary,
+  .reply-panel,
+  .timeline-panel,
+  .comments-panel,
+  .thread,
+  .conversation-thread {
+    padding: 12px;
+  }
+
+  .thread,
+  .conversation-thread {
+    min-height: 300px;
+    max-height: 62vh;
+  }
+
+  .bubble {
+    width: min(92%, 600px);
+  }
+
+  .comment-form {
+    align-items: stretch;
+  }
+
+  .comment-form .icon-button {
+    width: 100%;
+  }
+
+  .conversation-summary-strip {
+    padding: 10px;
+  }
+
+  .conversation-summary-strip div,
+  .field,
+  .client-info-grid div {
+    min-height: auto;
+  }
+
+  .qa-row {
+    gap: 12px;
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .qa-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .degradation-banner {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .degradation-banner a {
+    width: 100%;
+    margin-left: 25px;
+  }
+}
+
 /* ============================================
    Public landing page (/)
    Uses typography scale tokens + brand tokens.

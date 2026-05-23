@@ -30,9 +30,9 @@
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
-| 11 — UX Audit P1 | 9 | 1 | 10 |
+| 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **88** | **59** | **147** |
+| **TOTAL** | **89** | **58** | **147** |
 
 ---
 
@@ -226,7 +226,7 @@ Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiabl
 - [x] **T84 — UX** Add loading skeletons to tickets list, KB list, clients list, QA list, conversations list. — **DONE (2026-05-24): reusable `ListSkeleton` now covers internal tickets, conversations, QA calibration queue, knowledge entries, and client directory lists without hiding existing data during refreshes.**
 - [x] **T85 — UX** Empty state guidance on every list page (tickets, KB, clients, QA): icon + 1-line explainer + primary action (e.g. "No tickets yet. Connect a Facebook Page to start receiving messages → "). — **DONE (2026-05-24): reusable `EmptyState` with icon, explainer, and action now covers tickets, knowledge entries, client directory, and QA calibration queue.**
 - [x] **T86 — UX** Replace generic "something went wrong" errors with actionable messages naming the cause + the fix link (e.g. "Page token expired. Reconnect Meta integration → "). — **DONE (2026-05-24): client auth/dashboard were already partial; internal console ticket/conversation/QA errors, signup verification errors, knowledge library errors, and KB review errors now name what failed and include concrete recovery steps while preserving useful backend detail.**
-- [ ] **T87 — UX** Mobile-responsive sweep of `/internal/*` console (sidebar collapses, KPI strip stacks, ticket detail fits 390px).
+- [x] **T87 — UX** Mobile-responsive sweep of `/internal/*` console (sidebar collapses, KPI strip stacks, ticket detail fits 390px). — **DONE (2026-05-24): added narrow-width rules for internal console sidebar/header, page actions, KPI cards, ticket/conversation rows, detail panels, threads, QA rows, and alert banners so core operations fit 390px-style screens.**
 
 ---
 
