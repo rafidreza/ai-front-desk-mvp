@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { PilotClientService } from './pilot-client.service';
 import { ClientDashboardService } from './client-dashboard.service';
 import { DigestDeliveryService } from './digest-delivery.service';
+import { ExternalDataService } from '../external-data/external-data.service';
 
 const SignupSchema = z.object({
   businessName: z.string().trim().min(2),
@@ -68,12 +69,23 @@ const TicketStatusSchema = z.object({
   expectedVersion: z.number().int().nonnegative().optional(),
 });
 
+const GoogleSheetSourceSchema = z.object({
+  name: z.string().trim().min(2).max(80).optional(),
+  sheetUrl: z.string().trim().url(),
+  productsTabName: z.string().trim().min(1).max(80).optional(),
+  ordersTabName: z.string().trim().min(1).max(80).optional(),
+  syncIntervalMinutes: z.number().int().min(5).max(1440).optional(),
+  productFreshnessMinutes: z.number().int().min(1).max(1440).optional(),
+  orderFreshnessMinutes: z.number().int().min(1).max(1440).optional(),
+});
+
 @Controller('clients')
 export class ClientController {
   constructor(
     private readonly clients: PilotClientService,
     private readonly dashboard: ClientDashboardService,
     private readonly digests: DigestDeliveryService,
+    private readonly externalData: ExternalDataService,
   ) {}
 
   @Get()
@@ -170,5 +182,31 @@ export class ClientController {
         expectedVersion: parsed.expectedVersion,
       }),
     };
+  }
+
+  @Get(':clientId/external-data/sources')
+  async listExternalDataSources(@Param('clientId') clientId: string) {
+    return { sources: await this.externalData.listSources(clientId) };
+  }
+
+  @Post(':clientId/external-data/google-sheet')
+  async saveGoogleSheetSource(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = GoogleSheetSourceSchema.parse(body);
+    return { source: await this.externalData.saveGoogleSheetSource(clientId, parsed) };
+  }
+
+  @Post(':clientId/external-data/sources/:sourceId/sync')
+  async syncExternalDataSource(@Param('clientId') clientId: string, @Param('sourceId') sourceId: string) {
+    return this.externalData.syncSource(clientId, sourceId);
+  }
+
+  @Get(':clientId/external-data/products')
+  async listExternalProducts(@Param('clientId') clientId: string, @Query('sourceId') sourceId?: string) {
+    return { products: await this.externalData.listProducts(clientId, sourceId) };
+  }
+
+  @Get(':clientId/external-data/orders')
+  async listExternalOrders(@Param('clientId') clientId: string, @Query('sourceId') sourceId?: string) {
+    return { orders: await this.externalData.listOrders(clientId, sourceId) };
   }
 }

@@ -14,6 +14,7 @@ import { ConversationRepository } from './conversations/conversation.repository'
 import { ConversationService } from './conversations/conversation.service';
 import { AutoQaService } from './conversations/auto-qa.service';
 import { PrismaService } from './database/prisma.service';
+import { ExternalDataService } from './external-data/external-data.service';
 import { HealthController } from './health/health.controller';
 import { InternalUsersController } from './internal-users/internal-users.controller';
 import { ClientAuthController } from './clients/client-auth.controller';
@@ -66,6 +67,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     ClientDashboardService,
     DigestDeliveryService,
     EmbeddingService,
+    ExternalDataService,
     IndustryTemplateService,
     AuthCodeDeliveryService,
     EmailDeliveryService,
