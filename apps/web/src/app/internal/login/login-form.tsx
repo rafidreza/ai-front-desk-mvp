@@ -19,11 +19,12 @@ export function InternalLoginForm() {
     const response = await fetch('/api/internal-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password: password.trim() }),
     });
 
     if (!response.ok) {
-      setError('Password did not match.');
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(data?.error ?? 'Password did not match.');
       setIsSubmitting(false);
       return;
     }
