@@ -1,6 +1,6 @@
 # AI Front Desk — TODO
 
-**Last updated:** 2026-05-19
+**Last updated:** 2026-05-23
 **Source of truth for scope:** [`/MVP_GUIDELINE.md`](../MVP_GUIDELINE.md) + [`/PRD/`](../PRD/)
 **Companion doc:** [`DEVELOPMENT_STATUS.md`](DEVELOPMENT_STATUS.md) (verified build artifacts)
 
@@ -28,8 +28,8 @@
 | 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| 9 — Improvement backlog | 12 | 0 | 12 |
-| **TOTAL** | **64** | **20** | **84** |
+| 9 — Improvement backlog | 12 | 6 | 18 |
+| **TOTAL** | **64** | **26** | **90** |
 
 ---
 
@@ -184,6 +184,15 @@
 - [x] **T60 — IMPROVEMENT** Add audit trail events for every KB request transition so internal users can see who submitted, reviewed, edited, rejected, or published each change. — **DONE (2026-05-19): added `KnowledgeChangeRequestEvent` migration/model, backfilled submission events, records new submit/review/publish events, returns audit events in review detail, and shows the audit trail in `/internal/kb-review`**
 - [x] **T61 — IMPROVEMENT** Surface internal feedback back to the client portal when a KB request is rejected or needs clarification. — **DONE (2026-05-19): client KB request rows now show reviewer/client-visible feedback in a dedicated feedback block, making clarification or rejection notes visible from the client portal request history**
 - [x] **T62 — IMPROVEMENT** Add tests for the KB request lifecycle: client submit, internal approve, edit-then-publish, reject with reason, permission boundaries, and reindex trigger. — **DONE (2026-05-19): added focused `KnowledgeChangeRequestService` lifecycle tests for client submission, client-boundary enforcement on edits, rejection feedback/audit events, approve-and-publish create flow, edit-then-publish flow, and the active publish call that drives embedding reindexing**
+
+### Google Sheet product/order data source
+
+- [ ] **T63 — IMPROVEMENT** Define the Google Sheet data-source contract/template: supported tabs, required columns, permissions, freshness rules, client setup copy, and safe fallback behavior.
+- [ ] **T64 — IMPROVEMENT** Add data models/migrations for client external data sources, sync runs, product records, and order records derived from Google Sheets.
+- [ ] **T65 — IMPROVEMENT** Build Google Sheet fetch/parse/sync service with public CSV/export support, validation, stale-data handling, and manual sync endpoint.
+- [ ] **T66 — IMPROVEMENT** Add internal/client UI to attach a Google Sheet link, run "Sync now", see last sync status/errors, and map columns if needed.
+- [ ] **T67 — IMPROVEMENT** Add product availability/order-status lookup path in the message pipeline before AI response, with safe fallback when data is stale or missing.
+- [ ] **T68 — IMPROVEMENT** Add tests and QA fixtures for Sheet parsing, sync failures, product availability answers, and order-status privacy boundaries.
 
 ---
 
