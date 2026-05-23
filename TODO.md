@@ -29,10 +29,10 @@
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
-| 10 — UX Audit P0 | 0 | 9 | 9 |
+| 10 — UX Audit P0 | 6 | 3 | 9 |
 | 11 — UX Audit P1 | 0 | 10 | 10 |
 | 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **70** | **77** | **147** |
+| **TOTAL** | **76** | **71** | **147** |
 
 ---
 
@@ -203,14 +203,14 @@
 
 Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiable).
 
-- [ ] **T69 — UX** Make `/internal/login` "Unlock console" CTA solid brand-green (`#1f6e54`, white text, no border, darker hover); remove ghost outline style.
-- [ ] **T70 — UX** Add inline loading/error/success states to passcode submit: reserve fixed-height feedback slot, disable button + swap label to "Unlocking…" + spinner on submit, render "Incorrect passcode" inline without layout jump.
-- [ ] **T71 — UX** Split root route: serve public landing at `/` (product explainer + screenshot of tickets queue + customer-chat-widget demo); move passcode gate to `/internal/login` with "Internal access" link from landing footer.
-- [ ] **T72 — UX** Replace HTML5 `:invalid` browser tooltip on `/internal/agent-config` "Create draft" form with inline required-field markers + app-level error summary listing missing fields above the CTA.
-- [ ] **T73 — UX** Pre-populate new prompt-profile draft from currently active profile so operator only edits the delta (not from blank form).
-- [ ] **T74 — UX** Show inline banner on `/client/dashboard?clientId=…` when unauthenticated ("Please verify your access code to continue") instead of silently re-rendering request-code form; preserve `clientId` in restored verification state.
-- [ ] **T75 — UX** Establish typography scale tokens (body 16px, h2 24px / 1.5×, h1 32–40px / 2–2.5×); apply across internal console + client portal.
-- [ ] **T76 — UX** Audit copy for marketing buzzwords flagged by uxaudit; replace each with concrete claim (delete-test: if sentence works without word, drop word).
+- [x] **T69 — UX** Make `/internal/login` "Unlock console" CTA solid brand-green (`#1f6e54`, white text, no border, darker hover); remove ghost outline style. — **DONE (2026-05-23, commit `03248dc`): introduced `--brand` / `--brand-hover` / `--brand-on` / `--brand-soft` tokens + reusable `.btn-primary` component; applied to login CTA.**
+- [x] **T70 — UX** Add inline loading/error/success states to passcode submit: reserve fixed-height feedback slot, disable button + swap label to "Unlocking…" + spinner on submit, render "Incorrect passcode" inline without layout jump. — **DONE (2026-05-23, commit `03248dc`): aria-live `.login-feedback` slot (38px reserved) with info/error/success tones; inline `.btn-spinner` keyframe; input disabled during submit.**
+- [x] **T71 — UX** Split root route: serve public landing at `/` (product explainer + screenshot of tickets queue + customer-chat-widget demo); move passcode gate to `/internal/login` with "Internal access" link from landing footer. — **DONE (2026-05-24, commit `0953ea8`): public landing at `/` with hero + live `/widget` iframe demo + 3-pillar value row + tickets-queue mock; `apps/web/src/app/internal/layout.tsx` preserves internal subtree title; root layout switched to product-neutral metadata + `'%s · AI Front Desk'` template.**
+- [x] **T72 — UX** Replace HTML5 `:invalid` browser tooltip on `/internal/agent-config` "Create draft" form with inline required-field markers + app-level error summary listing missing fields above the CTA. — **DONE (2026-05-24, commit `c8eef70`): new reusable `useFormErrors` + `<FormField>` + `<FormErrorSummary>` primitives at `_components/form-validation.tsx`; agent-config Create form switched to `noValidate` with asterisk + red border + red bg + inline text per field + summary banner above CTA with clickable field links. (T72b backlog: sweep remaining forms — edit form, team-management, signup, KB editor.)**
+- [x] **T73 — UX** Pre-populate new prompt-profile draft from currently active profile so operator only edits the delta (not from blank form). — **DONE (2026-05-24, commit `c8eef70`): `activeProfile` memo + every Create-form field receives `defaultValue` from active profile + green dashed `.form-prefill-hint` banner; form key includes `activeProfile?.id` + `createResetToken` so remount stays clean.**
+- [x] **T74 — UX** Show inline banner on `/client/dashboard?clientId=…` when unauthenticated ("Please verify your access code to continue") instead of silently re-rendering request-code form; preserve `clientId` in restored verification state. — **DONE (2026-05-24, commit `0e2c64b`): middleware already preserves `?next=…` (verified); `/client/login` now derives a human label from the `next` param and renders a blue `.auth-redirect-banner` ("You were sent here from your <label>. Verify your access code to continue.") above the request form; banner hidden on direct visits; verify-success already bounces back via `nextPath`.**
+- [ ] **T75 — UX** Establish typography scale tokens (body 16px, h2 24px / 1.5×, h1 32–40px / 2–2.5×); apply across internal console + client portal. — **PARTIAL (2026-05-24, commit `0953ea8`): tokens `--text-display` / `--text-h1` / `--text-h2` / `--text-h3` / `--text-body` / `--text-small` / `--text-tiny` + `--lh-*` line-heights + `--fw-*` weights shipped in `:root`; applied to landing page only. Sweep across internal console + client portal still pending.**
+- [ ] **T76 — UX** Audit copy for marketing buzzwords flagged by uxaudit; replace each with concrete claim (delete-test: if sentence works without word, drop word). — **NOTE: only flagged buzzword was "unlock" on login CTA — literal usage, not marketing. Defer until additional surfaces (landing copy, dashboard headers) get a sweep.**
 - [ ] **T77 — UX** Add signature delight animation to `/internal/login`: 200ms cubic-bezier lock-icon-opening on successful passcode; rewrite subcopy with voice (vs flat "Enter the internal passcode to continue.").
 
 ---
@@ -225,7 +225,7 @@ Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiabl
 - [ ] **T83 — UX** Add top-of-page degradation banner: detect Anthropic API failure rate > threshold, show "AI is slow right now — using fallback replies" with link to internal status.
 - [ ] **T84 — UX** Add loading skeletons to tickets list, KB list, clients list, QA list, conversations list.
 - [ ] **T85 — UX** Empty state guidance on every list page (tickets, KB, clients, QA): icon + 1-line explainer + primary action (e.g. "No tickets yet. Connect a Facebook Page to start receiving messages → ").
-- [ ] **T86 — UX** Replace generic "something went wrong" errors with actionable messages naming the cause + the fix link (e.g. "Page token expired. Reconnect Meta integration → ").
+- [ ] **T86 — UX** Replace generic "something went wrong" errors with actionable messages naming the cause + the fix link (e.g. "Page token expired. Reconnect Meta integration → "). — **PARTIAL (2026-05-24, commit `0e2c64b`): client login (request code + verify code) and client dashboard fallback strings rewritten with named cause + recovery step. Remaining surfaces (internal console, signup, KB) still pending.**
 - [ ] **T87 — UX** Mobile-responsive sweep of `/internal/*` console (sidebar collapses, KPI strip stacks, ticket detail fits 390px).
 
 ---
