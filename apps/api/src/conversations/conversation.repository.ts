@@ -206,7 +206,17 @@ export class ConversationRepository {
           updatedAt: new Date(ticket.updatedAt),
         },
         create: {
-          ...ticket,
+          id: ticket.id,
+          clientId: ticket.clientId,
+          conversationId: ticket.conversationId,
+          assigneeId: ticket.assigneeId,
+          version: ticket.version,
+          priority: ticket.priority,
+          status: ticket.status,
+          reason: ticket.reason,
+          customerMessage: ticket.customerMessage,
+          suggestedReply: ticket.suggestedReply,
+          salesRecoveredEstimate: ticket.salesRecoveredEstimate,
           createdAt: new Date(ticket.createdAt),
           updatedAt: new Date(ticket.updatedAt),
           events: {

@@ -420,6 +420,20 @@ export interface Ticket {
   salesRecoveredEstimate: number;
   createdAt: string;
   updatedAt: string;
+  tags?: Tag[];
+}
+
+export type TagColor = 'coral' | 'amber' | 'green' | 'blue' | 'violet' | 'slate';
+
+export const TAG_COLORS: TagColor[] = ['coral', 'amber', 'green', 'blue', 'violet', 'slate'];
+
+export interface Tag {
+  id: string;
+  clientId: string;
+  name: string;
+  color: TagColor;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TicketEvent {

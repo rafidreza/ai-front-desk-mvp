@@ -36,6 +36,8 @@ import { UrgentTicketNotificationService } from './notifications/urgent-ticket-n
 import { StructuredLoggerService } from './observability/structured-logger.service';
 import { PromptProfileController } from './prompts/prompt-profile.controller';
 import { PromptProfileService } from './prompts/prompt-profile.service';
+import { TagController } from './tags/tag.controller';
+import { TagService } from './tags/tag.service';
 import { TicketController } from './tickets/ticket.controller';
 import { TicketService } from './tickets/ticket.service';
 import { ApiAuthGuard } from './security/api-auth.guard';
@@ -55,6 +57,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     WebChatController,
     WhatsAppController,
     PromptProfileController,
+    TagController,
     TicketController,
   ],
   providers: [
@@ -81,6 +84,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     PromptProfileService,
     PrismaService,
     StructuredLoggerService,
+    TagService,
     TicketService,
     UrgentTicketNotificationService,
     {
