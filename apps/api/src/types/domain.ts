@@ -24,6 +24,7 @@ export type {
   ConversationQaDefect,
   BlockedSender,
   ConversationSearchResult,
+  TestCustomer,
   ExternalDataSource,
   ExternalDataSourceStatus,
   ExternalDataSourceType,

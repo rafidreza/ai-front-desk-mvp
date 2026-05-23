@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AiService } from '../ai/ai.service';
 import { PilotClientService } from '../clients/pilot-client.service';
 import { BlockedSenderService } from '../customers/blocked-sender.service';
+import { TestCustomerService } from '../customers/test-customer.service';
 import { ExternalDataService } from '../external-data/external-data.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UrgentTicketNotificationService } from '../notifications/urgent-ticket-notification.service';
@@ -48,6 +49,7 @@ export class ConversationService {
     private readonly autoQa?: AutoQaService,
     private readonly externalData?: ExternalDataService,
     private readonly blockedSenders?: BlockedSenderService,
+    private readonly testCustomers?: TestCustomerService,
   ) {}
 
   async handleIncomingMessage(message: IncomingMessage): Promise<HandleMessageResult> {
@@ -197,12 +199,26 @@ export class ConversationService {
       ticketId: ticket?.id,
     });
 
-    await this.scoreConversation({
-      conversationId: input.conversationId,
-      customerText: input.message.text,
-      reply: input.reply,
-      ticket,
+    const isTestSender = await this.testCustomers?.isTestCustomer({
+      clientId: input.message.clientId,
+      channel: input.message.channel,
+      externalSenderId: input.message.externalSenderId,
     });
+
+    if (isTestSender !== true) {
+      await this.scoreConversation({
+        conversationId: input.conversationId,
+        customerText: input.message.text,
+        reply: input.reply,
+        ticket,
+      });
+    } else {
+      this.logger?.event('conversation.auto_qa_skipped_test_customer', {
+        conversationId: input.conversationId,
+        clientId: input.message.clientId,
+        externalSenderId: maskRecipient(input.message.externalSenderId),
+      });
+    }
 
     return {
       conversation: input.conversation,

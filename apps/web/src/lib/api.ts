@@ -24,6 +24,7 @@ import {
   BlockedSender,
   ConversationSearchResult,
   ProductRecord,
+  TestCustomer,
   PromptProfile,
   PromptProfileVersion,
   Tag,
@@ -595,6 +596,31 @@ export async function blockSender(
 
 export async function unblockSender(clientId: string, blockId: string): Promise<void> {
   await apiFetch(`/clients/${clientId}/blocked-senders/${blockId}`, { method: 'DELETE' });
+}
+
+export async function listTestCustomers(clientId: string): Promise<TestCustomer[]> {
+  const data = await apiFetch<{ testCustomers: TestCustomer[] }>(
+    `/clients/${clientId}/test-customers`,
+  );
+  return data.testCustomers;
+}
+
+export async function markTestCustomer(
+  clientId: string,
+  input: { channel: 'messenger' | 'whatsapp' | 'web'; externalSenderId: string; note?: string },
+): Promise<TestCustomer> {
+  const data = await apiFetch<{ testCustomer: TestCustomer }>(
+    `/clients/${clientId}/test-customers`,
+    {
+      method: 'POST',
+      body: JSON.stringify(input),
+    },
+  );
+  return data.testCustomer;
+}
+
+export async function unmarkTestCustomer(clientId: string, markId: string): Promise<void> {
+  await apiFetch(`/clients/${clientId}/test-customers/${markId}`, { method: 'DELETE' });
 }
 
 export async function gradeConversation(

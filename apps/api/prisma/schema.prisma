@@ -52,6 +52,7 @@ model Client {
   channels                ClientChannel[]
   whatsappTemplates       WhatsAppTemplate[]
   blockedSenders          BlockedSender[]
+  testCustomers           TestCustomer[]
 
   @@index([status])
 }
@@ -494,6 +495,20 @@ model BlockedSender {
   reason           String?
   blockedBy        String
   blockedAt        DateTime @default(now())
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, channel, externalSenderId])
+  @@index([clientId])
+}
+
+model TestCustomer {
+  id               String   @id
+  clientId         String
+  channel          String
+  externalSenderId String
+  note             String?
+  markedBy         String
+  markedAt         DateTime @default(now())
   client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@unique([clientId, channel, externalSenderId])

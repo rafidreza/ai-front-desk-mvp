@@ -415,6 +415,16 @@ export interface BlockedSender {
   blockedAt: string;
 }
 
+export interface TestCustomer {
+  id: string;
+  clientId: string;
+  channel: Channel;
+  externalSenderId: string;
+  note?: string;
+  markedBy: string;
+  markedAt: string;
+}
+
 export interface ConversationSearchResult {
   conversationId: string;
   clientId: string;

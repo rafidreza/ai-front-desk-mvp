@@ -43,6 +43,7 @@ export type {
   BlockedSender,
   ConversationSearchResult,
   ProductRecord,
+  TestCustomer,
   PromptProfile,
   PromptProfileVersion,
   Tag,

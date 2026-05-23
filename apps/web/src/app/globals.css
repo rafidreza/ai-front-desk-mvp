@@ -5401,3 +5401,20 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* Test-customer badge — slate violet pill to distinguish from real customers. */
+.test-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  background: var(--violet-soft);
+  color: var(--violet);
+  border: 1px solid var(--violet);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

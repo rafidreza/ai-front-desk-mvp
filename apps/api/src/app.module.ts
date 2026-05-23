@@ -42,6 +42,8 @@ import { PromptProfileController } from './prompts/prompt-profile.controller';
 import { PromptProfileService } from './prompts/prompt-profile.service';
 import { BlockedSenderController } from './customers/blocked-sender.controller';
 import { BlockedSenderService } from './customers/blocked-sender.service';
+import { TestCustomerController } from './customers/test-customer.controller';
+import { TestCustomerService } from './customers/test-customer.service';
 import { TagController } from './tags/tag.controller';
 import { TagService } from './tags/tag.service';
 import { TicketController } from './tickets/ticket.controller';
@@ -67,6 +69,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     PromptProfileController,
     BlockedSenderController,
     TagController,
+    TestCustomerController,
     TicketController,
   ],
   providers: [
@@ -97,6 +100,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     StructuredLoggerService,
     BlockedSenderService,
     TagService,
+    TestCustomerService,
     TicketService,
     UrgentTicketNotificationService,
     {

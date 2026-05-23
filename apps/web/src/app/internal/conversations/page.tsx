@@ -1,17 +1,20 @@
 'use client';
 
-import { Ban, Handshake, MessageSquareText, RefreshCw, Search, TicketCheck, X } from 'lucide-react';
+import { Ban, FlaskConical, Handshake, MessageSquareText, RefreshCw, Search, TicketCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   blockSender,
   getConversations,
   listBlockedSenders,
+  listTestCustomers,
+  markTestCustomer,
   searchConversations,
   takeOverConversation,
   unblockSender,
+  unmarkTestCustomer,
 } from '@/lib/api';
-import { BlockedSender, ConversationLog, ConversationSearchResult, Ticket } from '@/types/domain';
+import { BlockedSender, ConversationLog, ConversationSearchResult, TestCustomer, Ticket } from '@/types/domain';
 import { ConversationsPanel } from '../_components/ConversationsPanel';
 import { InternalShell } from '../_components/InternalShell';
 import { formatTime, getErrorMessage } from '../_lib/helpers';
@@ -31,6 +34,8 @@ export default function ConversationsPage() {
   const searchTimerRef = useRef<number | null>(null);
   const [blocksByClient, setBlocksByClient] = useState<Record<string, BlockedSender[]>>({});
   const [isBlocking, setIsBlocking] = useState(false);
+  const [testCustomersByClient, setTestCustomersByClient] = useState<Record<string, TestCustomer[]>>({});
+  const [isTogglingTest, setIsTogglingTest] = useState(false);
 
   async function loadConversations() {
     setIsLoading(true);
@@ -176,6 +181,82 @@ export default function ConversationsPage() {
     }
   }
 
+  useEffect(() => {
+    if (selectedConversation === undefined) return;
+    const cid = selectedConversation.clientId;
+    if (testCustomersByClient[cid] !== undefined) return;
+    let cancelled = false;
+    void listTestCustomers(cid)
+      .then((rows) => {
+        if (!cancelled) setTestCustomersByClient((current) => ({ ...current, [cid]: rows }));
+      })
+      .catch(() => {
+        if (!cancelled) setTestCustomersByClient((current) => ({ ...current, [cid]: [] }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedConversation, testCustomersByClient]);
+
+  const existingTestMark = useMemo(() => {
+    if (selectedConversation === undefined) return null;
+    const list = testCustomersByClient[selectedConversation.clientId] ?? [];
+    return (
+      list.find(
+        (mark) =>
+          mark.channel === selectedConversation.channel &&
+          mark.externalSenderId === selectedConversation.externalSenderId,
+      ) ?? null
+    );
+  }, [testCustomersByClient, selectedConversation]);
+
+  async function handleMarkTest() {
+    if (selectedConversation === undefined) return;
+    setIsTogglingTest(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const mark = await markTestCustomer(selectedConversation.clientId, {
+        channel: selectedConversation.channel,
+        externalSenderId: selectedConversation.externalSenderId,
+        note: 'Marked from conversation view',
+      });
+      setTestCustomersByClient((current) => ({
+        ...current,
+        [selectedConversation.clientId]: [
+          ...(current[selectedConversation.clientId] ?? []),
+          mark,
+        ],
+      }));
+      setNotice('Marked as test customer. Future replies stay live, but QA scoring is skipped.');
+    } catch (markError) {
+      setError(getErrorMessage(markError, 'Could not mark this sender as a test customer.'));
+    } finally {
+      setIsTogglingTest(false);
+    }
+  }
+
+  async function handleUnmarkTest() {
+    if (selectedConversation === undefined || existingTestMark === null) return;
+    setIsTogglingTest(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await unmarkTestCustomer(selectedConversation.clientId, existingTestMark.id);
+      setTestCustomersByClient((current) => ({
+        ...current,
+        [selectedConversation.clientId]: (
+          current[selectedConversation.clientId] ?? []
+        ).filter((mark) => mark.id !== existingTestMark.id),
+      }));
+      setNotice('Test-customer mark removed. Auto QA scoring will resume on the next message.');
+    } catch (unmarkError) {
+      setError(getErrorMessage(unmarkError, 'Could not unmark this test customer.'));
+    } finally {
+      setIsTogglingTest(false);
+    }
+  }
+
   async function handleTakeover() {
     if (selectedConversation === undefined) return;
     setIsTakingOver(true);
@@ -280,6 +361,27 @@ export default function ConversationsPage() {
               Conversation detail
             </div>
             <div className="panel-actions">
+              {existingTestMark !== null ? (
+                <button
+                  className="icon-button"
+                  disabled={isTogglingTest}
+                  onClick={() => void handleUnmarkTest()}
+                  type="button"
+                >
+                  <FlaskConical size={16} />
+                  Unmark test
+                </button>
+              ) : (
+                <button
+                  className="icon-button"
+                  disabled={isTogglingTest || selectedConversation === undefined}
+                  onClick={() => void handleMarkTest()}
+                  type="button"
+                >
+                  <FlaskConical size={16} />
+                  Mark as test
+                </button>
+              )}
               {existingBlock !== null ? (
                 <button
                   className="icon-button"
@@ -330,6 +432,12 @@ export default function ConversationsPage() {
                   <span>Customer</span>
                   <strong>
                     {selectedConversation.externalSenderId}
+                    {existingTestMark !== null && (
+                      <span className="test-badge" title={existingTestMark.note ?? 'Test customer'}>
+                        <FlaskConical size={11} />
+                        Test
+                      </span>
+                    )}
                     {existingBlock !== null && (
                       <span className="block-badge" title={existingBlock.reason ?? 'Blocked'}>
                         <Ban size={11} />
