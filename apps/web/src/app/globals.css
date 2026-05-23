@@ -4983,3 +4983,155 @@ button {
 .bulk-action-bar__close:hover {
   background: rgba(0, 0, 0, 0.15);
 }
+
+/* ============================================
+   SLA badge — waiting time + overdue state on ticket rows
+   ============================================ */
+
+.sla-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid currentColor;
+  font-variant-numeric: tabular-nums;
+}
+
+.sla-badge[data-size="md"] {
+  padding: 4px 10px;
+  font-size: var(--text-small);
+}
+
+.sla-badge[data-state="on_track"] {
+  color: var(--slate);
+  background: var(--slate-soft);
+  border-color: var(--line-strong);
+}
+
+.sla-badge[data-state="due_soon"] {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
+.sla-badge[data-state="overdue"] {
+  color: var(--coral);
+  background: var(--coral-soft);
+  border-color: var(--coral);
+  animation: sla-pulse 1.6s ease-in-out infinite;
+}
+
+.sla-badge__qualifier {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+@keyframes sla-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(182, 62, 53, 0.0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(182, 62, 53, 0.18);
+  }
+}
+
+.case-heading__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   Escalation chips — why AI escalated + confidence on the last reply
+   ============================================ */
+
+.escalation-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.escalation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.escalation-chips[data-size="md"] .escalation-chip {
+  padding: 4px 10px;
+  font-size: var(--text-small);
+}
+
+.escalation-chip[data-kind="low_confidence"] {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
+.escalation-chip[data-kind="sensitive_intent"] {
+  color: var(--coral);
+  background: var(--coral-soft);
+  border-color: var(--coral);
+}
+
+.escalation-chip[data-kind="unknown_product"] {
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-color: var(--blue);
+}
+
+.escalation-chip[data-kind="escalation_keyword"] {
+  color: var(--violet);
+  background: var(--violet-soft);
+  border-color: var(--violet);
+}
+
+.escalation-chip[data-kind="manual_takeover"] {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.escalation-chip[data-kind="other"] {
+  color: var(--muted);
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+}
+
+.escalation-chip--confidence[data-tone="low"] {
+  color: var(--coral);
+  background: var(--coral-soft);
+  border-color: var(--coral);
+}
+
+.escalation-chip--confidence[data-tone="medium"] {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
+.escalation-chip--confidence[data-tone="high"] {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.escalation-chip--confidence[data-tone="unknown"] {
+  color: var(--muted);
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+}

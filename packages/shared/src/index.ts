@@ -438,6 +438,7 @@ export interface Ticket {
   createdAt: string;
   updatedAt: string;
   tags?: Tag[];
+  confidence?: number;
 }
 
 export type TagColor = 'coral' | 'amber' | 'green' | 'blue' | 'violet' | 'slate';

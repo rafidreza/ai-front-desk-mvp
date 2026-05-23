@@ -2,6 +2,7 @@ import { RefreshCw, TicketCheck } from 'lucide-react';
 import { InternalUser, Ticket } from '@/types/domain';
 import { assigneeLabel, priorityTone, statusLabels, statusTone } from '../_lib/helpers';
 import { EmptyState } from './EmptyState';
+import { EscalationChips } from './EscalationChips';
 import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
 import { SlaBadge } from './SlaBadge';
@@ -130,9 +131,8 @@ export function TicketsPanel({
                     <span className="priority-dot" data-priority={ticket.priority} />
                     <span className="ticket-main">
                       <strong>{ticket.customerMessage}</strong>
-                      <small>
-                        {assigneeLabel(assigneeOptions, ticket.assigneeId)} | {ticket.reason}
-                      </small>
+                      <small>{assigneeLabel(assigneeOptions, ticket.assigneeId)}</small>
+                      <EscalationChips ticket={ticket} />
                       {ticket.tags !== undefined && ticket.tags.length > 0 && (
                         <span className="ticket-tags">
                           {ticket.tags.map((tag) => (

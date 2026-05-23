@@ -352,6 +352,9 @@ export class ConversationRepository {
             include: { tag: true },
             orderBy: { createdAt: 'asc' },
           },
+          conversation: {
+            select: { lastConfidence: true },
+          },
         },
       });
       return tickets.map((ticket) => ({
@@ -369,6 +372,7 @@ export class ConversationRepository {
         createdAt: ticket.createdAt.toISOString(),
         updatedAt: ticket.updatedAt.toISOString(),
         tags: mapTagRows(ticket.tags),
+        confidence: ticket.conversation.lastConfidence ?? undefined,
       }));
     }
 
@@ -389,6 +393,9 @@ export class ConversationRepository {
           tags: {
             include: { tag: true },
             orderBy: { createdAt: 'asc' },
+          },
+          conversation: {
+            select: { lastConfidence: true },
           },
         },
       });
@@ -413,6 +420,7 @@ export class ConversationRepository {
           createdAt: ticket.createdAt.toISOString(),
           updatedAt: ticket.updatedAt.toISOString(),
           tags: mapTagRows(ticket.tags),
+          confidence: ticket.conversation.lastConfidence ?? undefined,
         },
         events: ticket.events.map((event) => ({
           id: event.id,

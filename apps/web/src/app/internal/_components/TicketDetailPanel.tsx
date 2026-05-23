@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 import { assigneeLabel, eventTitle, formatTime, priorityTone, statusLabels, statuses } from '../_lib/helpers';
+import { EscalationChips } from './EscalationChips';
 import { SlaBadge } from './SlaBadge';
 
 interface TicketDetailPanelProps {
@@ -85,6 +86,7 @@ export function TicketDetailPanel({
                     {activeTicket.priority}
                   </span>
                   <SlaBadge ticket={activeTicket} size="md" />
+                  <EscalationChips ticket={activeTicket} size="md" />
                 </div>
               </div>
 
