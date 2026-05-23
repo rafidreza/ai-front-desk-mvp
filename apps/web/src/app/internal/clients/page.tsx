@@ -107,6 +107,7 @@ export default function InternalClientsPage() {
   const [query, setQuery] = useState('');
   const [formMode, setFormMode] = useState<'edit' | 'create'>('edit');
   const [form, setForm] = useState<ClientFormState>(emptyClientForm);
+  const [savedForm, setSavedForm] = useState<ClientFormState>(emptyClientForm);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -169,11 +170,20 @@ export default function InternalClientsPage() {
     }),
     [clients, dashboards],
   );
+  const isClientFormDirty = useMemo(() => {
+    return JSON.stringify(form) !== JSON.stringify(savedForm);
+  }, [form, savedForm]);
+  const canSubmitClientForm =
+    formMode === 'create'
+      ? isClientFormDirty && form.businessName.trim().length >= 2
+      : isClientFormDirty;
 
   useEffect(() => {
     if (formMode === 'create') return;
     if (selectedClient !== undefined) {
-      setForm(formFromClient(selectedClient));
+      const nextForm = formFromClient(selectedClient);
+      setForm(nextForm);
+      setSavedForm(nextForm);
     }
   }, [formMode, selectedClient]);
 
@@ -181,16 +191,25 @@ export default function InternalClientsPage() {
     setFormMode('create');
     setSelectedClientId(null);
     setForm(emptyClientForm);
+    setSavedForm(emptyClientForm);
     setNotice(null);
     setError(null);
   }
 
   function startEdit(client: ClientProfile) {
+    const nextForm = formFromClient(client);
     setFormMode('edit');
     setSelectedClientId(client.id);
-    setForm(formFromClient(client));
+    setForm(nextForm);
+    setSavedForm(nextForm);
     setNotice(null);
     setError(null);
+  }
+
+  function discardClientChanges() {
+    setForm(savedForm);
+    setError(null);
+    setNotice(null);
   }
 
   async function saveClient(event: FormEvent<HTMLFormElement>) {
@@ -210,8 +229,11 @@ export default function InternalClientsPage() {
             ? await createClientFromInternal(payload)
             : await updateClientFromInternal(selectedClientId, payload);
       setNotice(formMode === 'create' ? 'Client onboarded directly from the internal portal.' : 'Client information updated.');
+      const nextForm = formFromClient(saved);
       setFormMode('edit');
       setSelectedClientId(saved.id);
+      setForm(nextForm);
+      setSavedForm(nextForm);
       await loadClients();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save client.');
@@ -329,7 +351,7 @@ export default function InternalClientsPage() {
                   data-selected={client.id === selectedDashboard?.client.id}
                   key={client.id}
                   type="button"
-                  onClick={() => setSelectedClientId(client.id)}
+                  onClick={() => startEdit(client)}
                 >
                   <div>
                     <strong>{client.businessName}</strong>
@@ -523,10 +545,6 @@ export default function InternalClientsPage() {
                   />
                 </label>
                 <div className="form-actions client-management-actions">
-                  <button className="icon-button" disabled={isSaving} type="submit">
-                    <Save size={15} />
-                    {isSaving ? 'Saving...' : formMode === 'create' ? 'Onboard client' : 'Save changes'}
-                  </button>
                   {formMode === 'create' ? (
                     <button
                       className="mini-button"
@@ -550,6 +568,41 @@ export default function InternalClientsPage() {
                       </button>
                     )
                   )}
+                </div>
+                <div className="sticky-save-bar" data-dirty={isClientFormDirty}>
+                  <div>
+                    <strong>
+                      {isClientFormDirty
+                        ? formMode === 'create'
+                          ? 'New client draft ready'
+                          : 'Unsaved client changes'
+                        : 'No unsaved changes'}
+                    </strong>
+                    <span>
+                      {isClientFormDirty
+                        ? 'Save to update this workspace.'
+                        : 'Edit any field to enable saving.'}
+                    </span>
+                  </div>
+                  <div className="sticky-save-actions">
+                    <button
+                      className="mini-button"
+                      disabled={!isClientFormDirty || isSaving}
+                      type="button"
+                      onClick={discardClientChanges}
+                    >
+                      <RotateCcw size={14} />
+                      Discard
+                    </button>
+                    <button
+                      className="btn-primary"
+                      disabled={!canSubmitClientForm || isSaving}
+                      type="submit"
+                    >
+                      <Save size={15} />
+                      {isSaving ? 'Saving...' : formMode === 'create' ? 'Onboard client' : 'Save changes'}
+                    </button>
+                  </div>
                 </div>
               </form>
 

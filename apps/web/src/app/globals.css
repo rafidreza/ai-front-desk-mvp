@@ -1539,6 +1539,50 @@ button {
   justify-content: space-between;
 }
 
+.sticky-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px -14px -14px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: rgba(248, 250, 251, 0.96);
+  backdrop-filter: blur(12px);
+}
+
+.sticky-save-bar[data-dirty="true"] {
+  border-top-color: #b8d7c9;
+  background: rgba(224, 243, 236, 0.96);
+}
+
+.sticky-save-bar div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.sticky-save-bar strong {
+  color: var(--ink);
+  font-size: var(--text-small);
+  line-height: var(--lh-heading);
+}
+
+.sticky-save-bar span {
+  color: var(--muted);
+  font-size: var(--text-tiny);
+}
+
+.sticky-save-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .pricing-panel {
   display: grid;
   grid-template-columns: minmax(260px, 0.9fr) minmax(260px, 1.1fr);
@@ -3643,6 +3687,20 @@ button {
     width: 100%;
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .sticky-save-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sticky-save-actions {
+    justify-content: stretch;
+  }
+
+  .sticky-save-actions .btn-primary,
+  .sticky-save-actions .mini-button {
+    flex: 1 1 160px;
   }
 
   .page-select,
