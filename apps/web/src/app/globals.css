@@ -2520,6 +2520,13 @@ button {
   gap: 12px;
 }
 
+.client-ticket-workspace {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(460px, 1.1fr);
+  align-items: start;
+  gap: 16px;
+}
+
 .delegation-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -2530,6 +2537,27 @@ button {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   box-shadow: 0 10px 26px rgba(28, 39, 52, 0.055);
+}
+
+.delegation-card[data-selected="true"] {
+  border-color: #9bc9bb;
+  background: #f6fbf8;
+}
+
+.delegation-select {
+  min-width: 0;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.delegation-select:focus-visible {
+  outline: 3px solid rgba(15, 116, 87, 0.24);
+  outline-offset: 4px;
+  border-radius: 6px;
 }
 
 .delegation-card h2,
@@ -2580,6 +2608,26 @@ button {
   display: grid;
   grid-template-columns: repeat(3, minmax(132px, 1fr));
   gap: 8px;
+}
+
+.client-ticket-detail {
+  min-height: calc(100vh - 312px);
+}
+
+.client-case-layout {
+  grid-template-rows: auto auto auto minmax(260px, 1fr);
+}
+
+.client-case-layout .status-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.client-ticket-thread {
+  border-top: 1px solid var(--line);
+}
+
+.client-ticket-thread .section-label {
+  margin-bottom: 2px;
 }
 
 .knowledge-layout {
@@ -2921,6 +2969,7 @@ button {
   .client-management-grid,
   .team-portal-grid,
   .client-info-grid,
+  .client-ticket-workspace,
   .knowledge-client-strip,
   .pricing-panel,
   .knowledge-layout,
@@ -3071,6 +3120,11 @@ button {
   .client-filter-bar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .delegation-actions,
+  .client-case-layout .status-actions {
+    grid-template-columns: 1fr;
   }
 
   .csat-buttons {

@@ -150,6 +150,11 @@ export class ClientController {
     return { tickets: await this.dashboard.listClientTickets(clientId, status) };
   }
 
+  @Get(':clientId/tickets/:ticketId')
+  async getClientTicketDetail(@Param('clientId') clientId: string, @Param('ticketId') ticketId: string) {
+    return this.dashboard.getClientTicketDetail(clientId, ticketId);
+  }
+
   @Patch(':clientId/tickets/:ticketId/status')
   async updateClientTicketStatus(
     @Param('clientId') clientId: string,

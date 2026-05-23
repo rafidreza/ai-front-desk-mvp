@@ -95,6 +95,10 @@ export function clientRoutes() {
     c.json({ tickets: await createServices(c).dashboard.listClientTickets(c.req.param('clientId'), c.req.query('status')) }),
   );
 
+  app.get('/clients/:clientId/tickets/:ticketId', async (c) =>
+    c.json(await createServices(c).dashboard.getClientTicketDetail(c.req.param('clientId'), c.req.param('ticketId'))),
+  );
+
   app.patch('/clients/:clientId/tickets/:ticketId/status', async (c) => {
     const parsed = TicketStatusSchema.parse(await jsonBody(c));
     return c.json({

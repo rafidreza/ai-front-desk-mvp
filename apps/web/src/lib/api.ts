@@ -171,6 +171,13 @@ export async function getClientTickets(clientId: string, status = 'all'): Promis
   return data.tickets;
 }
 
+export async function getClientTicketDetail(
+  clientId: string,
+  ticketId: string,
+): Promise<TicketDetail & { conversation?: ConversationLog }> {
+  return apiFetch<TicketDetail & { conversation?: ConversationLog }>(`/clients/${clientId}/tickets/${ticketId}`);
+}
+
 export async function updateClientTicketStatus(
   clientId: string,
   ticketId: string,

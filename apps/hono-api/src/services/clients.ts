@@ -5,19 +5,21 @@ import type {
   ClientDashboardSummary,
   ClientProfile,
   ConversationLog,
+  TicketDetail,
   Ticket,
   TicketStatus,
 } from '@ai-front-desk/shared';
 import type { AppDb } from '../db/client';
-import { clients, conversations, messages, tickets, ticketEvents } from '../db/schema';
+import { clients, conversations, messages, ticketComments, ticketEvents, tickets } from '../db/schema';
 import { ConflictError, NotFoundError } from '../errors';
 import { randomId } from '../utils/crypto';
-import { toClientProfile, toConversation, toTicket } from './mappers';
+import { toClientProfile, toConversation, toTicket, toTicketComment, toTicketEvent } from './mappers';
 
 export const pilotClientFallback: ClientProfile = {
   id: 'pilot-client',
   businessName: 'Pilot F-Commerce Seller',
   pageId: 'pilot-page',
+  status: 'active',
   defaultLanguage: 'mixed',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
   escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
@@ -205,6 +207,28 @@ export class DashboardService {
           : and(eq(tickets.clientId, clientId), eq(tickets.status, status as TicketStatus));
     const rows = await this.db.select().from(tickets).where(where).orderBy(desc(tickets.updatedAt));
     return rows.map(toTicket);
+  }
+
+  async getClientTicketDetail(clientId: string, ticketId: string): Promise<TicketDetail & { conversation: ConversationLog }> {
+    const [ticket] = await this.db
+      .select()
+      .from(tickets)
+      .where(and(eq(tickets.id, ticketId), eq(tickets.clientId, clientId)))
+      .limit(1);
+    if (ticket === undefined) throw new NotFoundError('Ticket not found for this client');
+
+    const [events, comments, conversation] = await Promise.all([
+      this.db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticketId)).orderBy(asc(ticketEvents.createdAt)),
+      this.db.select().from(ticketComments).where(eq(ticketComments.ticketId, ticketId)).orderBy(desc(ticketComments.createdAt)),
+      this.getConversation(ticket.conversationId),
+    ]);
+
+    return {
+      ticket: toTicket(ticket),
+      events: events.map(toTicketEvent),
+      comments: comments.map(toTicketComment),
+      conversation,
+    };
   }
 
   async captureCsat(input: { clientId: string; conversationId: string; score: number; comment?: string }): Promise<ConversationLog> {

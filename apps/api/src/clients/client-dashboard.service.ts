@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Channel, ClientChannelSummary, ClientDashboardSummary, ClientProfile, ConversationLog, Ticket, TicketStatus } from '../types/domain';
+import { Channel, ClientChannelSummary, ClientDashboardSummary, ClientProfile, ConversationLog, Ticket, TicketDetail, TicketStatus } from '../types/domain';
 import { PilotClientService } from './pilot-client.service';
 
 @Injectable()
@@ -106,6 +106,81 @@ export class ClientDashboardService {
       createdAt: ticket.createdAt.toISOString(),
       updatedAt: ticket.updatedAt.toISOString(),
     }));
+  }
+
+  async getClientTicketDetail(clientId: string, ticketId: string): Promise<TicketDetail & { conversation: ConversationLog }> {
+    const ticket = await this.prisma.ticket.findFirst({
+      where: { id: ticketId, clientId },
+      include: {
+        events: { orderBy: { createdAt: 'asc' } },
+        comments: { orderBy: { createdAt: 'desc' } },
+        conversation: { include: { messages: { orderBy: { createdAt: 'asc' } } } },
+      },
+    });
+
+    if (ticket === null) {
+      throw new NotFoundException('Ticket not found for this client');
+    }
+
+    return {
+      ticket: {
+        id: ticket.id,
+        clientId: ticket.clientId,
+        conversationId: ticket.conversationId,
+        assigneeId: ticket.assigneeId ?? undefined,
+        version: ticket.version,
+        priority: ticket.priority,
+        status: ticket.status,
+        reason: ticket.reason,
+        customerMessage: ticket.customerMessage,
+        suggestedReply: ticket.suggestedReply,
+        salesRecoveredEstimate: ticket.salesRecoveredEstimate,
+        createdAt: ticket.createdAt.toISOString(),
+        updatedAt: ticket.updatedAt.toISOString(),
+      },
+      events: ticket.events.map((event) => ({
+        id: event.id,
+        ticketId: event.ticketId,
+        eventType: event.eventType,
+        payload: event.payload as Record<string, unknown>,
+        createdAt: event.createdAt.toISOString(),
+      })),
+      comments: ticket.comments.map((comment) => ({
+        id: comment.id,
+        ticketId: comment.ticketId,
+        body: comment.body,
+        authorId: comment.authorId,
+        createdAt: comment.createdAt.toISOString(),
+      })),
+      conversation: {
+        id: ticket.conversation.id,
+        clientId: ticket.conversation.clientId,
+        channel: ticket.conversation.channel as ConversationLog['channel'],
+        externalConversationId: ticket.conversation.externalConversationId,
+        externalSenderId: ticket.conversation.externalSenderId,
+        lastConfidence: ticket.conversation.lastConfidence ?? undefined,
+        ticketId: ticket.conversation.ticketId ?? undefined,
+        csatScore: ticket.conversation.csatScore ?? undefined,
+        csatComment: ticket.conversation.csatComment ?? undefined,
+        csatAt: ticket.conversation.csatAt?.toISOString(),
+        qaGrade: ticket.conversation.qaGrade as ConversationLog['qaGrade'],
+        hallucinationFlag: ticket.conversation.hallucinationFlag,
+        gradedBy: ticket.conversation.gradedBy ?? undefined,
+        gradedAt: ticket.conversation.gradedAt?.toISOString(),
+        autoQaScore: ticket.conversation.autoQaScore ?? undefined,
+        autoQaGrade: ticket.conversation.autoQaGrade as ConversationLog['autoQaGrade'],
+        autoQaDefects: ticket.conversation.autoQaDefects as ConversationLog['autoQaDefects'],
+        autoQaReason: ticket.conversation.autoQaReason ?? undefined,
+        autoQaAt: ticket.conversation.autoQaAt?.toISOString(),
+        autoQaVersion: ticket.conversation.autoQaVersion ?? undefined,
+        messages: ticket.conversation.messages.map((message) => ({
+          id: message.id,
+          direction: message.direction as ConversationLog['messages'][number]['direction'],
+          text: message.text,
+          createdAt: message.createdAt.toISOString(),
+        })),
+      },
+    };
   }
 
   async captureCsat(input: { clientId: string; conversationId: string; score: number; comment?: string }): Promise<ConversationLog> {

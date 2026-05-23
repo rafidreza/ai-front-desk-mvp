@@ -42,6 +42,7 @@ export function toClientProfile(client: {
     id: client.id,
     businessName: client.businessName,
     pageId: client.pageId,
+    status: 'active',
     ownerName: client.ownerName ?? undefined,
     ownerEmail: client.ownerEmail ?? undefined,
     ownerPhone: client.ownerPhone ?? undefined,
