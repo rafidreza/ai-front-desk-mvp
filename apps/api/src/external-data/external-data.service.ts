@@ -323,7 +323,7 @@ function mapOrder(row: OrderRecordRow): OrderRecord {
   };
 }
 
-function parseCsv(text: string): CsvRow[] {
+export function parseExternalDataCsv(text: string): CsvRow[] {
   const rows: string[][] = [];
   let field = '';
   let row: string[] = [];
@@ -776,12 +776,12 @@ export class ExternalDataService {
   }
 
   private isOrderVerified(order: OrderRecord, text: string) {
-    const normalizedText = normalizeLookupText(text);
+    const lowerText = text.toLowerCase();
     const phone = order.customerPhone === undefined ? undefined : normalizePhone(order.customerPhone);
     const email = order.customerEmail?.toLowerCase();
 
     if (phone === undefined && email === undefined) return true;
-    if (email !== undefined && normalizedText.includes(email)) return true;
+    if (email !== undefined && lowerText.includes(email)) return true;
 
     const textPhone = normalizePhone(text);
     return phone !== undefined && phone.length >= 6 && textPhone.includes(phone);
@@ -816,7 +816,7 @@ export class ExternalDataService {
   }
 
   private async fetchProducts(source: ExternalDataSource) {
-    const rows = parseCsv(await this.fetchCsv(buildCsvUrl(source, source.productsTabName)));
+    const rows = parseExternalDataCsv(await this.fetchCsv(buildCsvUrl(source, source.productsTabName)));
     const warnings: Warning[] = [];
     const imported: ParsedProduct[] = [];
 
@@ -857,7 +857,7 @@ export class ExternalDataService {
   }
 
   private async fetchOrders(source: ExternalDataSource) {
-    const rows = parseCsv(await this.fetchCsv(buildCsvUrl(source, source.ordersTabName ?? 'Orders')));
+    const rows = parseExternalDataCsv(await this.fetchCsv(buildCsvUrl(source, source.ordersTabName ?? 'Orders')));
     const warnings: Warning[] = [];
     const imported: ParsedOrder[] = [];
 
