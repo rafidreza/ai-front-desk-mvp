@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   addTicketComment,
+  getAiProviderHealth,
   getCalibrationQueue,
   getConversations,
   getDatabaseHealth,
@@ -15,6 +16,7 @@ import {
   updateTicketStatus,
 } from '@/lib/api';
 import {
+  AiProviderHealth,
   ApiHealth,
   CalibrationQueueFilter,
   CalibrationQueueSummary,
@@ -35,6 +37,7 @@ import { assigneeLabel, getErrorMessage, statusLabels } from './_lib/helpers';
 
 export default function InternalConsole() {
   const [health, setHealth] = useState<ApiHealth | null>(null);
+  const [aiHealth, setAiHealth] = useState<AiProviderHealth | null>(null);
   const [conversations, setConversations] = useState<ConversationLog[]>([]);
   const [calibrationConversations, setCalibrationConversations] = useState<ConversationLog[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -66,7 +69,12 @@ export default function InternalConsole() {
     setIsHealthLoading(true);
     setHealthError(null);
     try {
-      setHealth(await getDatabaseHealth());
+      const [databaseHealth, providerHealth] = await Promise.all([
+        getDatabaseHealth(),
+        getAiProviderHealth(),
+      ]);
+      setHealth(databaseHealth);
+      setAiHealth(providerHealth);
     } catch (loadError) {
       setHealthError(getErrorMessage(loadError, 'Unable to load database health.'));
     } finally {
@@ -351,6 +359,14 @@ export default function InternalConsole() {
             Refresh
           </button>
         </header>
+
+        {aiHealth?.isDegraded === true && (
+          <div className="degradation-banner">
+            <AlertTriangle size={16} />
+            <span>AI is slow right now — using fallback replies.</span>
+            <a href="/internal">Internal status</a>
+          </div>
+        )}
 
         <MetricCards
           activeView={activeView}

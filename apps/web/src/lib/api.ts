@@ -1,5 +1,6 @@
 import {
   ApiHealth,
+  AiProviderHealth,
   CalibrationQueueFilter,
   CalibrationQueueResult,
   ClientDashboardSummary,
@@ -50,6 +51,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function getDatabaseHealth(): Promise<ApiHealth> {
   return apiFetch<ApiHealth>('/health/db');
+}
+
+export async function getAiProviderHealth(): Promise<AiProviderHealth> {
+  return apiFetch<AiProviderHealth>('/health/ai');
 }
 
 export async function getConversations(): Promise<ConversationLog[]> {

@@ -454,6 +454,17 @@ export interface ApiHealth {
   };
 }
 
+export interface AiProviderHealth {
+  status: 'ok' | 'degraded' | 'local_fallback';
+  isDegraded: boolean;
+  failureCount: number;
+  windowMinutes: number;
+  threshold: number;
+  fallbackActive: boolean;
+  lastFailureAt?: string;
+  message: string;
+}
+
 export interface InternalUser {
   id: string;
   label: string;

@@ -1,8 +1,9 @@
 'use client';
 
+import { AlertTriangle } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
-import { getDatabaseHealth } from '@/lib/api';
-import { ApiHealth } from '@/types/domain';
+import { getAiProviderHealth, getDatabaseHealth } from '@/lib/api';
+import { AiProviderHealth, ApiHealth } from '@/types/domain';
 import { Sidebar } from './Sidebar';
 
 interface InternalShellProps {
@@ -25,12 +26,18 @@ interface InternalShellProps {
 
 export function InternalShell({ activeView, eyebrow, title, action, children }: InternalShellProps) {
   const [health, setHealth] = useState<ApiHealth | null>(null);
+  const [aiHealth, setAiHealth] = useState<AiProviderHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
 
   async function loadHealth() {
     setHealthError(null);
     try {
-      setHealth(await getDatabaseHealth());
+      const [databaseHealth, providerHealth] = await Promise.all([
+        getDatabaseHealth(),
+        getAiProviderHealth(),
+      ]);
+      setHealth(databaseHealth);
+      setAiHealth(providerHealth);
     } catch (error) {
       setHealthError(error instanceof Error ? error.message : 'Unable to check database health.');
     }
@@ -62,6 +69,13 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
           </div>
           {action}
         </header>
+        {aiHealth?.isDegraded === true && (
+          <div className="degradation-banner">
+            <AlertTriangle size={16} />
+            <span>AI is slow right now — using fallback replies.</span>
+            <a href="/internal">Internal status</a>
+          </div>
+        )}
         {children}
       </section>
     </main>

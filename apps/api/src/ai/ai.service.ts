@@ -1,9 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { Injectable } from '@nestjs/common';
-import { AgentReply, ClientProfile, KnowledgeEntry, PromptProfile } from '../types/domain';
+import { AgentReply, AiProviderHealth, ClientProfile, KnowledgeEntry, PromptProfile } from '../types/domain';
+
+type ProviderEvent = {
+  ok: boolean;
+  at: number;
+};
 
 @Injectable()
 export class AiService {
+  private readonly providerEvents: ProviderEvent[] = [];
+
   async generateReply(input: {
     client: ClientProfile;
     customerText: string;
@@ -15,14 +22,22 @@ export class AiService {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (apiKey !== undefined && apiKey !== '' && input.knowledgeEntries.length > 0) {
-      const reply = await this.generateClaudeReply(input, new Anthropic({ apiKey }));
-      return {
-        text: reply,
-        confidence: input.retrievalConfidence,
-        matchedKnowledgeIds: input.knowledgeEntries.map((entry) => entry.id),
-        shouldEscalate: escalationReason !== null,
-        escalationReason: escalationReason ?? undefined,
-      };
+      const providerHealth = this.getProviderHealth();
+      if (!providerHealth.isDegraded) {
+        try {
+          const reply = await this.generateClaudeReply(input, new Anthropic({ apiKey }));
+          this.recordProviderEvent(true);
+          return {
+            text: reply,
+            confidence: input.retrievalConfidence,
+            matchedKnowledgeIds: input.knowledgeEntries.map((entry) => entry.id),
+            shouldEscalate: escalationReason !== null,
+            escalationReason: escalationReason ?? undefined,
+          };
+        } catch {
+          this.recordProviderEvent(false);
+        }
+      }
     }
 
     const fallback = this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile);
@@ -32,6 +47,44 @@ export class AiService {
       matchedKnowledgeIds: input.knowledgeEntries.map((entry) => entry.id),
       shouldEscalate: escalationReason !== null,
       escalationReason: escalationReason ?? undefined,
+    };
+  }
+
+  getProviderHealth(now = new Date()): AiProviderHealth {
+    const windowMinutes = Number(process.env.AI_DEGRADATION_WINDOW_MINUTES ?? 5);
+    const threshold = Number(process.env.AI_DEGRADATION_FAILURE_THRESHOLD ?? 3);
+    const windowMs = Math.max(windowMinutes, 1) * 60 * 1000;
+    const cutoff = now.getTime() - windowMs;
+    this.trimProviderEvents(cutoff);
+
+    const failures = this.providerEvents.filter((event) => !event.ok);
+    const lastFailure = failures.at(-1);
+    const hasAnthropicKey = this.hasAnthropicKey();
+    const isDegraded = hasAnthropicKey && failures.length >= Math.max(threshold, 1);
+
+    if (!hasAnthropicKey) {
+      return {
+        status: 'local_fallback',
+        isDegraded: false,
+        failureCount: 0,
+        windowMinutes,
+        threshold,
+        fallbackActive: true,
+        message: 'Anthropic is not configured; local fallback replies are active.',
+      };
+    }
+
+    return {
+      status: isDegraded ? 'degraded' : 'ok',
+      isDegraded,
+      failureCount: failures.length,
+      windowMinutes,
+      threshold,
+      fallbackActive: isDegraded,
+      lastFailureAt: lastFailure === undefined ? undefined : new Date(lastFailure.at).toISOString(),
+      message: isDegraded
+        ? 'Anthropic failure threshold reached; fallback replies are active.'
+        : 'Anthropic provider is within the normal failure threshold.',
     };
   }
 
@@ -111,5 +164,23 @@ export class AiService {
     }
 
     return null;
+  }
+
+  private hasAnthropicKey() {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    return apiKey !== undefined && apiKey !== '';
+  }
+
+  private recordProviderEvent(ok: boolean) {
+    const now = Date.now();
+    const windowMinutes = Number(process.env.AI_DEGRADATION_WINDOW_MINUTES ?? 5);
+    this.providerEvents.push({ ok, at: now });
+    this.trimProviderEvents(now - Math.max(windowMinutes, 1) * 60 * 1000);
+  }
+
+  private trimProviderEvents(cutoff: number) {
+    while (this.providerEvents.length > 0 && this.providerEvents[0].at < cutoff) {
+      this.providerEvents.shift();
+    }
   }
 }

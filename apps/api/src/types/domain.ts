@@ -1,5 +1,6 @@
 export type {
   AgentReply,
+  AiProviderHealth,
   CalibrationQueueFilter,
   CalibrationQueueResult,
   CalibrationQueueSummary,

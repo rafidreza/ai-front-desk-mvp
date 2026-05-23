@@ -30,9 +30,9 @@
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 8 | 1 | 9 |
-| 11 — UX Audit P1 | 4 | 6 | 10 |
+| 11 — UX Audit P1 | 5 | 5 | 10 |
 | 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **82** | **65** | **147** |
+| **TOTAL** | **83** | **64** | **147** |
 
 ---
 
@@ -222,7 +222,7 @@ Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiabl
 - [x] **T80 — UX** Replace native `<select>` on `/internal/team` role field with shadcn `Select` component. — **DONE (2026-05-24): per agreed local-style direction, added reusable `UiSelect` wrapper with consistent trigger styling and used it for the team role field without introducing shadcn/Radix dependencies.**
 - [ ] **T81 — UX** Add inline Good / Bad / Hallucination action buttons per row on `/internal/qa` (keep drill-down as secondary).
 - [ ] **T82 — UX** Add sticky-bottom save bar to `/internal/clients/[id]` with disabled-until-dirty state.
-- [ ] **T83 — UX** Add top-of-page degradation banner: detect Anthropic API failure rate > threshold, show "AI is slow right now — using fallback replies" with link to internal status.
+- [x] **T83 — UX** Add top-of-page degradation banner: detect Anthropic API failure rate > threshold, show "AI is slow right now — using fallback replies" with link to internal status. — **DONE (2026-05-24): Anthropic failures are tracked in a 5-minute in-memory window; 3 failures triggers degraded mode, local fallback replies, `/health/ai`, and an internal top-of-page banner with an Internal status link.**
 - [x] **T84 — UX** Add loading skeletons to tickets list, KB list, clients list, QA list, conversations list. — **DONE (2026-05-24): reusable `ListSkeleton` now covers internal tickets, conversations, QA calibration queue, knowledge entries, and client directory lists without hiding existing data during refreshes.**
 - [ ] **T85 — UX** Empty state guidance on every list page (tickets, KB, clients, QA): icon + 1-line explainer + primary action (e.g. "No tickets yet. Connect a Facebook Page to start receiving messages → ").
 - [ ] **T86 — UX** Replace generic "something went wrong" errors with actionable messages naming the cause + the fix link (e.g. "Page token expired. Reconnect Meta integration → "). — **PARTIAL (2026-05-24, commit `0e2c64b`): client login (request code + verify code) and client dashboard fallback strings rewritten with named cause + recovery step. Remaining surfaces (internal console, signup, KB) still pending.**

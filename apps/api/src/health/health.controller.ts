@@ -1,9 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
+import { AiService } from '../ai/ai.service';
 import { PrismaService } from '../database/prisma.service';
 
 @Controller('health')
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ai: AiService,
+  ) {}
 
   @Get()
   getHealth() {
@@ -24,5 +28,10 @@ export class HealthController {
       database,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  @Get('ai')
+  getAiProviderHealth() {
+    return this.ai.getProviderHealth();
   }
 }
