@@ -3787,3 +3787,139 @@ button {
     gap: 8px;
   }
 }
+
+/* ============================================
+   Form validation primitives
+   Used by useFormErrors + FormField + FormErrorSummary
+   ============================================ */
+
+.form-field {
+  display: grid;
+  gap: 4px;
+}
+
+.form-field > label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.form-field__required-mark {
+  color: var(--coral);
+  font-weight: 700;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  font-size: var(--text-small);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.form-field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.form-field[data-error="true"] > label {
+  color: var(--coral);
+}
+
+.form-field[data-error="true"] input,
+.form-field[data-error="true"] textarea,
+.form-field[data-error="true"] select {
+  border-color: var(--coral);
+  background: var(--coral-soft);
+}
+
+.form-field[data-error="true"] input:focus,
+.form-field[data-error="true"] textarea:focus,
+.form-field[data-error="true"] select:focus {
+  box-shadow: 0 0 0 3px rgba(182, 62, 53, 0.18);
+}
+
+.form-field__error {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  color: var(--coral);
+}
+
+.form-error-summary {
+  display: none;
+}
+
+.form-error-summary[data-visible="true"] {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--coral);
+  background: var(--coral-soft);
+  color: var(--coral);
+  border-radius: 8px;
+  font-size: var(--text-small);
+}
+
+.form-error-summary__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.form-error-summary ul {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 2px;
+}
+
+.form-error-summary li button {
+  background: none;
+  border: none;
+  color: var(--coral);
+  font-weight: 700;
+  text-decoration: underline;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.form-error-summary li button:hover {
+  text-decoration: none;
+}
+
+.form-prefill-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border: 1px dashed var(--brand);
+  border-radius: 8px;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+}

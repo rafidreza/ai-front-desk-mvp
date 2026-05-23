@@ -1,6 +1,6 @@
 'use client';
 
-import { Archive, BotMessageSquare, History, Plus, RefreshCw, RotateCcw, Save, Send } from 'lucide-react';
+import { Archive, BotMessageSquare, History, Plus, RefreshCw, RotateCcw, Save, Send, Sparkles } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   createPromptProfile,
@@ -12,6 +12,21 @@ import {
 } from '@/lib/api';
 import { PromptProfile, PromptProfileVersion } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
+import { FormErrorSummary, FormField, useFormErrors } from '../_components/form-validation';
+
+const CREATE_FIELD_LABELS: Record<string, string> = {
+  name: 'Name',
+  systemInstructions: 'Opening conversation and role',
+  toneRules: 'Greeting and tone',
+  escalationRules: 'Handoff rules',
+  forbiddenClaims: 'Never say',
+  fallbackBehavior: 'Fallback and review request',
+};
+
+const CREATE_REQUIRED_RULES = Object.entries(CREATE_FIELD_LABELS).map(([name, label]) => ({
+  name,
+  label,
+}));
 
 function profileFromForm(form: FormData) {
   return {
@@ -34,6 +49,12 @@ export default function AgentConfigPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const createErrors = useFormErrors();
+  const [createResetToken, setCreateResetToken] = useState(0);
+  const activeProfile = useMemo(
+    () => profiles.find((profile) => profile.status === 'active') ?? null,
+    [profiles],
+  );
   const clientId = useMemo(() => {
     if (typeof window === 'undefined') return 'pilot-client';
     return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
@@ -72,12 +93,24 @@ export default function AgentConfigPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const values: Record<string, string> = {};
+    for (const rule of CREATE_REQUIRED_RULES) {
+      values[rule.name] = String(formData.get(rule.name) ?? '');
+    }
+    const validationErrors = createErrors.validateRequired(values, CREATE_REQUIRED_RULES);
+    if (Object.keys(validationErrors).length > 0) {
+      createErrors.focusField(Object.keys(validationErrors)[0]);
+      return;
+    }
+
     setIsSaving(true);
     setError(null);
     setNotice(null);
     try {
-      const created = await createPromptProfile(clientId, profileFromForm(new FormData(event.currentTarget)));
-      event.currentTarget.reset();
+      const created = await createPromptProfile(clientId, profileFromForm(formData));
+      createErrors.clearAll();
+      setCreateResetToken((token) => token + 1);
       setNotice('Prompt draft created.');
       await loadProfiles(status, created.id);
     } catch (createError) {
@@ -274,62 +307,130 @@ export default function AgentConfigPage() {
           </div>
         </section>
 
-        <form className="client-panel stack-form knowledge-create" onSubmit={handleCreate}>
+        <form
+          className="client-panel stack-form knowledge-create"
+          key={`create-${activeProfile?.id ?? 'empty'}-${createResetToken}`}
+          noValidate
+          onSubmit={handleCreate}
+        >
           <div className="section-label">
             <Plus size={15} />
             New prompt draft
           </div>
-          <label>
-            Name
-            <input name="name" required placeholder="Holiday sales prompt" />
-          </label>
-          <label>
-            Opening conversation and role
+
+          {activeProfile !== null && (
+            <div className="form-prefill-hint">
+              <Sparkles size={14} />
+              <span>
+                Pre-filled from active profile <strong>{activeProfile.name}</strong> — edit only what
+                you need.
+              </span>
+            </div>
+          )}
+
+          <FormField
+            error={createErrors.errors.name}
+            label="Name"
+            name="name"
+            required
+          >
+            <input
+              defaultValue={activeProfile?.name ?? ''}
+              id="name"
+              name="name"
+              placeholder="Holiday sales prompt"
+              type="text"
+            />
+          </FormField>
+
+          <FormField
+            error={createErrors.errors.systemInstructions}
+            hint="Define how the agent starts, what it can answer, and when it should ask one clarifying question."
+            label="Opening conversation and role"
+            name="systemInstructions"
+            required
+          >
             <textarea
+              defaultValue={activeProfile?.systemInstructions ?? ''}
+              id="systemInstructions"
               name="systemInstructions"
-              required
-              rows={4}
               placeholder="Start with a short greeting, identify the business, answer only from approved knowledge, and ask one clarifying question when needed."
+              rows={4}
             />
-          </label>
-          <label>
-            Greeting and tone
+          </FormField>
+
+          <FormField
+            error={createErrors.errors.toneRules}
+            hint="Example: friendly, concise, Bangla-English mixed when the customer does that first."
+            label="Greeting and tone"
+            name="toneRules"
+            required
+          >
             <textarea
+              defaultValue={activeProfile?.toneRules ?? ''}
+              id="toneRules"
               name="toneRules"
-              required
-              rows={3}
               placeholder="Warm, direct, and helpful. Mirror the customer's language. Keep replies short unless the customer asks for detail."
+              rows={3}
             />
-          </label>
-          <label>
-            Handoff rules
+          </FormField>
+
+          <FormField
+            error={createErrors.errors.escalationRules}
+            hint="List the exact moments when a human should take over: refund, angry customer, missing answer, payment issue."
+            label="Handoff rules"
+            name="escalationRules"
+            required
+          >
             <textarea
+              defaultValue={activeProfile?.escalationRules ?? ''}
+              id="escalationRules"
               name="escalationRules"
-              required
-              rows={3}
               placeholder="Hand off when refund, complaint, delivery failure, payment confusion, or low-confidence answer appears."
+              rows={3}
             />
-          </label>
-          <label>
-            Never say
+          </FormField>
+
+          <FormField
+            error={createErrors.errors.forbiddenClaims}
+            hint="Block promises the business cannot guarantee, such as fake stock, exact delivery dates, or refund approval."
+            label="Never say"
+            name="forbiddenClaims"
+            required
+          >
             <textarea
+              defaultValue={activeProfile?.forbiddenClaims ?? ''}
+              id="forbiddenClaims"
               name="forbiddenClaims"
-              required
-              rows={3}
               placeholder="Do not promise exact stock, delivery date, discount, refund approval, or policy exceptions unless present in knowledge."
-            />
-          </label>
-          <label>
-            Fallback and review request
-            <textarea
-              name="fallbackBehavior"
-              required
               rows={3}
-              placeholder="If unsure, say a human will confirm. After solving the request, ask the customer to rate the support experience."
             />
-          </label>
-          <button className="icon-button" disabled={isSaving} type="submit">
-            Create draft
+          </FormField>
+
+          <FormField
+            error={createErrors.errors.fallbackBehavior}
+            hint="Tell the agent what to do when unsure, and how it should ask for a short review after a resolved conversation."
+            label="Fallback and review request"
+            name="fallbackBehavior"
+            required
+          >
+            <textarea
+              defaultValue={activeProfile?.fallbackBehavior ?? ''}
+              id="fallbackBehavior"
+              name="fallbackBehavior"
+              placeholder="If unsure, say a human will confirm. After solving the request, ask the customer to rate the support experience."
+              rows={3}
+            />
+          </FormField>
+
+          <FormErrorSummary
+            errors={createErrors.errors}
+            fieldLabels={CREATE_FIELD_LABELS}
+            onFocusField={createErrors.focusField}
+          />
+
+          <button className="btn-primary" disabled={isSaving} type="submit">
+            {isSaving ? 'Creating…' : 'Create draft'}
           </button>
         </form>
       </section>
