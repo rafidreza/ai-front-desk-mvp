@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import {
+  AgentReply,
   ExternalDataSource,
   ExternalDataSyncRun,
   ExternalDataSyncStatus,
@@ -132,6 +133,61 @@ const allowedOrderStatuses = new Set<OrderStatus>([
 
 const allowedPaymentStatuses = new Set<PaymentStatus>(['unpaid', 'partial', 'paid', 'refunded', 'unknown']);
 
+const productIntentWords = [
+  'available',
+  'availability',
+  'stock',
+  'in stock',
+  'price',
+  'দাম',
+  'স্টক',
+  'আছে',
+  'পাবো',
+  'পাওয়া',
+];
+
+const orderIntentWords = [
+  'order',
+  'status',
+  'tracking',
+  'track',
+  'delivery',
+  'shipment',
+  'courier',
+  'অর্ডার',
+  'স্ট্যাটাস',
+  'ডেলিভারি',
+  'কুরিয়ার',
+];
+
+const lookupStopwords = new Set([
+  'is',
+  'this',
+  'that',
+  'the',
+  'a',
+  'an',
+  'in',
+  'stock',
+  'available',
+  'availability',
+  'price',
+  'please',
+  'pls',
+  'have',
+  'has',
+  'do',
+  'you',
+  'your',
+  'order',
+  'status',
+  'tracking',
+  'track',
+  'eta',
+  'ki',
+  'ase',
+]);
+
 function dateToString(value: Date | null): string | undefined {
   return value?.toISOString();
 }
@@ -150,6 +206,17 @@ function normalizeStatus(value: string) {
 
 function normalizePhone(value: string) {
   return value.replace(/\D+/g, '');
+}
+
+function normalizeLookupText(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9ঀ-৿]+/gu, ' ').trim();
+}
+
+function extractLookupTokens(value: string) {
+  return normalizeLookupText(value)
+    .split(/\s+/)
+    .filter((token) => token.length >= 2 && !lookupStopwords.has(token))
+    .slice(0, 12);
 }
 
 function toOptionalString(value: string | undefined) {
@@ -343,6 +410,21 @@ function buildCsvUrl(source: ExternalDataSource, tabName: string) {
 export class ExternalDataService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findOperationalReply(clientId: string, text: string): Promise<AgentReply | null> {
+    const source = await this.getActiveGoogleSheetSource(clientId);
+    if (source === null) return null;
+
+    if (this.hasOrderIntent(text)) {
+      return this.findOrderReply(source, text);
+    }
+
+    if (this.hasProductIntent(text)) {
+      return this.findProductReply(source, text);
+    }
+
+    return null;
+  }
+
   async listSources(clientId: string): Promise<ExternalDataSource[]> {
     const rows = await this.prisma.$queryRaw<ExternalDataSourceRow[]>`
       SELECT * FROM "ExternalDataSource"
@@ -529,6 +611,197 @@ export class ExternalDataService {
       LIMIT 500
     `;
     return rows.map(mapOrder);
+  }
+
+  private async getActiveGoogleSheetSource(clientId: string): Promise<ExternalDataSource | null> {
+    const rows = await this.prisma.$queryRaw<ExternalDataSourceRow[]>`
+      SELECT * FROM "ExternalDataSource"
+      WHERE "clientId" = ${clientId} AND "sourceType" = 'google_sheet' AND "status" = 'active'
+      ORDER BY "createdAt" ASC
+      LIMIT 1
+    `;
+    return rows[0] === undefined ? null : mapSource(rows[0]);
+  }
+
+  private async findProductReply(source: ExternalDataSource, text: string): Promise<AgentReply> {
+    if (!this.isFresh(source.lastSuccessfulSyncAt, source.productFreshnessMinutes)) {
+      return this.escalationReply(
+        'Product availability data is stale',
+        'I need the team to confirm current stock before answering this. Forwarding this now.',
+      );
+    }
+
+    const products = await this.listProducts(source.clientId, source.id);
+    const matches = this.rankProducts(products, text);
+
+    if (matches.length === 0) {
+      return this.escalationReply(
+        'Product not found in synced Sheet',
+        'I could not find that product in the latest product sheet. I am asking the team to confirm availability.',
+      );
+    }
+
+    const topScore = matches[0].score;
+    const topMatches = matches.filter((match) => match.score === topScore).slice(0, 4);
+    if (topMatches.length > 1) {
+      return {
+        text: `Which one do you mean: ${topMatches.map((match) => match.product.productName).join(', ')}?`,
+        confidence: 0.82,
+        matchedKnowledgeIds: [],
+        shouldEscalate: false,
+      };
+    }
+
+    const product = topMatches[0].product;
+    return {
+      text: this.formatProductReply(product),
+      confidence: 0.92,
+      matchedKnowledgeIds: [],
+      shouldEscalate: false,
+    };
+  }
+
+  private async findOrderReply(source: ExternalDataSource, text: string): Promise<AgentReply> {
+    const orderId = this.extractOrderId(text);
+    if (orderId === null) {
+      return {
+        text: 'Please share your order ID so I can check the latest status.',
+        confidence: 0.86,
+        matchedKnowledgeIds: [],
+        shouldEscalate: false,
+      };
+    }
+
+    if (!this.isFresh(source.lastSuccessfulSyncAt, source.orderFreshnessMinutes)) {
+      return this.escalationReply(
+        'Order status data is stale',
+        'I need the team to confirm the latest order status before answering this. Forwarding this now.',
+      );
+    }
+
+    const rows = await this.prisma.$queryRaw<OrderRecordRow[]>`
+      SELECT * FROM "OrderRecord"
+      WHERE "clientId" = ${source.clientId}
+        AND "dataSourceId" = ${source.id}
+        AND LOWER("orderId") = LOWER(${orderId})
+      LIMIT 1
+    `;
+    const order = rows[0] === undefined ? null : mapOrder(rows[0]);
+
+    if (order === null) {
+      return this.escalationReply(
+        'Order not found in synced Sheet',
+        'I could not find that order in the latest order sheet. I am asking the team to confirm.',
+      );
+    }
+
+    if (!this.isOrderVerified(order, text)) {
+      return {
+        text: 'Please share the phone number or email used for this order so I can verify it before sharing the status.',
+        confidence: 0.88,
+        matchedKnowledgeIds: [],
+        shouldEscalate: false,
+      };
+    }
+
+    return {
+      text: this.formatOrderReply(order),
+      confidence: 0.93,
+      matchedKnowledgeIds: [],
+      shouldEscalate: false,
+    };
+  }
+
+  private hasProductIntent(text: string) {
+    const normalized = normalizeLookupText(text);
+    return productIntentWords.some((word) => normalized.includes(word));
+  }
+
+  private hasOrderIntent(text: string) {
+    const normalized = normalizeLookupText(text);
+    return orderIntentWords.some((word) => normalized.includes(word)) || this.extractOrderId(text) !== null;
+  }
+
+  private extractOrderId(text: string) {
+    const match = text.match(/\b(?:order\s*(?:id|number|#)?\s*)?([a-z]{2,}[-_ ]?\d{2,}|\d{5,})\b/i);
+    return match?.[1]?.replace(/\s+/g, '-') ?? null;
+  }
+
+  private isFresh(lastSuccessfulSyncAt: string | undefined, freshnessMinutes: number) {
+    if (lastSuccessfulSyncAt === undefined) return false;
+    const syncedAt = new Date(lastSuccessfulSyncAt).getTime();
+    if (Number.isNaN(syncedAt)) return false;
+    return Date.now() - syncedAt <= freshnessMinutes * 60_000;
+  }
+
+  private rankProducts(products: ProductRecord[], text: string) {
+    const normalized = normalizeLookupText(text);
+    const tokens = extractLookupTokens(text);
+    return products
+      .map((product) => {
+        let score = 0;
+        const sku = product.sku?.toLowerCase();
+        if (sku !== undefined && sku !== '' && normalized.includes(sku)) score += 20;
+        const searchable = normalizeLookupText([product.productName, product.variant].filter(Boolean).join(' '));
+        for (const token of tokens) {
+          if (searchable.includes(token)) score += token.length >= 4 ? 3 : 1;
+        }
+        return { product, score };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+  }
+
+  private formatProductReply(product: ProductRecord) {
+    const label = [product.productName, product.variant].filter(Boolean).join(' - ');
+    const price = product.price === undefined ? '' : ` Price: ${product.currency ?? 'BDT'} ${product.price}.`;
+    const note = product.availabilityNote === undefined ? '' : ` ${product.availabilityNote}`;
+
+    if (product.availabilityStatus === 'in_stock') {
+      return `Yes, ${label} is available.${price}${note}`.trim();
+    }
+    if (product.availabilityStatus === 'low_stock') {
+      return `${label} is available but stock is low.${price}${note}`.trim();
+    }
+    if (product.availabilityStatus === 'out_of_stock') {
+      return `${label} is currently out of stock.${note}`.trim();
+    }
+    if (product.availabilityStatus === 'preorder') {
+      return `${label} is available for preorder.${price}${note}`.trim();
+    }
+    if (product.availabilityStatus === 'discontinued') {
+      return `${label} is discontinued.${note}`.trim();
+    }
+    return `I found ${label}, but the Sheet does not confirm current availability. I am asking the team to confirm.`;
+  }
+
+  private isOrderVerified(order: OrderRecord, text: string) {
+    const normalizedText = normalizeLookupText(text);
+    const phone = order.customerPhone === undefined ? undefined : normalizePhone(order.customerPhone);
+    const email = order.customerEmail?.toLowerCase();
+
+    if (phone === undefined && email === undefined) return true;
+    if (email !== undefined && normalizedText.includes(email)) return true;
+
+    const textPhone = normalizePhone(text);
+    return phone !== undefined && phone.length >= 6 && textPhone.includes(phone);
+  }
+
+  private formatOrderReply(order: OrderRecord) {
+    const tracking = order.trackingUrl === undefined ? '' : ` Tracking: ${order.trackingUrl}.`;
+    const payment = order.paymentStatus === undefined ? '' : ` Payment: ${order.paymentStatus.replace(/_/g, ' ')}.`;
+    const note = order.orderNote === undefined ? '' : ` ${order.orderNote}`;
+    return `Order ${order.orderId} is ${order.orderStatus.replace(/_/g, ' ')}.${payment}${tracking}${note}`.trim();
+  }
+
+  private escalationReply(reason: string, text: string): AgentReply {
+    return {
+      text,
+      confidence: 0.62,
+      matchedKnowledgeIds: [],
+      shouldEscalate: true,
+      escalationReason: reason,
+    };
   }
 
   private async getSyncRun(clientId: string, syncRunId: string): Promise<ExternalDataSyncRun> {

@@ -28,8 +28,8 @@
 | 6 — KB build pipeline | 3 | 3 | 6 |
 | 7 — QA & improvement loop | 3 | 2 | 5 |
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
-| 9 — Improvement backlog | 16 | 2 | 18 |
-| **TOTAL** | **68** | **22** | **90** |
+| 9 — Improvement backlog | 17 | 1 | 18 |
+| **TOTAL** | **69** | **21** | **90** |
 
 ---
 
@@ -191,7 +191,7 @@
 - [x] **T64 — IMPROVEMENT** Add data models/migrations for client external data sources, sync runs, product records, and order records derived from Google Sheets. — **DONE (2026-05-23): added Prisma and Drizzle models plus a migration for `ExternalDataSource`, `ExternalDataSyncRun`, `ProductRecord`, and `OrderRecord`; shared TypeScript contracts now cover Sheet source state, sync runs, product availability, order status, and payment status**
 - [x] **T65 — IMPROVEMENT** Build Google Sheet fetch/parse/sync service with public CSV/export support, validation, stale-data handling, and manual sync endpoint. — **DONE (2026-05-23): added `ExternalDataService` for Google Sheet source setup, public CSV/export fetching, product/order CSV parsing, row-level validation warnings, cached product/order replacement on successful sync, stale cache preservation on failed sync, and client-scoped list/sync endpoints**
 - [x] **T66 — IMPROVEMENT** Add internal/client UI to attach a Google Sheet link, run "Sync now", see last sync status/errors, and map columns if needed. — **DONE (2026-05-23): added `/client/data-sources` and `/internal/data-sources` for Sheet setup, tab naming, save/sync actions, last sync status/errors, validation warning display, and synced product/order previews; client portal navigation and backend proxy allowlist now include data sources**
-- [ ] **T67 — IMPROVEMENT** Add product availability/order-status lookup path in the message pipeline before AI response, with safe fallback when data is stale or missing.
+- [x] **T67 — IMPROVEMENT** Add product availability/order-status lookup path in the message pipeline before AI response, with safe fallback when data is stale or missing. — **DONE (2026-05-23): conversation handling now checks synced Sheet records before the general AI/KB path for product availability and order-status intents, answers from fresh cached product/order rows, asks clarifying or verification questions when needed, and escalates when Sheet data is stale or missing**
 - [ ] **T68 — IMPROVEMENT** Add tests and QA fixtures for Sheet parsing, sync failures, product availability answers, and order-status privacy boundaries.
 
 ---

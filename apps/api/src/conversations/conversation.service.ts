@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AiService } from '../ai/ai.service';
 import { PilotClientService } from '../clients/pilot-client.service';
+import { ExternalDataService } from '../external-data/external-data.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UrgentTicketNotificationService } from '../notifications/urgent-ticket-notification.service';
 import { StructuredLoggerService } from '../observability/structured-logger.service';
@@ -43,6 +44,7 @@ export class ConversationService {
     private readonly logger?: StructuredLoggerService,
     private readonly urgentNotifications?: UrgentTicketNotificationService,
     private readonly autoQa?: AutoQaService,
+    private readonly externalData?: ExternalDataService,
   ) {}
 
   async handleIncomingMessage(message: IncomingMessage): Promise<HandleMessageResult> {
@@ -76,6 +78,18 @@ export class ConversationService {
     });
 
     const client = await this.clients.findById(message.clientId);
+    const operationalReply = await this.externalData?.findOperationalReply(client.id, message.text);
+    if (operationalReply !== undefined && operationalReply !== null) {
+      return this.completeReplyFlow({
+        conversation,
+        conversationId,
+        client,
+        message,
+        outboundMessageId,
+        reply: operationalReply,
+      });
+    }
+
     const match = await this.knowledge.findRelevant(client.id, message.text);
     const promptProfile = await this.prompts?.getActiveForClient(client);
     const reply = await this.aiService.generateReply({
@@ -86,15 +100,33 @@ export class ConversationService {
       retrievalConfidence: match.confidence,
     });
 
-    await this.repository.addMessage(conversationId, {
-      id: outboundMessageId,
+    return this.completeReplyFlow({
+      conversation,
+      conversationId,
+      client,
+      message,
+      outboundMessageId,
+      reply,
+    });
+  }
+
+  private async completeReplyFlow(input: {
+    conversation: ConversationLog;
+    conversationId: string;
+    client: ClientProfile;
+    message: IncomingMessage;
+    outboundMessageId: string;
+    reply: AgentReply;
+  }): Promise<HandleMessageResult> {
+    await this.repository.addMessage(input.conversationId, {
+      id: input.outboundMessageId,
       direction: 'outbound',
-      text: reply.text,
+      text: input.reply.text,
       createdAt: new Date().toISOString(),
     });
 
-    const ticket = reply.shouldEscalate
-      ? await this.tickets.createFromEscalation({ message, conversationId, reply })
+    const ticket = input.reply.shouldEscalate
+      ? await this.tickets.createFromEscalation({ message: input.message, conversationId: input.conversationId, reply: input.reply })
       : undefined;
 
     if (ticket !== undefined) {
@@ -105,24 +137,24 @@ export class ConversationService {
         priority: ticket.priority,
         reason: ticket.reason,
       });
-      await this.notifyPocForUrgentTicket(client, ticket);
+      await this.notifyPocForUrgentTicket(input.client, ticket);
     }
 
-    await this.repository.setConversationResult(conversationId, {
-      lastConfidence: reply.confidence,
+    await this.repository.setConversationResult(input.conversationId, {
+      lastConfidence: input.reply.confidence,
       ticketId: ticket?.id,
     });
 
     await this.scoreConversation({
-      conversationId,
-      customerText: message.text,
-      reply,
+      conversationId: input.conversationId,
+      customerText: input.message.text,
+      reply: input.reply,
       ticket,
     });
 
     return {
-      conversation,
-      reply,
+      conversation: input.conversation,
+      reply: input.reply,
       ticket,
     };
   }
