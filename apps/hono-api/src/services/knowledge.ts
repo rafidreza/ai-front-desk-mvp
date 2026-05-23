@@ -585,7 +585,7 @@ export class KnowledgeImportService {
   }
 
   private async extractWorkbook(bytes: Uint8Array) {
-    const XLSX = await import('xlsx');
+    const XLSX = await import('@e965/xlsx');
     const workbook = XLSX.read(bytes, { type: 'array', cellDates: true });
     const lines = [];
     for (const sheetName of workbook.SheetNames) {
