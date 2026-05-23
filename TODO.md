@@ -30,9 +30,9 @@
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
-| 11 — UX Audit P1 | 5 | 5 | 10 |
+| 11 — UX Audit P1 | 6 | 4 | 10 |
 | 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **84** | **63** | **147** |
+| **TOTAL** | **85** | **62** | **147** |
 
 ---
 
@@ -220,7 +220,7 @@ Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiabl
 - [x] **T78 — UX** Add Pending / Approved / Rejected / Needs-info filter tabs to `/internal/kb-review` queue. — **DONE (2026-05-24): queue now has operator-friendly tabs with counts; Pending groups `submitted` + `in_review`, Approved groups `approved` + `edited_then_published` + `published`, Rejected shows `rejected`, Needs-info shows `needs_clarification`.**
 - [x] **T79 — UX** Standardize client picker: replace inconsistent custom dropdowns with shadcn `Select` component everywhere clients are selected (KB import, manage-clients, agent-config). — **DONE (2026-05-24): per agreed local-style direction, client selection now uses the reusable `UiSelect` in knowledge/data-source client switches, manage-clients jump-to-client, and agent-config. Agent-config also gained an explicit client picker and client summary strip.**
 - [x] **T80 — UX** Replace native `<select>` on `/internal/team` role field with shadcn `Select` component. — **DONE (2026-05-24): per agreed local-style direction, added reusable `UiSelect` wrapper with consistent trigger styling and used it for the team role field without introducing shadcn/Radix dependencies.**
-- [ ] **T81 — UX** Add inline Good / Bad / Hallucination action buttons per row on `/internal/qa` (keep drill-down as secondary).
+- [x] **T81 — UX** Add inline Good / Bad / Hallucination action buttons per row on `/internal/qa` (keep drill-down as secondary). — **DONE (verified 2026-05-24): `QaReview` rows already expose inline Good, Bad, and Hallucination actions per conversation; the queue/filter context remains available as the secondary review surface.**
 - [ ] **T82 — UX** Add sticky-bottom save bar to `/internal/clients/[id]` with disabled-until-dirty state.
 - [x] **T83 — UX** Add top-of-page degradation banner: detect Anthropic API failure rate > threshold, show "AI is slow right now — using fallback replies" with link to internal status. — **DONE (2026-05-24): Anthropic failures are tracked in a 5-minute in-memory window; 3 failures triggers degraded mode, local fallback replies, `/health/ai`, and an internal top-of-page banner with an Internal status link.**
 - [x] **T84 — UX** Add loading skeletons to tickets list, KB list, clients list, QA list, conversations list. — **DONE (2026-05-24): reusable `ListSkeleton` now covers internal tickets, conversations, QA calibration queue, knowledge entries, and client directory lists without hiding existing data during refreshes.**
