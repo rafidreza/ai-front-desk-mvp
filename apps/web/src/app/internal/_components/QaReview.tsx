@@ -5,6 +5,7 @@ import {
   ConversationLog,
   ConversationQaGrade,
 } from '@/types/domain';
+import { EmptyState } from './EmptyState';
 import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
 
@@ -161,7 +162,12 @@ export function QaReview({
             </>
           )}
           {!isConversationsLoading && conversations.length === 0 && conversationsError === null && (
-            <div className="empty">No conversations to grade</div>
+            <EmptyState
+              icon={<ShieldCheck size={20} />}
+              title="No conversations to grade"
+              description="The calibration queue is clear for this filter."
+              action={<button className="mini-button" type="button" onClick={onReload}>Refresh queue</button>}
+            />
           )}
         </div>
       </div>

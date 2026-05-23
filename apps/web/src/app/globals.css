@@ -1601,6 +1601,42 @@ button {
   font-size: 13px;
 }
 
+.empty-state {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c8d9d1;
+  background: var(--green-soft);
+  color: var(--green);
+  border-radius: 8px;
+}
+
+.empty-state strong {
+  color: var(--ink);
+  font-size: var(--text-body);
+  line-height: var(--lh-heading);
+}
+
+.empty-state p {
+  max-width: 340px;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
 .list-skeleton {
   display: grid;
   gap: 8px;

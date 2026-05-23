@@ -1,6 +1,7 @@
 import { RefreshCw, TicketCheck } from 'lucide-react';
 import { InternalUser, Ticket } from '@/types/domain';
 import { assigneeLabel, priorityTone, statusLabels, statusTone } from '../_lib/helpers';
+import { EmptyState } from './EmptyState';
 import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
 
@@ -69,7 +70,14 @@ export function TicketsPanel({
         ) : (
           <>
             {isTicketsLoading && tickets.length === 0 && <ListSkeleton rows={5} variant="ticket" />}
-            {!isTicketsLoading && tickets.length === 0 && <div className="empty">No tickets</div>}
+            {!isTicketsLoading && tickets.length === 0 && (
+              <EmptyState
+                icon={<TicketCheck size={20} />}
+                title="No tickets yet"
+                description="Customer handoffs will appear here when conversations need human help."
+                action={<a className="mini-button" href="/internal/conversations">Check conversations</a>}
+              />
+            )}
             {tickets.map((ticket) => (
               <button
                 className="ticket-row"

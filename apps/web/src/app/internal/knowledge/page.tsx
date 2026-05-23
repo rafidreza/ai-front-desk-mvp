@@ -26,6 +26,7 @@ import {
   updateKnowledgeEntry,
 } from '@/lib/api';
 import { ClientProfile, KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
+import { EmptyState } from '../_components/EmptyState';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
 import { UiSelect } from '../_components/UiSelect';
@@ -398,7 +399,14 @@ export default function KnowledgePage() {
                 <small>{entry.keywords.join(', ')}</small>
               </button>
             ))}
-            {!isLoading && filteredEntries.length === 0 && <div className="empty">No matching knowledge entries</div>}
+            {!isLoading && filteredEntries.length === 0 && (
+              <EmptyState
+                icon={<DatabaseZap size={20} />}
+                title="No knowledge entries in this view"
+                description="Create a draft or import files so the agent has approved answers to use."
+                action={<a className="mini-button" href="#knowledge-import">Import drafts</a>}
+              />
+            )}
           </div>
         </section>
 
@@ -524,7 +532,7 @@ export default function KnowledgePage() {
           </button>
         </form>
 
-        <form className="client-panel stack-form knowledge-import" onSubmit={handleImport}>
+        <form id="knowledge-import" className="client-panel stack-form knowledge-import" onSubmit={handleImport}>
           <div className="section-label">
             <FileUp size={15} />
             Import files

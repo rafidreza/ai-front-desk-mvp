@@ -11,6 +11,7 @@ import {
   updateClientStatus,
 } from '@/lib/api';
 import { ClientDashboardSummary, ClientProfile, ClientStatus } from '@/types/domain';
+import { EmptyState } from '../_components/EmptyState';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
 import { UiSelect } from '../_components/UiSelect';
@@ -340,7 +341,14 @@ export default function InternalClientsPage() {
                 </button>
               );
             })}
-            {!isLoading && filteredClients.length === 0 && <div className="empty">No clients found</div>}
+            {!isLoading && filteredClients.length === 0 && (
+              <EmptyState
+                icon={<Building2 size={20} />}
+                title="No clients found"
+                description="Create a client workspace or clear the search to see existing clients."
+                action={<button className="mini-button" type="button" onClick={startCreate}>New client</button>}
+              />
+            )}
           </div>
         </section>
 
