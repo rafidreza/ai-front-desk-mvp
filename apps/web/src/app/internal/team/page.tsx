@@ -5,6 +5,7 @@ import { RefreshCw, UserPlus, Users } from 'lucide-react';
 import { createInternalUser, getInternalUsers } from '@/lib/api';
 import { InternalUser } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
+import { UiSelect } from '../_components/UiSelect';
 
 export default function InternalTeamPage() {
   const [users, setUsers] = useState<InternalUser[]>([]);
@@ -109,13 +110,13 @@ export default function InternalTeamPage() {
           </label>
           <label>
             Role
-            <select name="role" defaultValue="support">
+            <UiSelect name="role" defaultValue="support">
               <option value="admin">Admin</option>
               <option value="support">Support</option>
               <option value="sales">Sales</option>
               <option value="qa">QA</option>
               <option value="viewer">Viewer</option>
-            </select>
+            </UiSelect>
           </label>
           <p className="form-hint">
             New people become available as ticket owners immediately. Login permissions can be hardened later with invite emails and role-based access.
