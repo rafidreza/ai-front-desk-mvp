@@ -15,6 +15,11 @@ const CalibrationQueueQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(200).optional(),
 });
 
+const SearchConversationsQuerySchema = z.object({
+  q: z.string().trim().min(2).max(200),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+});
+
 const TakeoverConversationSchema = z.object({
   actorId: z.string().min(1).optional(),
 });
@@ -41,6 +46,16 @@ export class ConversationController {
   async calibrationQueue(@Query() query: unknown) {
     const parsed = CalibrationQueueQuerySchema.parse(query);
     return this.conversations.listCalibrationQueue(parsed);
+  }
+
+  @Get('conversations/search')
+  async searchConversations(@Query() query: unknown) {
+    const parsed = SearchConversationsQuerySchema.parse(query);
+    const results = await this.conversations.searchConversations({
+      query: parsed.q,
+      limit: parsed.limit,
+    });
+    return { results };
   }
 
   @Patch('conversations/:id/grade')

@@ -21,6 +21,7 @@ import {
   KnowledgeImportFileInput,
   KnowledgeImportResult,
   OrderRecord,
+  ConversationSearchResult,
   ProductRecord,
   PromptProfile,
   PromptProfileVersion,
@@ -565,6 +566,14 @@ export async function bulkApplyTag(
     method: 'POST',
     body: JSON.stringify({ ticketIds, tagId }),
   });
+}
+
+export async function searchConversations(query: string, limit = 30): Promise<ConversationSearchResult[]> {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  const data = await apiFetch<{ results: ConversationSearchResult[] }>(
+    `/conversations/search?${params.toString()}`,
+  );
+  return data.results;
 }
 
 export async function gradeConversation(

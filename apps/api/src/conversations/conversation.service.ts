@@ -14,6 +14,7 @@ import {
   ClientProfile,
   ConversationLog,
   ConversationQaGrade,
+  ConversationSearchResult,
   IncomingMessage,
   Ticket,
 } from '../types/domain';
@@ -257,6 +258,15 @@ export class ConversationService {
 
   listConversations(): Promise<ConversationLog[]> {
     return this.repository.listConversations();
+  }
+
+  searchConversations(input: { query: string; limit?: number }): Promise<ConversationSearchResult[]> {
+    const trimmed = input.query.trim();
+    if (trimmed.length < 2) return Promise.resolve([]);
+    return this.repository.searchConversations({
+      query: trimmed,
+      limit: Math.max(1, Math.min(input.limit ?? 30, 100)),
+    });
   }
 
   listCalibrationQueue(input: {

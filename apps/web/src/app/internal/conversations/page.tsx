@@ -1,10 +1,10 @@
 'use client';
 
-import { Handshake, MessageSquareText, RefreshCw, TicketCheck } from 'lucide-react';
+import { Handshake, MessageSquareText, RefreshCw, Search, TicketCheck, X } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-import { getConversations, takeOverConversation } from '@/lib/api';
-import { ConversationLog, Ticket } from '@/types/domain';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getConversations, searchConversations, takeOverConversation } from '@/lib/api';
+import { ConversationLog, ConversationSearchResult, Ticket } from '@/types/domain';
 import { ConversationsPanel } from '../_components/ConversationsPanel';
 import { InternalShell } from '../_components/InternalShell';
 import { formatTime, getErrorMessage } from '../_lib/helpers';
@@ -17,6 +17,11 @@ export default function ConversationsPage() {
   const [isTakingOver, setIsTakingOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<ConversationSearchResult[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const searchTimerRef = useRef<number | null>(null);
 
   async function loadConversations() {
     setIsLoading(true);
@@ -35,6 +40,49 @@ export default function ConversationsPage() {
   useEffect(() => {
     void loadConversations();
   }, []);
+
+  useEffect(() => {
+    if (searchTimerRef.current !== null) window.clearTimeout(searchTimerRef.current);
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
+      setSearchResults(null);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+    searchTimerRef.current = window.setTimeout(() => {
+      setIsSearching(true);
+      setSearchError(null);
+      searchConversations(trimmed)
+        .then((results) => setSearchResults(results))
+        .catch((searchErrorValue) => {
+          setSearchError(
+            getErrorMessage(
+              searchErrorValue,
+              'Search could not run. Fix: try a shorter query or refresh the page.',
+            ),
+          );
+          setSearchResults([]);
+        })
+        .finally(() => setIsSearching(false));
+    }, 300);
+    return () => {
+      if (searchTimerRef.current !== null) window.clearTimeout(searchTimerRef.current);
+    };
+  }, [searchQuery]);
+
+  function clearSearch() {
+    setSearchQuery('');
+    setSearchResults(null);
+    setSearchError(null);
+  }
+
+  function openSearchResult(result: ConversationSearchResult) {
+    setSelectedConversationId(result.conversationId);
+    clearSearch();
+    setNotice(null);
+    setCreatedTicket(null);
+  }
 
   const selectedConversation = useMemo(
     () =>
@@ -83,6 +131,51 @@ export default function ConversationsPage() {
     >
       {notice !== null && <div className="inline-success">{notice}</div>}
       {error !== null && <div className="inline-alert">{error}</div>}
+
+      <section className="conversation-search">
+        <div className="conversation-search__input">
+          <Search size={15} />
+          <input
+            aria-label="Search conversations"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search every message — try 'refund', 'bkash', 'delivery koto'…"
+            type="search"
+            value={searchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <button aria-label="Clear search" onClick={clearSearch} type="button">
+              <X size={14} />
+            </button>
+          )}
+          {isSearching && <span className="conversation-search__busy">Searching…</span>}
+        </div>
+        {searchError !== null && <div className="inline-alert">{searchError}</div>}
+        {searchResults !== null && (
+          <div className="conversation-search__results">
+            {searchResults.length === 0 ? (
+              <p>No messages match. Try fewer words.</p>
+            ) : (
+              <ul>
+                {searchResults.map((result) => (
+                  <li key={result.matchedMessageId}>
+                    <button onClick={() => openSearchResult(result)} type="button">
+                      <span className="conversation-search__meta">
+                        <strong>{result.externalSenderId}</strong>
+                        <span data-direction={result.matchedMessageDirection}>
+                          {result.matchedMessageDirection === 'inbound' ? 'Customer' : 'AI'}
+                        </span>
+                        <span>{result.channel}</span>
+                        <time>{formatTime(result.matchedMessageCreatedAt)}</time>
+                      </span>
+                      <span className="conversation-search__snippet">{result.matchedMessageText}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </section>
 
       <section className="conversation-portal-grid">
         <ConversationsPanel

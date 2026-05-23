@@ -405,6 +405,18 @@ export interface ConversationMessage {
   createdAt: string;
 }
 
+export interface ConversationSearchResult {
+  conversationId: string;
+  clientId: string;
+  channel: Channel;
+  externalSenderId: string;
+  matchedMessageId: string;
+  matchedMessageDirection: 'inbound' | 'outbound';
+  matchedMessageText: string;
+  matchedMessageCreatedAt: string;
+  ticketId?: string;
+}
+
 export interface ConversationLog {
   id: string;
   clientId: string;

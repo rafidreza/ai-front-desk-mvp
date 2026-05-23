@@ -11,6 +11,7 @@ import {
   ConversationMessage,
   ConversationQaDefect,
   ConversationQaGrade,
+  ConversationSearchResult,
   Tag,
   TagColor,
   Ticket,
@@ -314,6 +315,78 @@ export class ConversationRepository {
     }
 
     return this.conversations.get(conversationId) ?? null;
+  }
+
+  async searchConversations(input: { query: string; limit: number }): Promise<ConversationSearchResult[]> {
+    if (this.prisma?.enabled === true) {
+      const rows = await this.prisma.$queryRaw<
+        Array<{
+          messageId: string;
+          messageText: string;
+          messageDirection: string;
+          messageCreatedAt: Date;
+          conversationId: string;
+          clientId: string;
+          channel: string;
+          externalSenderId: string;
+          ticketId: string | null;
+        }>
+      >(
+        Prisma.sql`
+          SELECT
+            m."id"             AS "messageId",
+            m."text"           AS "messageText",
+            m."direction"      AS "messageDirection",
+            m."createdAt"      AS "messageCreatedAt",
+            c."id"             AS "conversationId",
+            c."clientId"       AS "clientId",
+            c."channel"        AS "channel",
+            c."externalSenderId" AS "externalSenderId",
+            c."ticketId"       AS "ticketId"
+          FROM "Message" m
+          JOIN "Conversation" c ON c."id" = m."conversationId"
+          WHERE m."tsv" @@ plainto_tsquery('simple', ${input.query})
+          ORDER BY m."createdAt" DESC
+          LIMIT ${input.limit}
+        `,
+      );
+
+      return rows.map((row) => ({
+        conversationId: row.conversationId,
+        clientId: row.clientId,
+        channel: row.channel as ConversationSearchResult['channel'],
+        externalSenderId: row.externalSenderId,
+        matchedMessageId: row.messageId,
+        matchedMessageDirection: row.messageDirection as ConversationSearchResult['matchedMessageDirection'],
+        matchedMessageText: row.messageText,
+        matchedMessageCreatedAt: row.messageCreatedAt.toISOString(),
+        ticketId: row.ticketId ?? undefined,
+      }));
+    }
+
+    // In-memory fallback for tests / no-Prisma mode.
+    const needle = input.query.toLowerCase();
+    const results: ConversationSearchResult[] = [];
+    for (const conversation of this.conversations.values()) {
+      for (const message of conversation.messages) {
+        if (message.text.toLowerCase().includes(needle)) {
+          results.push({
+            conversationId: conversation.id,
+            clientId: conversation.clientId,
+            channel: conversation.channel,
+            externalSenderId: conversation.externalSenderId,
+            matchedMessageId: message.id,
+            matchedMessageDirection: message.direction,
+            matchedMessageText: message.text,
+            matchedMessageCreatedAt: message.createdAt,
+            ticketId: conversation.ticketId,
+          });
+        }
+      }
+    }
+    return results
+      .sort((a, b) => b.matchedMessageCreatedAt.localeCompare(a.matchedMessageCreatedAt))
+      .slice(0, input.limit);
   }
 
   async listCalibrationQueue(input: {
