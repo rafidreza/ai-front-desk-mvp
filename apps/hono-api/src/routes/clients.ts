@@ -22,6 +22,22 @@ const CsatSchema = z.object({
   comment: z.string().trim().max(500).optional(),
 });
 
+const OnboardingProfilePatchSchema = z.object({
+  focusChannels: z.array(z.enum(['whatsapp', 'facebook', 'website'])).min(1).max(3).optional(),
+  websiteUrl: z.string().trim().url().optional(),
+  facebookPageUrl: z.string().trim().url().optional(),
+  whatsappSetup: z.enum(['self', 'assisted', 'skip']).optional(),
+  facebookSetup: z.enum(['oauth', 'assisted', 'skip']).optional(),
+});
+
+const OnboardingPatchSchema = z.object({
+  businessCategory: z.string().trim().min(2).max(80).optional(),
+  pageId: z.string().trim().min(2).max(180).optional(),
+  whatsappPoc: z.string().trim().min(5).max(80).optional(),
+  onboardingStatus: z.enum(['signup_started', 'profile_complete', 'channels_complete', 'onboarding_complete']).optional(),
+  onboardingProfile: OnboardingProfilePatchSchema.optional(),
+});
+
 const TicketStatusSchema = z.object({
   status: z.enum(['open', 'assigned', 'waiting_client', 'resolved']),
   expectedVersion: z.number().int().nonnegative().optional(),
@@ -45,6 +61,11 @@ export function clientRoutes() {
   app.post('/clients/signup', async (c) => {
     const parsed = SignupSchema.parse(await jsonBody(c));
     return c.json({ client: await createServices(c).clients.create(parsed) });
+  });
+
+  app.patch('/clients/:clientId/onboarding', async (c) => {
+    const parsed = OnboardingPatchSchema.parse(await jsonBody(c));
+    return c.json({ client: await createServices(c).clients.updateOnboarding(c.req.param('clientId'), parsed) });
   });
 
   app.get('/clients/:clientId/dashboard', async (c) => c.json(await createServices(c).dashboard.getDashboard(c.req.param('clientId'))));

@@ -31,6 +31,7 @@ export function toClientProfile(client: {
   ownerPhone?: string | null;
   businessCategory?: string | null;
   onboardingStatus: string;
+  onboardingProfile?: Record<string, unknown> | null;
   defaultLanguage: string;
   tone: string;
   escalationKeywords: string[];
@@ -46,6 +47,7 @@ export function toClientProfile(client: {
     ownerPhone: client.ownerPhone ?? undefined,
     businessCategory: client.businessCategory ?? undefined,
     onboardingStatus: client.onboardingStatus,
+    onboardingProfile: client.onboardingProfile ?? undefined,
     defaultLanguage:
       client.defaultLanguage === 'bangla' || client.defaultLanguage === 'english' || client.defaultLanguage === 'mixed'
         ? client.defaultLanguage

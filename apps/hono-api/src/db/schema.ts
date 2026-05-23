@@ -33,6 +33,7 @@ export const clients = pgTable(
     ownerPhone: text('ownerPhone'),
     businessCategory: text('businessCategory'),
     onboardingStatus: text('onboardingStatus').notNull().default('draft'),
+    onboardingProfile: jsonb('onboardingProfile').$type<Record<string, unknown> | null>(),
     defaultLanguage: text('defaultLanguage').notNull(),
     tone: text('tone').notNull(),
     escalationKeywords: text('escalationKeywords').array().notNull(),

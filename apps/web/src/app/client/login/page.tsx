@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyRound, LogIn } from 'lucide-react';
+import { BadgeCheck, KeyRound, LogIn, Store } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
 import { ClientProfile } from '@/types/domain';
 
@@ -82,58 +82,85 @@ export default function ClientLoginPage() {
   }
 
   return (
-    <main className="client-shell">
-      <section className="client-hero">
-        <div>
+    <main className="client-auth-shell">
+      <section className="client-auth-intro">
+        <a className="client-auth-brand" href="/client/login">
+          <span>AI</span>
+          <strong>AI Front Desk</strong>
+        </a>
+        <div className="client-auth-copy">
           <p className="eyebrow">Client login</p>
-          <h1>AI Front Desk</h1>
-          <p>Enter your workspace email, phone, or client ID to open your support dashboard.</p>
+          <h1>Return to the support desk built around your customers.</h1>
+          <p>Use a verified email or WhatsApp code to open tickets, knowledge, and channel status.</p>
+        </div>
+        <div className="client-auth-rail" aria-label="Login access">
+          <span data-active="true">
+            <BadgeCheck size={15} />
+            Verify
+          </span>
+          <span>Dashboard</span>
         </div>
       </section>
 
-      <section className="client-panel signup-panel">
-        {challenge === null ? (
-          <form className="stack-form" onSubmit={requestCode}>
-            <div className="section-label">
-              <LogIn size={15} />
-              Request code
-            </div>
-            <label>
-              Email, phone, or client ID
-              <input name="identifier" required placeholder="owner@example.com or client-id" />
-            </label>
-            <label>
-              Delivery channel
-              <select name="channel" defaultValue="email">
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-              </select>
-            </label>
-            {error !== null && <div className="inline-alert">{error}</div>}
-            <button className="icon-button" disabled={isSubmitting} type="submit">
-              {isSubmitting ? 'Sending...' : 'Send code'}
-            </button>
-          </form>
-        ) : (
-          <form className="stack-form" onSubmit={verifyCode}>
-            <div className="section-label">
-              <KeyRound size={15} />
-              Verify code
-            </div>
-            <div className="inline-success">
-              Code requested for {challenge.destination}. Expires at {new Date(challenge.expiresAt).toLocaleTimeString()}.
-            </div>
-            {challenge.devCode !== undefined && <div className="inline-alert">Dev code: {challenge.devCode}</div>}
-            <label>
-              6-digit code
-              <input name="code" inputMode="numeric" maxLength={6} minLength={6} required />
-            </label>
-            {error !== null && <div className="inline-alert">{error}</div>}
-            <button className="icon-button" disabled={isSubmitting || client !== null} type="submit">
-              {isSubmitting ? 'Verifying...' : 'Open dashboard'}
-            </button>
-          </form>
-        )}
+      <section className="client-auth-workspace">
+        <div className="client-auth-topline">
+          <span>{challenge === null ? 'Workspace access' : 'Confirm access'}</span>
+          <a className="auth-text-link" href="/signup">
+            <Store size={15} />
+            Create account
+          </a>
+        </div>
+
+        <section className="client-panel auth-form-panel">
+          {challenge === null ? (
+            <form className="stack-form" onSubmit={requestCode}>
+              <div className="section-label">
+                <LogIn size={15} />
+                Request code
+              </div>
+              <label>
+                Email, phone, or client ID
+                <input name="identifier" required placeholder="owner@example.com or client-id" />
+              </label>
+              <label>
+                Delivery channel
+                <select name="channel" defaultValue="email">
+                  <option value="email">Email</option>
+                  <option value="whatsapp">WhatsApp</option>
+                </select>
+              </label>
+              {error !== null && <div className="inline-alert">{error}</div>}
+              <button className="icon-button" disabled={isSubmitting} type="submit">
+                {isSubmitting ? 'Sending...' : 'Send code'}
+              </button>
+              <p className="auth-switch-copy">
+                No workspace yet? <a href="/signup">Create client account</a>
+              </p>
+            </form>
+          ) : (
+            <form className="stack-form" onSubmit={verifyCode}>
+              <div className="section-label">
+                <KeyRound size={15} />
+                Verify code
+              </div>
+              <div className="inline-success">
+                Code requested for {challenge.destination}. Expires at {new Date(challenge.expiresAt).toLocaleTimeString()}.
+              </div>
+              {challenge.devCode !== undefined && <div className="inline-alert">Dev code: {challenge.devCode}</div>}
+              <label>
+                6-digit code
+                <input name="code" inputMode="numeric" maxLength={6} minLength={6} required />
+              </label>
+              {error !== null && <div className="inline-alert">{error}</div>}
+              <button className="icon-button" disabled={isSubmitting || client !== null} type="submit">
+                {isSubmitting ? 'Verifying...' : 'Open dashboard'}
+              </button>
+              <p className="auth-switch-copy">
+                Starting fresh? <a href="/signup">Create client account</a>
+              </p>
+            </form>
+          )}
+        </section>
       </section>
     </main>
   );

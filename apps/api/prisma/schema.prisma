@@ -28,6 +28,7 @@ model Client {
   ownerPhone              String?
   businessCategory        String?
   onboardingStatus        String                   @default("draft")
+  onboardingProfile       Json?
   defaultLanguage         String
   tone                    String
   escalationKeywords      String[]

@@ -87,11 +87,9 @@ export async function getClients(): Promise<ClientProfile[]> {
 
 export async function signupClient(input: {
   businessName: string;
-  ownerName?: string;
-  ownerEmail?: string;
-  ownerPhone?: string;
-  businessCategory?: string;
-  pageId?: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerPhone: string;
 }): Promise<ClientProfile> {
   const response = await fetch('/api/client-auth/signup', {
     method: 'POST',
@@ -104,6 +102,23 @@ export async function signupClient(input: {
   }
 
   const data = (await response.json()) as { client: ClientProfile };
+  return data.client;
+}
+
+export async function updateClientOnboarding(
+  clientId: string,
+  input: {
+    businessCategory?: string;
+    pageId?: string;
+    whatsappPoc?: string;
+    onboardingStatus?: 'signup_started' | 'profile_complete' | 'channels_complete' | 'onboarding_complete';
+    onboardingProfile?: ClientProfile['onboardingProfile'];
+  },
+): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/onboarding`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
   return data.client;
 }
 

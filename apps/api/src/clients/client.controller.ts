@@ -17,6 +17,22 @@ const SignupSchema = z.object({
   digestEmail: z.string().trim().email().optional(),
 });
 
+const OnboardingProfilePatchSchema = z.object({
+  focusChannels: z.array(z.enum(['whatsapp', 'facebook', 'website'])).min(1).max(3).optional(),
+  websiteUrl: z.string().trim().url().optional(),
+  facebookPageUrl: z.string().trim().url().optional(),
+  whatsappSetup: z.enum(['self', 'assisted', 'skip']).optional(),
+  facebookSetup: z.enum(['oauth', 'assisted', 'skip']).optional(),
+});
+
+const OnboardingPatchSchema = z.object({
+  businessCategory: z.string().trim().min(2).max(80).optional(),
+  pageId: z.string().trim().min(2).max(180).optional(),
+  whatsappPoc: z.string().trim().min(5).max(80).optional(),
+  onboardingStatus: z.enum(['signup_started', 'profile_complete', 'channels_complete', 'onboarding_complete']).optional(),
+  onboardingProfile: OnboardingProfilePatchSchema.optional(),
+});
+
 const CsatSchema = z.object({
   score: z.number().int().min(1).max(5),
   comment: z.string().trim().max(500).optional(),
@@ -44,6 +60,12 @@ export class ClientController {
   async signup(@Body() body: unknown) {
     const parsed = SignupSchema.parse(body);
     return { client: await this.clients.create(parsed) };
+  }
+
+  @Patch(':clientId/onboarding')
+  async updateOnboarding(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = OnboardingPatchSchema.parse(body);
+    return { client: await this.clients.updateOnboarding(clientId, parsed) };
   }
 
   @Get(':clientId/dashboard')

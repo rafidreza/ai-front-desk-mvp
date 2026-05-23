@@ -41,6 +41,21 @@ export interface ClientProfile {
   escalationKeywords: string[];
   whatsappPoc?: string;
   digestEmail?: string;
+  onboardingProfile?: ClientOnboardingProfile;
+}
+
+export type ClientFocusChannel = 'whatsapp' | 'facebook' | 'website';
+
+export type ClientWhatsAppSetupPreference = 'self' | 'assisted' | 'skip';
+
+export type ClientFacebookSetupPreference = 'oauth' | 'assisted' | 'skip';
+
+export interface ClientOnboardingProfile {
+  focusChannels?: ClientFocusChannel[];
+  websiteUrl?: string;
+  facebookPageUrl?: string;
+  whatsappSetup?: ClientWhatsAppSetupPreference;
+  facebookSetup?: ClientFacebookSetupPreference;
 }
 
 export type ClientChannelStatus = 'connected' | 'available' | 'needs_setup';

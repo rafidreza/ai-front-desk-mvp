@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
-import { ClientProfile } from '../types/domain';
+import { ClientOnboardingProfile, ClientProfile } from '../types/domain';
 
 type ClientLanguage = ClientProfile['defaultLanguage'];
 
@@ -14,6 +14,7 @@ function toClientProfile(client: {
   ownerPhone: string | null;
   businessCategory: string | null;
   onboardingStatus: string;
+  onboardingProfile: unknown;
   defaultLanguage: string;
   tone: string;
   escalationKeywords: string[];
@@ -34,12 +35,18 @@ function toClientProfile(client: {
     ownerPhone: client.ownerPhone ?? undefined,
     businessCategory: client.businessCategory ?? undefined,
     onboardingStatus: client.onboardingStatus,
+    onboardingProfile: toOnboardingProfile(client.onboardingProfile),
     defaultLanguage,
     tone: client.tone,
     escalationKeywords: client.escalationKeywords,
     whatsappPoc: client.whatsappPoc ?? undefined,
     digestEmail: client.digestEmail ?? undefined,
   };
+}
+
+function toOnboardingProfile(value: unknown): ClientOnboardingProfile | undefined {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  return value as ClientOnboardingProfile;
 }
 
 const pilotClientFallback: ClientProfile = {
@@ -152,5 +159,41 @@ export class PilotClientService {
     }
 
     throw new NotFoundException(`Client not found: ${clientId}`);
+  }
+
+  async updateOnboarding(
+    clientId: string,
+    input: {
+      businessCategory?: string;
+      pageId?: string;
+      whatsappPoc?: string;
+      onboardingStatus?: string;
+      onboardingProfile?: ClientOnboardingProfile;
+    },
+  ): Promise<ClientProfile> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+
+    const onboardingProfile =
+      input.onboardingProfile === undefined
+        ? undefined
+        : {
+            ...(toOnboardingProfile(existing.onboardingProfile) ?? {}),
+            ...input.onboardingProfile,
+          };
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        businessCategory: input.businessCategory,
+        pageId: input.pageId,
+        whatsappPoc: input.whatsappPoc,
+        onboardingStatus: input.onboardingStatus,
+        onboardingProfile,
+      },
+    });
+    return toClientProfile(client);
   }
 }

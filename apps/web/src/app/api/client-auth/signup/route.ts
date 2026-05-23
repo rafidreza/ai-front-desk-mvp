@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clientSessionCookieName, createClientSessionCookie } from '@/lib/client-auth';
-import { shouldUseSecureCookie } from '@/lib/cookies';
 import { backendFetch } from '@/lib/server-backend';
 import { ClientProfile } from '@/types/domain';
 
@@ -11,17 +9,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       body: JSON.stringify(body),
     });
-    const response = NextResponse.json(data);
-    response.cookies.set({
-      name: clientSessionCookieName,
-      value: await createClientSessionCookie(data.client.id),
-      httpOnly: true,
-      sameSite: 'strict',
-      secure: shouldUseSecureCookie(request),
-      path: '/',
-      maxAge: 60 * 60 * 24 * 14,
-    });
-    return response;
+    return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to create workspace.' },

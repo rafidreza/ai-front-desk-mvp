@@ -82,6 +82,41 @@ export class ClientService {
     return toClientProfile(client);
   }
 
+  async updateOnboarding(
+    clientId: string,
+    input: {
+      businessCategory?: string;
+      pageId?: string;
+      whatsappPoc?: string;
+      onboardingStatus?: string;
+      onboardingProfile?: Record<string, unknown>;
+    },
+  ) {
+    const [existing] = await this.db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+    if (existing === undefined) throw new NotFoundError(`Client not found: ${clientId}`);
+
+    const [client] = await this.db
+      .update(clients)
+      .set({
+        businessCategory: input.businessCategory,
+        pageId: input.pageId,
+        whatsappPoc: input.whatsappPoc,
+        onboardingStatus: input.onboardingStatus,
+        onboardingProfile:
+          input.onboardingProfile === undefined
+            ? undefined
+            : {
+                ...(existing.onboardingProfile ?? {}),
+                ...input.onboardingProfile,
+              },
+        updatedAt: new Date(),
+      })
+      .where(eq(clients.id, clientId))
+      .returning();
+
+    return toClientProfile(client!);
+  }
+
   async findByPageId(pageId: string) {
     const [client] = await this.db.select().from(clients).where(eq(clients.pageId, pageId)).limit(1);
     if (client === undefined) throw new NotFoundError(`Client not found for page: ${pageId}`);

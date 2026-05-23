@@ -10,6 +10,7 @@ function getBackendClientId(pathname: string) {
 function isClientAllowedBackendPath(pathname: string) {
   return (
     /^\/api\/backend\/clients\/[^/]+\/dashboard$/.test(pathname) ||
+    /^\/api\/backend\/clients\/[^/]+\/onboarding$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/tickets(?:\/[^/]+\/status)?$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/conversations\/[^/]+\/csat$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/knowledge\/client-view$/.test(pathname) ||
