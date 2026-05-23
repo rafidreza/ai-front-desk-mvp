@@ -57,6 +57,30 @@ export class ConversationService {
     const conversationId = conversation.id;
     const outboundMessageId = `reply:${message.id}`;
 
+    if (conversation.ticketId !== undefined) {
+      try {
+        const reopened = await this.tickets.reopenIfResolved({
+          ticketId: conversation.ticketId,
+          actorId: 'inbound-message',
+          payload: { messageId: message.id, channel: message.channel },
+        });
+        if (reopened !== null) {
+          this.logger?.event('ticket.reopened', {
+            ticketId: reopened.id,
+            clientId: reopened.clientId,
+            conversationId,
+            messageId: message.id,
+          });
+        }
+      } catch (reopenError) {
+        this.logger?.event('ticket.reopen_failed', {
+          ticketId: conversation.ticketId,
+          conversationId,
+          error: reopenError instanceof Error ? reopenError.message : 'Unknown',
+        });
+      }
+    }
+
     if (await this.repository.messageExists(outboundMessageId)) {
       return {
         conversation,

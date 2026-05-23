@@ -5,9 +5,16 @@ export const statusLabels: Record<TicketStatus, string> = {
   assigned: 'Assigned',
   waiting_client: 'Waiting',
   resolved: 'Resolved',
+  reopened: 'Reopened',
 };
 
-export const statuses: TicketStatus[] = ['open', 'assigned', 'waiting_client', 'resolved'];
+export const statuses: TicketStatus[] = [
+  'open',
+  'assigned',
+  'waiting_client',
+  'resolved',
+  'reopened',
+];
 
 export function formatTime(value: string) {
   return new Intl.DateTimeFormat('en', {
@@ -28,6 +35,7 @@ export function statusTone(status: TicketStatus) {
   if (status === 'resolved') return 'green';
   if (status === 'waiting_client') return 'amber';
   if (status === 'assigned') return 'blue';
+  if (status === 'reopened') return 'amber';
   return 'coral';
 }
 
@@ -40,6 +48,8 @@ export function eventTitle(eventType: string) {
   if (eventType === 'ticket.status_updated') return 'Status updated';
   if (eventType === 'ticket.assignee_updated') return 'Assignee updated';
   if (eventType === 'ticket.comment_added') return 'Comment added';
+  if (eventType === 'ticket.reopened') return 'Reopened by customer reply';
+  if (eventType === 'ticket.manual_takeover_requested') return 'Manual takeover';
   return eventType;
 }
 

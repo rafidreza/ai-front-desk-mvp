@@ -6,6 +6,7 @@ import {
   History,
   MessageSquarePlus,
   RefreshCw,
+  RotateCcw,
   Send,
 } from 'lucide-react';
 import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
@@ -135,19 +136,26 @@ export function TicketDetailPanel({
               </div>
 
               <div className="status-actions">
-                {statuses.map((status) => (
-                  <button
-                    className="status-button"
-                    data-active={activeTicket.status === status}
-                    disabled={isUpdating}
-                    key={status}
-                    type="button"
-                    onClick={() => onChangeStatus(status)}
-                  >
-                    {status === 'resolved' ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}
-                    {statusLabels[status]}
-                  </button>
-                ))}
+                {statuses.map((status) => {
+                  const isReopen = status === 'reopened';
+                  const isResolve = status === 'resolved';
+                  // Hide "Reopened" action unless the ticket is currently resolved.
+                  if (isReopen && activeTicket.status !== 'resolved') return null;
+                  const Icon = isResolve ? CheckCircle2 : isReopen ? RotateCcw : Clock3;
+                  return (
+                    <button
+                      className="status-button"
+                      data-active={activeTicket.status === status}
+                      disabled={isUpdating}
+                      key={status}
+                      type="button"
+                      onClick={() => onChangeStatus(status)}
+                    >
+                      <Icon size={14} />
+                      {statusLabels[status]}
+                    </button>
+                  );
+                })}
               </div>
             </section>
           )}

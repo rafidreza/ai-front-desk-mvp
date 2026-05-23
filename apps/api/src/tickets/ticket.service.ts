@@ -104,6 +104,33 @@ export class TicketService {
     return ticket;
   }
 
+  async reopenIfResolved(input: {
+    ticketId: string;
+    actorId: string;
+    payload?: Record<string, unknown>;
+  }): Promise<Ticket | null> {
+    const existing = await this.repository.getTicketDetail(input.ticketId);
+    if (existing === null) return null;
+    if (existing.ticket.status !== 'resolved') return null;
+
+    const reopened = await this.repository.updateTicketStatus({
+      ticketId: input.ticketId,
+      status: 'reopened',
+      actorId: input.actorId,
+      expectedVersion: existing.ticket.version,
+    });
+    await this.repository.recordTicketEvent({
+      ticketId: input.ticketId,
+      eventType: 'ticket.reopened',
+      payload: {
+        actorId: input.actorId,
+        reason: 'inbound-customer-message',
+        ...(input.payload ?? {}),
+      },
+    });
+    return reopened;
+  }
+
   private async harvestKnowledgeFromResolution(ticket: Ticket, actorId?: string): Promise<void> {
     if (this.knowledge === undefined) return;
     try {

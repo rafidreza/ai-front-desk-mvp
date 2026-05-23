@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { TicketService } from './ticket.service';
 
 const UpdateTicketStatusSchema = z.object({
-  status: z.enum(['open', 'assigned', 'waiting_client', 'resolved']),
+  status: z.enum(['open', 'assigned', 'waiting_client', 'resolved', 'reopened']),
   actorId: z.string().min(1).optional(),
   expectedVersion: z.number().int().nonnegative().optional(),
 });

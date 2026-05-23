@@ -17,6 +17,7 @@ enum TicketStatus {
   assigned
   waiting_client
   resolved
+  reopened
 }
 
 model Client {
@@ -49,7 +50,27 @@ model Client {
   authChallenges          ClientAuthChallenge[]
   tags                    Tag[]
   channels                ClientChannel[]
+  whatsappTemplates       WhatsAppTemplate[]
 
+  @@index([status])
+}
+
+model WhatsAppTemplate {
+  id              String   @id
+  clientId        String
+  name            String
+  languageCode    String   @default("en_US")
+  category        String   @default("utility")
+  status          String   @default("pending")
+  body            String
+  rejectionReason String?
+  lastSyncedAt    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, name, languageCode])
+  @@index([clientId])
   @@index([status])
 }
 

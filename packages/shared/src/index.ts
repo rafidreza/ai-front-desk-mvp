@@ -4,7 +4,12 @@ export type Channel = 'messenger' | 'whatsapp' | 'web';
 
 export type TicketPriority = 'P1' | 'P2' | 'P3';
 
-export type TicketStatus = 'open' | 'assigned' | 'waiting_client' | 'resolved';
+export type TicketStatus =
+  | 'open'
+  | 'assigned'
+  | 'waiting_client'
+  | 'resolved'
+  | 'reopened';
 
 export type ConversationQaGrade = 'good' | 'bad';
 
