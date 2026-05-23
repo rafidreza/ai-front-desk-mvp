@@ -5135,3 +5135,103 @@ button {
   background: var(--surface-2);
   border-color: var(--line-strong);
 }
+
+/* ============================================
+   Internal notes private affordances + mention menu
+   ============================================ */
+
+.comments-private-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  border-radius: 999px;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  background: var(--slate-soft);
+  color: var(--slate);
+  border: 1px solid var(--line-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.comments-helper {
+  margin: 4px 0 8px;
+  padding: 0;
+  font-size: var(--text-tiny);
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.comments-helper code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.comment-form__field {
+  position: relative;
+}
+
+.mention-menu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 240px;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(28, 39, 52, 0.18);
+  padding: 4px;
+}
+
+.mention-menu header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px 4px;
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+.mention-menu__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mention-menu__row:hover {
+  background: var(--brand-soft);
+}
+
+.mention-menu__row strong {
+  font-size: var(--text-small);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.mention-menu__row small {
+  font-size: var(--text-tiny);
+  color: var(--muted);
+}

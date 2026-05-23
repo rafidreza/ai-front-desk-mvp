@@ -43,6 +43,15 @@ export function assigneeLabel(users: InternalUser[], assigneeId?: string) {
   return users.find((option) => option.id === assigneeId)?.label ?? 'Unassigned';
 }
 
+export function operatorLabel(users: InternalUser[], authorId?: string) {
+  if (authorId === undefined || authorId === '') return 'Operator';
+  const match = users.find((option) => option.id === authorId);
+  if (match !== undefined) return match.label;
+  if (authorId === 'internal-console' || authorId === 'internal-operator') return 'Operator';
+  if (authorId === 'inbound-message') return 'Customer reply';
+  return authorId;
+}
+
 export function eventTitle(eventType: string) {
   if (eventType === 'ticket.created') return 'Ticket created';
   if (eventType === 'ticket.status_updated') return 'Status updated';

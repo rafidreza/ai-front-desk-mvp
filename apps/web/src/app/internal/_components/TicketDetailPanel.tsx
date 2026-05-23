@@ -1,16 +1,19 @@
 import {
   Activity,
   AlertTriangle,
+  AtSign,
   CheckCircle2,
   Clock3,
   History,
+  Lock,
   MessageSquarePlus,
   RefreshCw,
   RotateCcw,
   Send,
 } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
-import { assigneeLabel, eventTitle, formatTime, priorityTone, statusLabels, statuses } from '../_lib/helpers';
+import { assigneeLabel, eventTitle, formatTime, operatorLabel, priorityTone, statusLabels, statuses } from '../_lib/helpers';
 import { EscalationChips } from './EscalationChips';
 import { SlaBadge } from './SlaBadge';
 
@@ -49,6 +52,28 @@ export function TicketDetailPanel({
   onChangeCommentDraft,
   onAddComment,
 }: TicketDetailPanelProps) {
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const mentionableUsers = useMemo(() => {
+    const trimmed = commentDraft.trimEnd();
+    const match = /@(\w*)$/.exec(trimmed);
+    if (match === null) return null;
+    const query = match[1].toLowerCase();
+    return assigneeOptions.filter((option) =>
+      option.label.toLowerCase().includes(query) || option.id.toLowerCase().includes(query),
+    );
+  }, [commentDraft, assigneeOptions]);
+
+  const showMentionMenu = mentionOpen && mentionableUsers !== null && mentionableUsers.length > 0;
+
+  function insertMention(user: InternalUser) {
+    const replaced = commentDraft.replace(/@(\w*)$/, `@${user.label.replace(/\s+/g, '_')} `);
+    onChangeCommentDraft(replaced);
+    setMentionOpen(false);
+    textareaRef.current?.focus();
+  }
+
   return (
     <section className="detail-panel">
       <div className="panel-header">
@@ -219,28 +244,66 @@ export function TicketDetailPanel({
               <div className="section-label">
                 <MessageSquarePlus size={15} />
                 Internal Notes
+                <span aria-label="Private to operators" className="comments-private-badge">
+                  <Lock size={11} />
+                  Private
+                </span>
               </div>
+              <p className="comments-helper">
+                These notes stay between operators. Customers never see them. Use{' '}
+                <code>@name</code> to flag a teammate.
+              </p>
               <div className="comment-form">
-                <textarea
-                  value={commentDraft}
-                  onChange={(event) => onChangeCommentDraft(event.target.value)}
-                  placeholder="Add an operator note"
-                  rows={3}
-                />
+                <div className="comment-form__field">
+                  <textarea
+                    onBlur={() => window.setTimeout(() => setMentionOpen(false), 120)}
+                    onChange={(event) => {
+                      onChangeCommentDraft(event.target.value);
+                      setMentionOpen(/@(\w*)$/.test(event.target.value.trimEnd()));
+                    }}
+                    onFocus={() => setMentionOpen(/@(\w*)$/.test(commentDraft.trimEnd()))}
+                    placeholder="Add an operator note. Type @ to mention a teammate."
+                    ref={textareaRef}
+                    rows={3}
+                    value={commentDraft}
+                  />
+                  {showMentionMenu && (
+                    <div className="mention-menu" role="listbox">
+                      <header>
+                        <AtSign size={11} />
+                        Mention a teammate
+                      </header>
+                      {mentionableUsers!.slice(0, 6).map((user) => (
+                        <button
+                          className="mention-menu__row"
+                          key={user.id}
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            insertMention(user);
+                          }}
+                          type="button"
+                        >
+                          <strong>{user.label}</strong>
+                          <small>{user.id}</small>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
-                  className="mini-button"
-                  type="button"
-                  onClick={onAddComment}
+                  className="btn-primary"
                   disabled={isCommenting || commentDraft.trim().length === 0}
+                  onClick={onAddComment}
+                  type="button"
                 >
-                  Add note
+                  {isCommenting ? 'Saving…' : 'Add private note'}
                 </button>
               </div>
               <div className="comment-list">
                 {(selectedTicketDetail?.comments ?? []).map((comment) => (
                   <article className="comment-item" key={comment.id}>
                     <div>
-                      <strong>{comment.authorId}</strong>
+                      <strong>{operatorLabel(assigneeOptions, comment.authorId)}</strong>
                       <time>{formatTime(comment.createdAt)}</time>
                     </div>
                     <p>{comment.body}</p>
