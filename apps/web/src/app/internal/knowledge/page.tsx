@@ -26,6 +26,7 @@ import {
   updateKnowledgeEntry,
 } from '@/lib/api';
 import { ClientProfile, KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
+import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
 
 const categoryOptions = [
@@ -382,6 +383,7 @@ export default function KnowledgePage() {
             </div>
           </div>
           <div className="client-list">
+            {isLoading && filteredEntries.length === 0 && <ListSkeleton rows={5} variant="default" />}
             {filteredEntries.map((entry) => (
               <button
                 className="knowledge-row"
@@ -395,7 +397,7 @@ export default function KnowledgePage() {
                 <small>{entry.keywords.join(', ')}</small>
               </button>
             ))}
-            {filteredEntries.length === 0 && <div className="empty">No matching knowledge entries</div>}
+            {!isLoading && filteredEntries.length === 0 && <div className="empty">No matching knowledge entries</div>}
           </div>
         </section>
 

@@ -5,6 +5,7 @@ import {
   ConversationLog,
   ConversationQaGrade,
 } from '@/types/domain';
+import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
 
 interface QaReviewProps {
@@ -96,67 +97,70 @@ export function QaReview({
               onRetry={onReload}
             />
           ) : (
-            conversations.map((conversation) => {
-              const lastMessage = conversation.messages.at(-1);
-              return (
-                <article className="qa-row" key={conversation.id}>
-                  <div className="qa-row-copy">
-                    <strong>{conversation.externalSenderId}</strong>
-                    <p>{lastMessage?.text ?? 'No messages'}</p>
-                    <small>
-                      {conversation.ticketId === undefined ? 'Contained by AI' : 'Escalated to ticket'} |{' '}
-                      {conversation.lastConfidence !== undefined
-                        ? `${Math.round(conversation.lastConfidence * 100)}% confidence`
-                        : 'No confidence score'}
-                    </small>
-                    <div className="qa-auto-line">
-                      <span data-grade={conversation.autoQaGrade ?? 'none'}>
-                        {conversation.autoQaGrade === undefined
-                          ? 'Auto QA pending'
-                          : `Auto ${conversation.autoQaGrade} ${conversation.autoQaScore ?? 0}/100`}
-                      </span>
-                      {conversation.autoQaDefects.map((defect) => (
-                        <span key={defect}>{defect.replaceAll('_', ' ')}</span>
-                      ))}
+            <>
+              {isConversationsLoading && conversations.length === 0 && <ListSkeleton rows={5} variant="qa" />}
+              {conversations.map((conversation) => {
+                const lastMessage = conversation.messages.at(-1);
+                return (
+                  <article className="qa-row" key={conversation.id}>
+                    <div className="qa-row-copy">
+                      <strong>{conversation.externalSenderId}</strong>
+                      <p>{lastMessage?.text ?? 'No messages'}</p>
+                      <small>
+                        {conversation.ticketId === undefined ? 'Contained by AI' : 'Escalated to ticket'} |{' '}
+                        {conversation.lastConfidence !== undefined
+                          ? `${Math.round(conversation.lastConfidence * 100)}% confidence`
+                          : 'No confidence score'}
+                      </small>
+                      <div className="qa-auto-line">
+                        <span data-grade={conversation.autoQaGrade ?? 'none'}>
+                          {conversation.autoQaGrade === undefined
+                            ? 'Auto QA pending'
+                            : `Auto ${conversation.autoQaGrade} ${conversation.autoQaScore ?? 0}/100`}
+                        </span>
+                        {conversation.autoQaDefects.map((defect) => (
+                          <span key={defect}>{defect.replaceAll('_', ' ')}</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="qa-actions">
-                    <button
-                      className="status-button"
-                      data-active={conversation.qaGrade === 'good'}
-                      disabled={isGrading}
-                      type="button"
-                      onClick={() => onGrade(conversation, 'good', false)}
-                    >
-                      <ThumbsUp size={14} />
-                      Good
-                    </button>
-                    <button
-                      className="status-button"
-                      data-active={conversation.qaGrade === 'bad' && !conversation.hallucinationFlag}
-                      disabled={isGrading}
-                      type="button"
-                      onClick={() => onGrade(conversation, 'bad', false)}
-                    >
-                      <ThumbsDown size={14} />
-                      Bad
-                    </button>
-                    <button
-                      className="status-button"
-                      data-active={conversation.hallucinationFlag}
-                      disabled={isGrading}
-                      type="button"
-                      onClick={() => onGrade(conversation, 'bad', !conversation.hallucinationFlag)}
-                    >
-                      <Flag size={14} />
-                      Hallucination
-                    </button>
-                  </div>
-                </article>
-              );
-            })
+                    <div className="qa-actions">
+                      <button
+                        className="status-button"
+                        data-active={conversation.qaGrade === 'good'}
+                        disabled={isGrading}
+                        type="button"
+                        onClick={() => onGrade(conversation, 'good', false)}
+                      >
+                        <ThumbsUp size={14} />
+                        Good
+                      </button>
+                      <button
+                        className="status-button"
+                        data-active={conversation.qaGrade === 'bad' && !conversation.hallucinationFlag}
+                        disabled={isGrading}
+                        type="button"
+                        onClick={() => onGrade(conversation, 'bad', false)}
+                      >
+                        <ThumbsDown size={14} />
+                        Bad
+                      </button>
+                      <button
+                        className="status-button"
+                        data-active={conversation.hallucinationFlag}
+                        disabled={isGrading}
+                        type="button"
+                        onClick={() => onGrade(conversation, 'bad', !conversation.hallucinationFlag)}
+                      >
+                        <Flag size={14} />
+                        Hallucination
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </>
           )}
-          {conversations.length === 0 && conversationsError === null && (
+          {!isConversationsLoading && conversations.length === 0 && conversationsError === null && (
             <div className="empty">No conversations to grade</div>
           )}
         </div>

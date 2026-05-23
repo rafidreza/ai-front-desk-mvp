@@ -11,6 +11,7 @@ import {
   updateClientStatus,
 } from '@/lib/api';
 import { ClientDashboardSummary, ClientProfile, ClientStatus } from '@/types/domain';
+import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
 
 const baseMonthlyFee = 1500;
@@ -295,6 +296,7 @@ export default function InternalClientsPage() {
             </div>
           </div>
           <div className="client-list">
+            {isLoading && filteredClients.length === 0 && <ListSkeleton rows={5} variant="default" />}
             {filteredClients.map((client) => {
               const dashboard = dashboards.find((item) => item.client.id === client.id);
               return (
@@ -315,7 +317,7 @@ export default function InternalClientsPage() {
                 </button>
               );
             })}
-            {filteredClients.length === 0 && <div className="empty">No clients found</div>}
+            {!isLoading && filteredClients.length === 0 && <div className="empty">No clients found</div>}
           </div>
         </section>
 

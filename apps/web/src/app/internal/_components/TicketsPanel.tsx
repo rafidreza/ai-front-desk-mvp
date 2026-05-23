@@ -1,6 +1,7 @@
 import { RefreshCw, TicketCheck } from 'lucide-react';
 import { InternalUser, Ticket } from '@/types/domain';
 import { assigneeLabel, priorityTone, statusLabels, statusTone } from '../_lib/helpers';
+import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
 
 interface TicketsPanelProps {
@@ -67,7 +68,8 @@ export function TicketsPanel({
           <PanelError message={ticketsError} isRetrying={isTicketsLoading} onRetry={onReload} />
         ) : (
           <>
-            {tickets.length === 0 && <div className="empty">No tickets</div>}
+            {isTicketsLoading && tickets.length === 0 && <ListSkeleton rows={5} variant="ticket" />}
+            {!isTicketsLoading && tickets.length === 0 && <div className="empty">No tickets</div>}
             {tickets.map((ticket) => (
               <button
                 className="ticket-row"

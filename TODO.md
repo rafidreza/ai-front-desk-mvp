@@ -30,9 +30,9 @@
 | 8 — Ops / launch readiness | 0 | 6 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 7 | 2 | 9 |
-| 11 — UX Audit P1 | 1 | 9 | 10 |
+| 11 — UX Audit P1 | 2 | 8 | 10 |
 | 12 — Use case backlog | 0 | 38 | 38 |
-| **TOTAL** | **78** | **69** | **147** |
+| **TOTAL** | **79** | **68** | **147** |
 
 ---
 
@@ -223,7 +223,7 @@ Source: `/UX_AUDIT_FINDINGS.md` (uxaudit run 2026-05-23, 10 fails, 8 unverifiabl
 - [ ] **T81 — UX** Add inline Good / Bad / Hallucination action buttons per row on `/internal/qa` (keep drill-down as secondary).
 - [ ] **T82 — UX** Add sticky-bottom save bar to `/internal/clients/[id]` with disabled-until-dirty state.
 - [ ] **T83 — UX** Add top-of-page degradation banner: detect Anthropic API failure rate > threshold, show "AI is slow right now — using fallback replies" with link to internal status.
-- [ ] **T84 — UX** Add loading skeletons to tickets list, KB list, clients list, QA list, conversations list.
+- [x] **T84 — UX** Add loading skeletons to tickets list, KB list, clients list, QA list, conversations list. — **DONE (2026-05-24): reusable `ListSkeleton` now covers internal tickets, conversations, QA calibration queue, knowledge entries, and client directory lists without hiding existing data during refreshes.**
 - [ ] **T85 — UX** Empty state guidance on every list page (tickets, KB, clients, QA): icon + 1-line explainer + primary action (e.g. "No tickets yet. Connect a Facebook Page to start receiving messages → ").
 - [ ] **T86 — UX** Replace generic "something went wrong" errors with actionable messages naming the cause + the fix link (e.g. "Page token expired. Reconnect Meta integration → "). — **PARTIAL (2026-05-24, commit `0e2c64b`): client login (request code + verify code) and client dashboard fallback strings rewritten with named cause + recovery step. Remaining surfaces (internal console, signup, KB) still pending.**
 - [ ] **T87 — UX** Mobile-responsive sweep of `/internal/*` console (sidebar collapses, KPI strip stacks, ticket detail fits 390px).

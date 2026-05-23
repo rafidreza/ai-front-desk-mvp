@@ -1,5 +1,6 @@
 import { Inbox, MessagesSquare, RefreshCw } from 'lucide-react';
 import { ConversationLog } from '@/types/domain';
+import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
 
 interface ConversationsPanelProps {
@@ -40,7 +41,10 @@ export function ConversationsPanel({
           <PanelError message={conversationsError} isRetrying={isConversationsLoading} onRetry={onReload} />
         ) : (
           <>
-            {conversations.length === 0 && <div className="empty">No conversations</div>}
+            {isConversationsLoading && conversations.length === 0 && (
+              <ListSkeleton rows={5} variant="conversation" />
+            )}
+            {!isConversationsLoading && conversations.length === 0 && <div className="empty">No conversations</div>}
             {conversations.map((conversation) => {
               const lastMessage = conversation.messages.at(-1);
               return (
