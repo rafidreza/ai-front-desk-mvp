@@ -331,10 +331,20 @@ export class ClientDashboardService {
   }
 
   private buildChannelSummaries(client: ClientProfile, conversationsByChannel: Map<Channel, number>): ClientChannelSummary[] {
-    const messengerConnected = client.pageId.trim().length > 0 && !client.pageId.endsWith('-page-pending');
+    const messengerChannels = (client.channels ?? []).filter(
+      (channel) => channel.channel === 'messenger' && channel.status !== 'disabled',
+    );
+    const messengerConnected =
+      messengerChannels.some((channel) => channel.status === 'connected') ||
+      (client.pageId.trim().length > 0 && !client.pageId.endsWith('-page-pending'));
+    const primaryMessenger = messengerChannels.find((channel) => channel.isPrimary) ?? messengerChannels[0];
     const whatsappContact = client.whatsappPoc ?? client.ownerPhone;
     const whatsappConnected = whatsappContact !== undefined && whatsappContact.trim().length > 0;
     const copy = buildChannelCopy(client.defaultLanguage);
+    const messengerDetail =
+      messengerChannels.length > 1
+        ? `${messengerChannels.length} Facebook pages: ${messengerChannels.map((channel) => channel.label).join(', ')}`
+        : copy.messengerDetail(primaryMessenger?.externalId ?? client.pageId);
 
     return [
       {
@@ -342,8 +352,12 @@ export class ClientDashboardService {
         label: 'Messenger',
         status: messengerConnected ? 'connected' : 'needs_setup',
         conversations: conversationsByChannel.get('messenger') ?? 0,
-        setupLabel: messengerConnected ? copy.messengerLinked : copy.messengerSetupNeeded,
-        detail: messengerConnected ? copy.messengerDetail(client.pageId) : copy.messengerMissing,
+        setupLabel: messengerConnected
+          ? messengerChannels.length > 1
+            ? `${messengerChannels.length} pages linked`
+            : copy.messengerLinked
+          : copy.messengerSetupNeeded,
+        detail: messengerConnected ? messengerDetail : copy.messengerMissing,
         actionLabel: messengerConnected ? copy.messengerReady : copy.messengerConnect,
       },
       {

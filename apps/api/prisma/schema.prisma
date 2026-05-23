@@ -48,8 +48,29 @@ model Client {
   tickets                 Ticket[]
   authChallenges          ClientAuthChallenge[]
   tags                    Tag[]
+  channels                ClientChannel[]
 
   @@index([status])
+}
+
+model ClientChannel {
+  id          String   @id
+  clientId    String
+  channel     String
+  externalId  String
+  label       String
+  status      String   @default("connected")
+  isPrimary   Boolean  @default(false)
+  metadata    Json     @default("{}")
+  connectedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, externalId])
+  @@index([clientId])
+  @@index([clientId, channel])
+  @@index([channel, externalId])
 }
 
 model ClientAuthChallenge {

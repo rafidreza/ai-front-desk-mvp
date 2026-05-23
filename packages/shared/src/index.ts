@@ -21,6 +21,22 @@ export type ConversationQaDefect =
 
 export type ClientStatus = 'active' | 'inactive';
 
+export type ClientIntegrationStatus = 'connected' | 'available' | 'needs_setup' | 'disabled';
+
+export interface ClientChannel {
+  id: string;
+  clientId: string;
+  channel: Channel;
+  externalId: string;
+  label: string;
+  status: ClientIntegrationStatus;
+  isPrimary: boolean;
+  metadata?: Record<string, unknown>;
+  connectedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type CalibrationQueueFilter =
   | 'needs_review'
   | 'failed'
@@ -45,6 +61,7 @@ export interface ClientProfile {
   whatsappPoc?: string;
   digestEmail?: string;
   onboardingProfile?: ClientOnboardingProfile;
+  channels?: ClientChannel[];
 }
 
 export type ClientFocusChannel = 'whatsapp' | 'facebook' | 'website';

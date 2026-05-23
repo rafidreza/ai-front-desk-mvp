@@ -42,6 +42,25 @@ async function main() {
     create: pilotClient,
   });
 
+  await prisma.clientChannel.upsert({
+    where: { channel_externalId: { channel: 'messenger', externalId: pilotClient.pageId } },
+    update: {
+      clientId: pilotClient.id,
+      label: 'Primary Facebook Page',
+      status: 'connected',
+      isPrimary: true,
+    },
+    create: {
+      id: `${pilotClient.id}:messenger:${pilotClient.pageId}`,
+      clientId: pilotClient.id,
+      channel: 'messenger',
+      externalId: pilotClient.pageId,
+      label: 'Primary Facebook Page',
+      status: 'connected',
+      isPrimary: true,
+    },
+  });
+
   for (const entry of knowledgeEntries) {
     await prisma.knowledgeEntry.upsert({
       where: { id: entry.id },

@@ -43,6 +43,17 @@ const ClientStatusSchema = z.object({
   status: z.enum(['active', 'inactive']),
 });
 
+const ClientChannelSchema = z.object({
+  channel: z.enum(['messenger', 'whatsapp', 'web']),
+  externalId: z.string().trim().min(2).max(180),
+  label: z.string().trim().min(2).max(120).optional(),
+  status: z.enum(['connected', 'available', 'needs_setup', 'disabled']).optional(),
+  isPrimary: z.boolean().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+const ClientChannelPatchSchema = ClientChannelSchema.partial();
+
 const OnboardingProfilePatchSchema = z.object({
   focusChannels: z.array(z.enum(['whatsapp', 'facebook', 'website'])).min(1).max(3).optional(),
   websiteUrl: z.string().trim().url().optional(),
@@ -115,6 +126,27 @@ export class ClientController {
   async updateClientStatus(@Param('clientId') clientId: string, @Body() body: unknown) {
     const parsed = ClientStatusSchema.parse(body);
     return { client: await this.clients.setStatus(clientId, parsed.status) };
+  }
+
+  @Post(':clientId/channels')
+  async createClientChannel(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = ClientChannelSchema.parse(body);
+    return { client: await this.clients.createChannel(clientId, parsed) };
+  }
+
+  @Patch(':clientId/channels/:channelId')
+  async updateClientChannel(
+    @Param('clientId') clientId: string,
+    @Param('channelId') channelId: string,
+    @Body() body: unknown,
+  ) {
+    const parsed = ClientChannelPatchSchema.parse(body);
+    return { client: await this.clients.updateChannel(clientId, channelId, parsed) };
+  }
+
+  @Post(':clientId/channels/:channelId/delete')
+  async deleteClientChannel(@Param('clientId') clientId: string, @Param('channelId') channelId: string) {
+    return { client: await this.clients.deleteChannel(clientId, channelId) };
   }
 
   @Patch(':clientId/onboarding')
