@@ -8,6 +8,7 @@ const englishStatusLabels: Record<TicketStatus, string> = {
   open: 'Open',
   assigned: 'Assigned',
   waiting_client: 'Waiting on you',
+  reopened: 'Reopened',
   resolved: 'Resolved',
 };
 
@@ -15,6 +16,7 @@ const banglaStatusLabels: Record<TicketStatus, string> = {
   open: 'খোলা',
   assigned: 'টিমের কাছে',
   waiting_client: 'আপনার সিদ্ধান্ত দরকার',
+  reopened: 'আবার খোলা হয়েছে',
   resolved: 'সমাধান হয়েছে',
 };
 
@@ -22,6 +24,7 @@ const mixedStatusLabels: Record<TicketStatus, string> = {
   open: 'Open',
   assigned: 'Team assigned',
   waiting_client: 'Apnar decision dorkar',
+  reopened: 'Reopened',
   resolved: 'Resolved',
 };
 
@@ -30,6 +33,7 @@ const englishFilterLabels: Record<TicketFilter, string> = {
   open: 'Open',
   assigned: 'Assigned',
   waiting_client: 'Waiting on you',
+  reopened: 'Reopened',
   resolved: 'Resolved',
 };
 
@@ -38,6 +42,7 @@ const banglaFilterLabels: Record<TicketFilter, string> = {
   open: 'খোলা',
   assigned: 'টিমের কাছে',
   waiting_client: 'আপনার সিদ্ধান্ত দরকার',
+  reopened: 'আবার খোলা হয়েছে',
   resolved: 'সমাধান হয়েছে',
 };
 
@@ -46,6 +51,7 @@ const mixedFilterLabels: Record<TicketFilter, string> = {
   open: 'Open',
   assigned: 'Team assigned',
   waiting_client: 'Decision dorkar',
+  reopened: 'Reopened',
   resolved: 'Resolved',
 };
 

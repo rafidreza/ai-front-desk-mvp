@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChannelSendService, normalizeWhatsappRecipient } from './channel-send.service';
+import { WhatsAppTemplateService } from './whatsapp-template.service';
 
 describe('ChannelSendService', () => {
   const originalEnv = { ...process.env };
@@ -52,6 +53,54 @@ describe('ChannelSendService', () => {
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+      }),
+    );
+  });
+
+  it('blocks WhatsApp template sends unless the template is approved', async () => {
+    const templates = {
+      ensureApproved: vi.fn(async () => {
+        throw new Error('WhatsApp template is pending: order_update (en_US)');
+      }),
+    } as unknown as WhatsAppTemplateService;
+    const service = new ChannelSendService(undefined, templates);
+
+    const result = await service.sendWhatsappTemplate({
+      clientId: 'client-1',
+      recipientId: '+8801712345678',
+      templateName: 'order_update',
+    });
+
+    expect(result).toMatchObject({
+      mode: 'skipped',
+      channel: 'whatsapp',
+      reason: 'WhatsApp template is pending: order_update (en_US)',
+    });
+  });
+
+  it('sends approved WhatsApp templates through Cloud API', async () => {
+    process.env.WHATSAPP_ACCESS_TOKEN = 'test-token';
+    process.env.WHATSAPP_PHONE_NUMBER_ID = 'phone-number-id';
+    const templates = {
+      ensureApproved: vi.fn(async () => undefined),
+    } as unknown as WhatsAppTemplateService;
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const service = new ChannelSendService(undefined, templates);
+
+    const result = await service.sendWhatsappTemplate({
+      clientId: 'client-1',
+      recipientId: '+8801712345678',
+      templateName: 'order_update',
+      parameters: ['A123'],
+    });
+
+    expect(result).toMatchObject({ mode: 'sent', channel: 'whatsapp', recipientId: '8801712345678' });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://graph.facebook.com/v20.0/phone-number-id/messages',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"type":"template"'),
       }),
     );
   });

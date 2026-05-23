@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { StructuredLoggerService } from '../observability/structured-logger.service';
+import { WhatsAppTemplateService } from './whatsapp-template.service';
 
 export type OutboundChannel = 'messenger' | 'whatsapp';
 
@@ -18,6 +19,15 @@ export interface ChannelSendResult {
   reason?: string;
 }
 
+export interface WhatsAppTemplateSendInput {
+  clientId: string;
+  recipientId: string;
+  templateName: string;
+  languageCode?: string;
+  parameters?: string[];
+  purpose?: string;
+}
+
 export function normalizeWhatsappRecipient(phone: string) {
   const digits = phone.replace(/\D/g, '');
   if (digits.startsWith('00')) return digits.slice(2);
@@ -27,7 +37,10 @@ export function normalizeWhatsappRecipient(phone: string) {
 
 @Injectable()
 export class ChannelSendService {
-  constructor(private readonly logger?: StructuredLoggerService) {}
+  constructor(
+    private readonly logger?: StructuredLoggerService,
+    private readonly templates?: WhatsAppTemplateService,
+  ) {}
 
   async sendText(input: ChannelSendTextInput): Promise<ChannelSendResult> {
     if (input.channel === 'messenger') {
@@ -35,6 +48,23 @@ export class ChannelSendService {
     }
 
     return this.sendWhatsappText(input);
+  }
+
+  async sendWhatsappTemplate(input: WhatsAppTemplateSendInput): Promise<ChannelSendResult> {
+    const languageCode = input.languageCode ?? 'en_US';
+    try {
+      await this.templates?.ensureApproved(input.clientId, input.templateName, languageCode);
+    } catch (error) {
+      return {
+        mode: 'skipped',
+        channel: 'whatsapp',
+        recipientId: input.recipientId,
+        text: input.templateName,
+        reason: error instanceof Error ? error.message : 'whatsapp_template_not_approved',
+      };
+    }
+
+    return this.sendWhatsappApprovedTemplate({ ...input, languageCode });
   }
 
   private async sendMessengerText(input: ChannelSendTextInput): Promise<ChannelSendResult> {
@@ -117,6 +147,69 @@ export class ChannelSendService {
     }
 
     return { mode: 'sent', channel: 'whatsapp', recipientId, text: input.text };
+  }
+
+  private async sendWhatsappApprovedTemplate(input: Required<Pick<WhatsAppTemplateSendInput, 'clientId' | 'recipientId' | 'templateName' | 'languageCode'>> & {
+    parameters?: string[];
+    purpose?: string;
+  }): Promise<ChannelSendResult> {
+    const recipientId = normalizeWhatsappRecipient(input.recipientId);
+    if (recipientId.length < 8) {
+      return {
+        mode: 'skipped',
+        channel: 'whatsapp',
+        recipientId: input.recipientId,
+        text: input.templateName,
+        reason: 'invalid_whatsapp_recipient',
+      };
+    }
+
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    if (accessToken === undefined || accessToken === '' || phoneNumberId === undefined || phoneNumberId === '') {
+      return { mode: 'dry-run', channel: 'whatsapp', recipientId, text: input.templateName };
+    }
+
+    const graphVersion = process.env.WHATSAPP_GRAPH_VERSION ?? 'v20.0';
+    const response = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      signal: AbortSignal.timeout(8_000),
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: recipientId,
+        type: 'template',
+        template: {
+          name: input.templateName,
+          language: { code: input.languageCode },
+          ...(input.parameters === undefined || input.parameters.length === 0
+            ? {}
+            : {
+                components: [
+                  {
+                    type: 'body',
+                    parameters: input.parameters.map((text) => ({ type: 'text', text })),
+                  },
+                ],
+              }),
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      await this.handleFailedSend({
+        channel: 'whatsapp',
+        recipientId,
+        status: response.status,
+        errorBody: await response.text(),
+        purpose: input.purpose,
+      });
+    }
+
+    return { mode: 'sent', channel: 'whatsapp', recipientId, text: input.templateName };
   }
 
   private async handleFailedSend(input: {

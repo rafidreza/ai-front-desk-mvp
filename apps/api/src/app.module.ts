@@ -8,6 +8,8 @@ import { MessengerSignatureService } from './channels/messenger-signature.servic
 import { WebChatController } from './channels/web-chat.controller';
 import { WhatsAppController } from './channels/whatsapp.controller';
 import { WhatsAppSignatureService } from './channels/whatsapp-signature.service';
+import { WhatsAppTemplateController } from './channels/whatsapp-template.controller';
+import { WhatsAppTemplateService } from './channels/whatsapp-template.service';
 import { PilotClientService } from './clients/pilot-client.service';
 import { ConversationController } from './conversations/conversation.controller';
 import { ConversationRepository } from './conversations/conversation.repository';
@@ -56,6 +58,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     MessengerController,
     WebChatController,
     WhatsAppController,
+    WhatsAppTemplateController,
     PromptProfileController,
     TagController,
     TicketController,
@@ -80,6 +83,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     MessengerSendService,
     MessengerSignatureService,
     WhatsAppSignatureService,
+    WhatsAppTemplateService,
     PilotClientService,
     PromptProfileService,
     PrismaService,

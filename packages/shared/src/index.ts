@@ -42,6 +42,22 @@ export interface ClientChannel {
   updatedAt: string;
 }
 
+export type WhatsAppTemplateStatus = 'pending' | 'approved' | 'rejected';
+
+export interface WhatsAppTemplate {
+  id: string;
+  clientId: string;
+  name: string;
+  languageCode: string;
+  category: string;
+  status: WhatsAppTemplateStatus;
+  body: string;
+  rejectionReason?: string;
+  lastSyncedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type CalibrationQueueFilter =
   | 'needs_review'
   | 'failed'

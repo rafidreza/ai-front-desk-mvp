@@ -54,5 +54,7 @@ export type {
   TicketEvent,
   TicketPriority,
   TicketStatus,
+  WhatsAppTemplate,
+  WhatsAppTemplateStatus,
 } from '@ai-front-desk/shared';
 export { TAG_COLORS } from '@ai-front-desk/shared';
