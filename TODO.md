@@ -267,9 +267,9 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 
 ### Billing + auth + RBAC
 
-- [ ] **T110 — USECASE** Billing surface: plan picker, invoice list, payment method (SSLCOMMERZ + bKash UI).
-- [ ] **T111 — USECASE** Trial countdown ("12 days left") + monthly quota meter ("8,400 / 10,000 msgs").
-- [ ] **T112 — USECASE** Internal per-client LLM cost dashboard (USD spend per client per day, alert > threshold).
+- [ ] **T110 — USECASE** Billing surface: plan picker, invoice list, payment method (SSLCOMMERZ + bKash UI). — **DEFERRED (2026-05-24): user requested skipping billing/payment-related work for now.**
+- [ ] **T111 — USECASE** Trial countdown ("12 days left") + monthly quota meter ("8,400 / 10,000 msgs"). — **DEFERRED (2026-05-24): user considers trial/quota tied to billing; skip billing/payment-related work for now.**
+- [ ] **T112 — USECASE** Internal per-client LLM cost dashboard (USD spend per client per day, alert > threshold). — **DEFERRED (2026-05-24): user requested skipping billing/payment/cost-related work for now.**
 - [ ] **T113 — USECASE** RBAC: admin / operator / read-only roles (replace single shared `INTERNAL_CONSOLE_PASSWORD`).
 - [ ] **T114 — USECASE** Audit log: who deleted KB entry, who changed prompt profile, who closed ticket (compliance + DPA).
 - [ ] **T115 — USECASE** Magic-link expiry + clear re-request CTA on failure page.
