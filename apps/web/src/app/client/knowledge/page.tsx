@@ -6,11 +6,14 @@ import { ClientPortalNav } from '../_components/ClientPortalNav';
 import {
   getClientKnowledgeEntries,
   getClientKnowledgeRequests,
+  getClientDashboard,
   submitClientKnowledgeEditRequest,
   submitClientKnowledgeRequest,
 } from '@/lib/api';
+import { formatLocalizedNumber } from '@/lib/localized-format';
 import {
   ClientKnowledgeEntry,
+  ClientProfile,
   KnowledgeChangeRequest,
   KnowledgeChangeRequestStatus,
   KnowledgeChangeRequestUrgency,
@@ -79,6 +82,7 @@ function parseKeywords(input: string) {
 export default function ClientKnowledgePage() {
   const [entries, setEntries] = useState<ClientKnowledgeEntry[]>([]);
   const [requests, setRequests] = useState<KnowledgeChangeRequest[]>([]);
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [requestStatus, setRequestStatus] = useState<KnowledgeChangeRequestStatus | 'all'>('all');
@@ -112,12 +116,14 @@ export default function ClientKnowledgePage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [loadedEntries, loadedRequests] = await Promise.all([
+      const [loadedEntries, loadedRequests, dashboard] = await Promise.all([
         getClientKnowledgeEntries(clientId),
         getClientKnowledgeRequests(clientId, { status: nextStatus }),
+        getClientDashboard(clientId),
       ]);
       setEntries(loadedEntries);
       setRequests(loadedRequests);
+      setLanguage(dashboard.client.defaultLanguage);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load knowledge.');
     } finally {
@@ -205,7 +211,7 @@ export default function ClientKnowledgePage() {
             <h1>Knowledge Base</h1>
           </div>
         </div>
-        <ClientPortalNav active="knowledge" clientId={clientId} />
+        <ClientPortalNav active="knowledge" clientId={clientId} language={language} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadKnowledge()}>
             <RefreshCw size={16} />
@@ -223,17 +229,17 @@ export default function ClientKnowledgePage() {
       <section className="client-knowledge-command">
         <div>
           <p className="eyebrow">Approved answers</p>
-          <h2>{filteredEntries.length} published entries available to your AI support agent</h2>
+          <h2>{formatLocalizedNumber(filteredEntries.length, language)} published entries available to your AI support agent</h2>
           <p>These are the customer-facing facts currently approved for replies. Submitted updates stay in review until the operations team publishes them.</p>
         </div>
         <div className="knowledge-command-stats">
           <div>
             <span>Published</span>
-            <strong>{entries.length}</strong>
+            <strong>{formatLocalizedNumber(entries.length, language)}</strong>
           </div>
           <div>
             <span>Requests</span>
-            <strong>{requests.length}</strong>
+            <strong>{formatLocalizedNumber(requests.length, language)}</strong>
           </div>
         </div>
       </section>
@@ -245,7 +251,7 @@ export default function ClientKnowledgePage() {
               <BookOpenText size={16} />
               Published knowledge
             </div>
-            <span className="count">{filteredEntries.length}</span>
+            <span className="count">{formatLocalizedNumber(filteredEntries.length, language)}</span>
           </div>
 
           <div className="client-knowledge-tools">
@@ -274,7 +280,7 @@ export default function ClientKnowledgePage() {
                 <div className="knowledge-client-entry-head">
                   <div>
                     <strong>{entry.title}</strong>
-                    <small>{entry.category ?? 'general'} | v{entry.version}</small>
+                    <small>{entry.category ?? 'general'} | v{formatLocalizedNumber(entry.version, language)}</small>
                   </div>
                   <span className="badge" data-tone="green">
                     <ShieldCheck size={12} />
@@ -390,7 +396,7 @@ export default function ClientKnowledgePage() {
                 <Filter size={16} />
                 Update requests
               </div>
-              <span className="count">{requests.length}</span>
+              <span className="count">{formatLocalizedNumber(requests.length, language)}</span>
             </div>
 
             <div className="client-filter-bar knowledge-request-filter">

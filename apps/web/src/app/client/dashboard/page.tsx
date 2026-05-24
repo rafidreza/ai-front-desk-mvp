@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { captureCsat, getClientDashboard } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
+import { formatBdt, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
 import { ClientDashboardSummary } from '@/types/domain';
 
 const channelIcons = {
@@ -26,7 +27,8 @@ export default function ClientDashboardPage() {
 
   const channels = dashboard?.channels ?? [];
   const connectedChannelCount = channels.filter((channel) => channel.status !== 'needs_setup').length;
-  const copy = getClientPortalCopy(dashboard?.client.defaultLanguage);
+  const language = dashboard?.client.defaultLanguage;
+  const copy = getClientPortalCopy(language);
 
   async function loadDashboard() {
     setIsLoading(true);
@@ -108,22 +110,22 @@ export default function ClientDashboardPage() {
       <section className="metrics">
         <article className="metric">
           <span>{copy.dashboard.conversations}</span>
-          <strong>{dashboard?.totals.conversations ?? 0}</strong>
+          <strong>{formatLocalizedNumber(dashboard?.totals.conversations ?? 0, language)}</strong>
           <small>{copy.dashboard.handledByAi}</small>
         </article>
         <article className="metric">
           <span>{copy.dashboard.containment}</span>
-          <strong>{dashboard?.totals.containmentRate ?? 0}%</strong>
+          <strong>{formatLocalizedPercent(dashboard?.totals.containmentRate ?? 0, language)}</strong>
           <small>{copy.dashboard.noHandoffNeeded}</small>
         </article>
         <article className="metric">
           <span>{copy.dashboard.openTickets}</span>
-          <strong>{dashboard?.totals.openTickets ?? 0}</strong>
-          <small>P1: {dashboard?.totals.p1Tickets ?? 0}</small>
+          <strong>{formatLocalizedNumber(dashboard?.totals.openTickets ?? 0, language)}</strong>
+          <small>P1: {formatLocalizedNumber(dashboard?.totals.p1Tickets ?? 0, language)}</small>
         </article>
         <article className="metric">
           <span>{copy.dashboard.salesProtected}</span>
-          <strong>{dashboard?.totals.salesRecoveredEstimate ?? 0}</strong>
+          <strong>{formatBdt(dashboard?.totals.salesRecoveredEstimate ?? 0, language)}</strong>
           <small>{copy.dashboard.bdtEstimate}</small>
         </article>
       </section>
@@ -149,7 +151,7 @@ export default function ClientDashboardPage() {
                 </span>
               </div>
               <div className="channel-count">
-                <strong>{channel.conversations}</strong>
+                <strong>{formatLocalizedNumber(channel.conversations, language)}</strong>
                 <span>{copy.dashboard.channelConversations}</span>
               </div>
               <p>{channel.detail}</p>
@@ -189,7 +191,7 @@ export default function ClientDashboardPage() {
               <article className="client-row" key={ticket.id}>
                 <div>
                   <strong>{ticket.customerMessage}</strong>
-                  <small>{ticket.status} | {ticket.priority} | BDT {ticket.salesRecoveredEstimate}</small>
+                  <small>{ticket.status} | {ticket.priority} | {formatBdt(ticket.salesRecoveredEstimate, language)}</small>
                 </div>
               </article>
             ))}
@@ -216,7 +218,7 @@ export default function ClientDashboardPage() {
                   <div className="csat-buttons">
                     {[1, 2, 3, 4, 5].map((score) => (
                       <button className="mini-button" key={score} type="button" onClick={() => void handleCsat(conversation.id, score)}>
-                        {score}
+                        {formatLocalizedNumber(score, language)}
                       </button>
                     ))}
                   </div>

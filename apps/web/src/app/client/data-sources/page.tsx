@@ -7,10 +7,12 @@ import {
   getExternalDataSources,
   getExternalOrders,
   getExternalProducts,
+  getClientDashboard,
   saveGoogleSheetDataSource,
   syncExternalDataSource,
 } from '@/lib/api';
-import { ExternalDataSource, ExternalDataSyncRun, OrderRecord, ProductRecord } from '@/types/domain';
+import { formatLocalizedDateTime, formatLocalizedNumber } from '@/lib/localized-format';
+import { ClientProfile, ExternalDataSource, ExternalDataSyncRun, OrderRecord, ProductRecord } from '@/types/domain';
 
 type SheetForm = {
   name: string;
@@ -32,14 +34,9 @@ const emptyForm: SheetForm = {
   orderFreshnessMinutes: '5',
 };
 
-function formatTime(value?: string) {
+function formatTime(value: string | undefined, language: ClientProfile['defaultLanguage']) {
   if (value === undefined) return 'Never';
-  return new Intl.DateTimeFormat('en', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
+  return formatLocalizedDateTime(value, language);
 }
 
 function formFromSource(source?: ExternalDataSource): SheetForm {
@@ -66,6 +63,7 @@ export default function ClientDataSourcesPage() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [lastSyncRun, setLastSyncRun] = useState<ExternalDataSyncRun | null>(null);
   const [form, setForm] = useState<SheetForm>(emptyForm);
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +82,9 @@ export default function ClientDataSourcesPage() {
     setError(null);
     try {
       const loadedSources = await getExternalDataSources(clientId);
+      const dashboard = await getClientDashboard(clientId);
       const activeSource = nextSource ?? loadedSources[0];
+      setLanguage(dashboard.client.defaultLanguage);
       setSources(loadedSources);
       if (activeSource !== undefined) {
         const [loadedProducts, loadedOrders] = await Promise.all([
@@ -147,7 +147,12 @@ export default function ClientDataSourcesPage() {
     try {
       const result = await syncExternalDataSource(clientId, source.id);
       setLastSyncRun(result.syncRun);
-      setNotice(`Sync complete: ${result.syncRun.productsImported} products and ${result.syncRun.ordersImported} orders imported.`);
+      setNotice(
+        `Sync complete: ${formatLocalizedNumber(result.syncRun.productsImported, language)} products and ${formatLocalizedNumber(
+          result.syncRun.ordersImported,
+          language,
+        )} orders imported.`,
+      );
       await loadData(result.source);
     } catch (syncError) {
       setError(syncError instanceof Error ? syncError.message : 'Unable to sync Google Sheet.');
@@ -167,7 +172,7 @@ export default function ClientDataSourcesPage() {
             <h1>Data Sources</h1>
           </div>
         </div>
-        <ClientPortalNav active="data-sources" clientId={clientId} />
+        <ClientPortalNav active="data-sources" clientId={clientId} language={language} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadData()}>
             <RefreshCw size={16} />
@@ -186,16 +191,20 @@ export default function ClientDataSourcesPage() {
         <div>
           <p className="eyebrow">Google Sheet</p>
           <h2>{source?.lastSyncStatus === 'succeeded' ? 'Product and order data is connected' : 'Connect product and order data'}</h2>
-          <p>Last sync: {formatTime(source?.lastSuccessfulSyncAt)}. Products stay fresh for {source?.productFreshnessMinutes ?? 15} minutes; orders stay fresh for {source?.orderFreshnessMinutes ?? 5} minutes.</p>
+          <p>
+            Last sync: {formatTime(source?.lastSuccessfulSyncAt, language)}. Products stay fresh for{' '}
+            {formatLocalizedNumber(source?.productFreshnessMinutes ?? 15, language)} minutes; orders stay fresh for{' '}
+            {formatLocalizedNumber(source?.orderFreshnessMinutes ?? 5, language)} minutes.
+          </p>
         </div>
         <div className="knowledge-command-stats">
           <div>
             <span>Products</span>
-            <strong>{products.length}</strong>
+            <strong>{formatLocalizedNumber(products.length, language)}</strong>
           </div>
           <div>
             <span>Orders</span>
-            <strong>{orders.length}</strong>
+            <strong>{formatLocalizedNumber(orders.length, language)}</strong>
           </div>
         </div>
       </section>
@@ -264,7 +273,7 @@ export default function ClientDataSourcesPage() {
               <TableProperties size={16} />
               Sync status
             </div>
-            {source !== undefined && <span className="count">{formatTime(source.lastSyncAt)}</span>}
+            {source !== undefined && <span className="count">{formatTime(source.lastSyncAt, language)}</span>}
           </div>
           <div className="data-source-status">
             <div>
@@ -273,11 +282,11 @@ export default function ClientDataSourcesPage() {
             </div>
             <div>
               <span>Products imported</span>
-              <strong>{lastSyncRun?.productsImported ?? products.length}</strong>
+              <strong>{formatLocalizedNumber(lastSyncRun?.productsImported ?? products.length, language)}</strong>
             </div>
             <div>
               <span>Orders imported</span>
-              <strong>{lastSyncRun?.ordersImported ?? orders.length}</strong>
+              <strong>{formatLocalizedNumber(lastSyncRun?.ordersImported ?? orders.length, language)}</strong>
             </div>
           </div>
           {source?.lastSyncError !== undefined && <div className="inline-alert">{source.lastSyncError}</div>}
@@ -295,7 +304,7 @@ export default function ClientDataSourcesPage() {
         <section className="client-panel data-source-panel">
           <div className="panel-header">
             <div className="panel-title">Products</div>
-            <span className="count">{products.length}</span>
+            <span className="count">{formatLocalizedNumber(products.length, language)}</span>
           </div>
           <div className="data-record-list">
             {products.slice(0, 8).map((product) => (
@@ -316,7 +325,7 @@ export default function ClientDataSourcesPage() {
         <section className="client-panel data-source-panel">
           <div className="panel-header">
             <div className="panel-title">Orders</div>
-            <span className="count">{orders.length}</span>
+            <span className="count">{formatLocalizedNumber(orders.length, language)}</span>
           </div>
           <div className="data-record-list">
             {orders.slice(0, 8).map((order) => (

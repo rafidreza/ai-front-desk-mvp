@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { getClientDashboard, getClientTicketDetail, getClientTickets, updateClientTicketStatus } from '@/lib/api';
 import { getClientPortalCopy, priorityTone } from '@/lib/client-portal-copy';
+import { formatBdt, formatLocalizedDateTime, formatLocalizedNumber } from '@/lib/localized-format';
 import { ClientProfile, ConversationLog, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 
 const statuses: TicketStatus[] = ['assigned', 'waiting_client', 'resolved'];
@@ -13,12 +14,7 @@ const filters: Array<'all' | 'open' | TicketStatus> = ['all', 'open', 'assigned'
 type ClientTicketDetail = TicketDetail & { conversation?: ConversationLog };
 
 function formatTime(value: string, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
+  return formatLocalizedDateTime(value, locale === 'bn-BD' ? 'bangla' : 'english');
 }
 
 export default function ClientTicketsPage() {
@@ -141,11 +137,11 @@ export default function ClientTicketsPage() {
         <div className="ticket-command-stats">
           <div>
             <span>{copy.tickets.open}</span>
-            <strong>{openTickets}</strong>
+            <strong>{formatLocalizedNumber(openTickets, language)}</strong>
           </div>
           <div>
             <span>{copy.tickets.p1}</span>
-            <strong>{urgentTickets}</strong>
+            <strong>{formatLocalizedNumber(urgentTickets, language)}</strong>
           </div>
         </div>
       </section>
@@ -264,7 +260,7 @@ export default function ClientTicketsPage() {
                   </div>
                   <div className="field">
                     <span>{copy.tickets.protectedSale}</span>
-                    <strong>BDT {selectedTicket.salesRecoveredEstimate.toLocaleString(copy.locale)}</strong>
+                    <strong>{formatBdt(selectedTicket.salesRecoveredEstimate, language)}</strong>
                   </div>
                   <div className="field field-wide">
                     <span>{copy.tickets.raisedReason}</span>

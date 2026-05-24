@@ -1,4 +1,5 @@
 import { ClientChannelSummary, ClientProfile, Ticket, TicketStatus } from '@/types/domain';
+import { formatBdt, formatLocalizedNumber } from './localized-format';
 
 type ClientLanguage = ClientProfile['defaultLanguage'];
 
@@ -82,7 +83,8 @@ function baseCopy(language: ClientLanguage) {
       dashboard: {
         eyebrow: 'ক্লায়েন্ট ড্যাশবোর্ড',
         supportCoverage: 'সাপোর্ট কভারেজ',
-        coverageTitle: (connected: number) => `${connected} / 3 কাস্টমার চ্যানেলে AI সহায়তা চালু আছে`,
+        coverageTitle: (connected: number) =>
+          `${formatLocalizedNumber(connected, 'bangla')} / ${formatLocalizedNumber(3, 'bangla')} কাস্টমার চ্যানেলে AI সহায়তা চালু আছে`,
         coverageDescription:
           'Messenger, WhatsApp এবং web widget আলাদা করে ট্র্যাক করা হচ্ছে, যেন কোন চ্যানেল লাইভ আর কোথায় সেটআপ দরকার তা বোঝা যায়।',
         clientAccount: 'ক্লায়েন্ট অ্যাকাউন্ট',
@@ -130,7 +132,7 @@ function baseCopy(language: ClientLanguage) {
         noTimeline: 'এখনও কোনো টাইমলাইন ইভেন্ট নেই',
         customerConversation: 'কাস্টমার কথোপকথন',
         transcriptPending: 'লোড হলে কথোপকথনের ট্রান্সক্রিপ্ট এখানে দেখা যাবে',
-        protectedEstimate: (amount: number) => `BDT ${amount.toLocaleString('bn-BD')} সুরক্ষিত অনুমান`,
+        protectedEstimate: (amount: number) => `${formatBdt(amount, 'bangla')} সুরক্ষিত অনুমান`,
       },
       statusLabels: banglaStatusLabels,
       filterLabels: banglaFilterLabels,
@@ -170,7 +172,8 @@ function baseCopy(language: ClientLanguage) {
       dashboard: {
         eyebrow: 'Client dashboard',
         supportCoverage: 'Support coverage',
-        coverageTitle: (connected: number) => `AI assistance is active across ${connected} of 3 customer channels`,
+        coverageTitle: (connected: number) =>
+          `AI assistance is active across ${formatLocalizedNumber(connected, 'english')} of ${formatLocalizedNumber(3, 'english')} customer channels`,
         coverageDescription:
           'Messenger, WhatsApp, and the web widget are tracked separately so your team can see which channels are live, which need setup, and where customers are already talking.',
         clientAccount: 'Client account',
@@ -218,7 +221,7 @@ function baseCopy(language: ClientLanguage) {
         noTimeline: 'No timeline events yet',
         customerConversation: 'Customer conversation',
         transcriptPending: 'Conversation transcript will appear here when loaded',
-        protectedEstimate: (amount: number) => `BDT ${amount.toLocaleString('en')} protected estimate`,
+        protectedEstimate: (amount: number) => `${formatBdt(amount, 'english')} protected estimate`,
       },
       statusLabels: englishStatusLabels,
       filterLabels: englishFilterLabels,
@@ -257,7 +260,8 @@ function baseCopy(language: ClientLanguage) {
     dashboard: {
       eyebrow: 'Client dashboard',
       supportCoverage: 'Support coverage',
-      coverageTitle: (connected: number) => `${connected} of 3 customer channels e AI assistance active`,
+      coverageTitle: (connected: number) =>
+        `${formatLocalizedNumber(connected, 'mixed')} of ${formatLocalizedNumber(3, 'mixed')} customer channels e AI assistance active`,
       coverageDescription:
         'Messenger, WhatsApp, ar web widget alada track kora hocche, jate live channel, setup-needed channel, ar customer traffic clear thake.',
       clientAccount: 'Client account',
@@ -305,7 +309,7 @@ function baseCopy(language: ClientLanguage) {
       noTimeline: 'Ekhono timeline event nei',
       customerConversation: 'Customer conversation',
       transcriptPending: 'Load hole conversation transcript ekhane dekha jabe',
-      protectedEstimate: (amount: number) => `BDT ${amount.toLocaleString('en')} protected estimate`,
+      protectedEstimate: (amount: number) => `${formatBdt(amount, 'mixed')} protected estimate`,
     },
     statusLabels: mixedStatusLabels,
     filterLabels: mixedFilterLabels,
