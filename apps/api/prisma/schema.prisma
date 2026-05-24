@@ -51,10 +51,33 @@ model Client {
   tags                    Tag[]
   channels                ClientChannel[]
   whatsappTemplates       WhatsAppTemplate[]
+  autoReplyRules          ClientAutoReplyRule[]
   blockedSenders          BlockedSender[]
   testCustomers           TestCustomer[]
 
   @@index([status])
+}
+
+model ClientAutoReplyRule {
+  id          String   @id
+  clientId    String
+  ruleType    String   @default("holiday")
+  label       String
+  timezone    String   @default("Asia/Dhaka")
+  startDate   String?
+  endDate     String?
+  dayOfWeek   Int?
+  startMinute Int      @default(0)
+  endMinute   Int      @default(1440)
+  replyText   String
+  enabled     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([clientId, enabled])
+  @@index([ruleType])
 }
 
 model WhatsAppTemplate {

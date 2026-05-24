@@ -13,6 +13,8 @@ import { WhatsAppSignatureService } from './channels/whatsapp-signature.service'
 import { WhatsAppTemplateController } from './channels/whatsapp-template.controller';
 import { WhatsAppTemplateService } from './channels/whatsapp-template.service';
 import { PilotClientService } from './clients/pilot-client.service';
+import { AutoReplyController } from './clients/auto-reply.controller';
+import { AutoReplyService } from './clients/auto-reply.service';
 import { ConversationController } from './conversations/conversation.controller';
 import { ConversationRepository } from './conversations/conversation.repository';
 import { ConversationService } from './conversations/conversation.service';
@@ -55,6 +57,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
   controllers: [
     ClientController,
     ClientAuthController,
+    AutoReplyController,
     ChannelHealthController,
     ConversationController,
     HealthController,
@@ -75,6 +78,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
   providers: [
     AiService,
     AutoQaService,
+    AutoReplyService,
     ChannelHealthService,
     ChannelSendService,
     ConversationRepository,

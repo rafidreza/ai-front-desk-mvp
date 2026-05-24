@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 14 | 24 | 38 |
-| **TOTAL** | **103** | **44** | **147** |
+| 12 — Use case backlog | 15 | 23 | 38 |
+| **TOTAL** | **104** | **43** | **147** |
 
 ---
 
@@ -240,7 +240,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T89 — USECASE** Multi-FB-Page-per-seller: relax "1 client = 1 page" assumption; data model + UI for `ClientChannel[]`. — **DONE (2026-05-24): added `ClientChannel` persistence with legacy `pageId` primary-page compatibility, routed Messenger/WhatsApp lookup through channel records, seeded existing page IDs as primary channels, and added internal client UI to list, add, remove, and mark primary Facebook pages.**
 - [x] **T90 — USECASE** WhatsApp template approval status UI: list templates with `pending` / `approved` / `rejected` state from Meta; block send if not approved. — **DONE (2026-05-24): added manual WhatsApp template registry per client, internal Channels UI for approval status/rejection reason, and an approved-template send path that skips outbound WhatsApp template sends when the template is missing, pending, or rejected.**
 - [x] **T91 — USECASE** Channel health dashboard: Meta page token TTL countdown, WhatsApp number status, webhook deliverability stats. — **DONE (2026-05-24): added internal channel health checks for Messenger page-token configuration/TTL, WhatsApp access-token and number-ID readiness, last webhook activity, 24h traffic counts, and WhatsApp template approval counts on the Channels dashboard.**
-- [ ] **T92 — USECASE** Holiday / off-hours auto-reply calendar (Eid, Puja, custom dates) with per-client override.
+- [x] **T92 — USECASE** Holiday / off-hours auto-reply calendar (Eid, Puja, custom dates) with per-client override. — **DONE (2026-05-24): added per-client auto-reply rules with disabled editable Bangladesh holiday suggestions and daily after-hours template, internal Channels UI to edit/enable/delete rules, and inbound conversation short-circuiting so active holiday/off-hours windows send the configured reply before the AI path.**
 - [ ] **T93 — USECASE** Voice note ingest UI in chat (operator can play customer voice + see transcribed text inline).
 - [ ] **T94 — USECASE** Image OCR ingest UI in chat (customer photos product → operator sees extracted text + matched product candidates).
 - [ ] **T95 — USECASE** Unified customer history view across pages (same phone number → one timeline).

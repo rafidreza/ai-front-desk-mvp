@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AiService } from '../ai/ai.service';
+import { AutoReplyService } from '../clients/auto-reply.service';
 import { PilotClientService } from '../clients/pilot-client.service';
 import { BlockedSenderService } from '../customers/blocked-sender.service';
 import { TestCustomerService } from '../customers/test-customer.service';
@@ -50,6 +51,7 @@ export class ConversationService {
     private readonly externalData?: ExternalDataService,
     private readonly blockedSenders?: BlockedSenderService,
     private readonly testCustomers?: TestCustomerService,
+    private readonly autoReplies?: AutoReplyService,
   ) {}
 
   async handleIncomingMessage(message: IncomingMessage): Promise<HandleMessageResult> {
@@ -132,6 +134,21 @@ export class ConversationService {
     });
 
     const client = await this.clients.findById(message.clientId);
+    const autoReply = await this.autoReplies?.findActiveReply({
+      clientId: client.id,
+      at: new Date(message.receivedAt),
+    });
+    if (autoReply !== undefined) {
+      return this.completeReplyFlow({
+        conversation,
+        conversationId,
+        client,
+        message,
+        outboundMessageId,
+        reply: autoReply,
+      });
+    }
+
     const operationalReply = await this.externalData?.findOperationalReply(client.id, message.text);
     if (operationalReply !== undefined && operationalReply !== null) {
       return this.completeReplyFlow({

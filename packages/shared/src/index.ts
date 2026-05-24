@@ -58,6 +58,25 @@ export interface WhatsAppTemplate {
   updatedAt: string;
 }
 
+export type AutoReplyRuleType = 'holiday' | 'off_hours';
+
+export interface ClientAutoReplyRule {
+  id: string;
+  clientId: string;
+  ruleType: AutoReplyRuleType;
+  label: string;
+  timezone: string;
+  startDate?: string;
+  endDate?: string;
+  dayOfWeek?: number;
+  startMinute: number;
+  endMinute: number;
+  replyText: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type CalibrationQueueFilter =
   | 'needs_review'
   | 'failed'
