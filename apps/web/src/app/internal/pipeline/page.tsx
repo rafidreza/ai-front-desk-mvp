@@ -148,6 +148,11 @@ export default function PipelinePage() {
                         <Link className="mini-button" href={`/internal/onboarding?clientId=${client.id}`}>
                           Onboarding
                         </Link>
+                        {client.lifecycleStage === 'shadow' && (
+                          <Link className="mini-button" href={`/internal/shadow?clientId=${client.id}`}>
+                            Shadow QA
+                          </Link>
+                        )}
                         {next !== null && (
                           <button
                             className="btn-primary"

@@ -6257,3 +6257,168 @@ button {
     position: static;
   }
 }
+
+/* ============================================
+   Shadow comparison review (T119)
+   ============================================ */
+
+.shadow-filter {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.shadow-filter label {
+  display: grid;
+  gap: 6px;
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.shadow-filter__help {
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.shadow-empty {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 32px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+
+.shadow-empty strong {
+  color: var(--ink);
+  font-size: var(--text-h3);
+}
+
+.shadow-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.shadow-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.shadow-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.shadow-card header strong {
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.shadow-card header small {
+  display: block;
+  font-size: var(--text-tiny);
+  color: var(--muted);
+}
+
+.shadow-card__time {
+  font-size: var(--text-tiny);
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.shadow-card__customer {
+  padding: 10px 12px;
+  background: var(--blue-soft);
+  border: 1px solid var(--blue);
+  border-radius: 10px;
+}
+
+.shadow-card__customer span {
+  display: block;
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.shadow-card__customer p {
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.shadow-card__compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.shadow-card__col {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.shadow-card__col[data-source="ai"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.shadow-card__col[data-source="operator"] {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.shadow-card__col span {
+  display: block;
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.shadow-card__col[data-source="ai"] span { color: var(--brand); }
+.shadow-card__col[data-source="operator"] span { color: var(--amber); }
+
+.shadow-card__col p {
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--ink);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.shadow-card footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .shadow-card__compare {
+    grid-template-columns: 1fr;
+  }
+}
