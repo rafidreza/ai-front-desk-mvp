@@ -16,6 +16,8 @@ export type {
   ClientDpaProfile,
   ClientFacebookSetupPreference,
   ClientFocusChannel,
+  ClientRetentionMode,
+  ClientRetentionPolicy,
   CustomerHistory,
   CustomerHistoryEvent,
   CustomerHistoryIdentityConfidence,

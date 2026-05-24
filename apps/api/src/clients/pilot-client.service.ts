@@ -10,6 +10,7 @@ import {
   ClientIntegrationStatus,
   ClientOnboardingProfile,
   ClientProfile,
+  ClientRetentionPolicy,
   ClientStatus,
   ConversionChecklistItem,
 } from '../types/domain';
@@ -38,6 +39,8 @@ type ClientMutationInput = {
   onboardingProfile?: ClientOnboardingProfile;
 };
 type DpaProfileInput = Omit<ClientDpaProfile, 'updatedAt'>;
+type RetentionPolicyInput = Pick<ClientRetentionPolicy, 'mode' | 'days'>;
+const retentionRedactedText = '[deleted by retention policy]';
 
 type ClientChannelRecord = {
   id: string;
@@ -107,7 +110,12 @@ function toComplianceProfile(value: unknown): ClientComplianceProfile | undefine
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const profile = value as Record<string, unknown>;
   const dpa = normalizeDpaProfile(profile.dpa);
-  return dpa === undefined ? undefined : { dpa };
+  const retention = normalizeRetentionPolicy(profile.retention);
+  if (dpa === undefined && retention === undefined) return undefined;
+  return {
+    dpa,
+    retention,
+  };
 }
 
 function normalizeDpaProfile(value: unknown): ClientDpaProfile | undefined {
@@ -133,6 +141,25 @@ function normalizeDpaProfile(value: unknown): ClientDpaProfile | undefined {
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
+}
+
+function normalizeRetentionPolicy(value: unknown): ClientRetentionPolicy | undefined {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const policy = value as Record<string, unknown>;
+  const days = typeof policy.days === 'number' && Number.isInteger(policy.days) ? policy.days : 90;
+  return {
+    mode: policy.mode === 'redact' ? 'redact' : 'disabled',
+    days: Math.min(Math.max(days, 30), 3650),
+    lastRunAt: optionalString(policy.lastRunAt),
+    lastRunCount: typeof policy.lastRunCount === 'number' && Number.isInteger(policy.lastRunCount) ? policy.lastRunCount : undefined,
+    updatedAt: optionalString(policy.updatedAt),
+  };
+}
+
+function retentionCutoff(days: number): Date {
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - days);
+  return cutoff;
 }
 
 function toLifecycleStage(value: unknown): ClientProfile['lifecycleStage'] {
@@ -521,6 +548,97 @@ export class PilotClientService {
       include: { channels: true },
     });
     return toClientProfile(client);
+  }
+
+  async updateRetentionPolicy(clientId: string, input: RetentionPolicyInput): Promise<ClientProfile> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+
+    const existingCompliance = toComplianceProfile(existing.complianceProfile);
+    const complianceProfile: ClientComplianceProfile = {
+      ...existingCompliance,
+      retention: {
+        ...existingCompliance?.retention,
+        mode: input.mode,
+        days: input.days,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: { complianceProfile: complianceProfile as unknown as Prisma.InputJsonValue },
+      include: { channels: true },
+    });
+    return toClientProfile(client);
+  }
+
+  async previewRetentionCleanup(clientId: string): Promise<{ cutoff: string; count: number; policy: ClientRetentionPolicy }> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+    const policy = toComplianceProfile(existing.complianceProfile)?.retention ?? { mode: 'disabled', days: 90 };
+    const cutoff = retentionCutoff(policy.days);
+    const count =
+      policy.mode === 'disabled'
+        ? 0
+        : await prisma.message.count({
+            where: {
+              createdAt: { lt: cutoff },
+              text: { not: retentionRedactedText },
+              conversation: { clientId },
+            },
+          });
+    return { cutoff: cutoff.toISOString(), count, policy };
+  }
+
+  async runRetentionCleanup(clientId: string): Promise<{ cutoff: string; count: number; client: ClientProfile }> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+    const existingCompliance = toComplianceProfile(existing.complianceProfile);
+    const policy = existingCompliance?.retention ?? { mode: 'disabled', days: 90 };
+    const cutoff = retentionCutoff(policy.days);
+    const result =
+      policy.mode === 'disabled'
+        ? { count: 0 }
+        : await prisma.message.updateMany({
+            where: {
+              createdAt: { lt: cutoff },
+              text: { not: retentionRedactedText },
+              conversation: { clientId },
+            },
+            data: {
+              text: retentionRedactedText,
+              transcript: null,
+              extractedText: null,
+              attachmentUrl: null,
+            },
+          });
+
+    const complianceProfile: ClientComplianceProfile = {
+      ...existingCompliance,
+      retention: {
+        mode: policy.mode,
+        days: policy.days,
+        lastRunAt: new Date().toISOString(),
+        lastRunCount: result.count,
+        updatedAt: policy.updatedAt,
+      },
+    };
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: { complianceProfile: complianceProfile as unknown as Prisma.InputJsonValue },
+      include: { channels: true },
+    });
+    return { cutoff: cutoff.toISOString(), count: result.count, client: toClientProfile(client) };
   }
 
   async updateProfile(clientId: string, input: ClientMutationInput): Promise<ClientProfile> {

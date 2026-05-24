@@ -102,6 +102,11 @@ const DpaProfileSchema = z.object({
   notes: z.string().trim().max(800).optional(),
 });
 
+const RetentionPolicySchema = z.object({
+  mode: z.enum(['disabled', 'redact']),
+  days: z.number().int().min(30).max(3650),
+});
+
 const CsatSchema = z.object({
   score: z.number().int().min(1).max(5),
   comment: z.string().trim().max(500).optional(),
@@ -217,6 +222,22 @@ export class ClientController {
   async updateDpaProfile(@Param('clientId') clientId: string, @Body() body: unknown) {
     const parsed = DpaProfileSchema.parse(body);
     return { client: await this.clients.updateDpaProfile(clientId, parsed) };
+  }
+
+  @Patch(':clientId/compliance/retention')
+  async updateRetentionPolicy(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = RetentionPolicySchema.parse(body);
+    return { client: await this.clients.updateRetentionPolicy(clientId, parsed) };
+  }
+
+  @Get(':clientId/compliance/retention/preview')
+  async previewRetentionCleanup(@Param('clientId') clientId: string) {
+    return this.clients.previewRetentionCleanup(clientId);
+  }
+
+  @Post(':clientId/compliance/retention/run')
+  async runRetentionCleanup(@Param('clientId') clientId: string) {
+    return this.clients.runRetentionCleanup(clientId);
   }
 
   @Get(':clientId/dashboard')

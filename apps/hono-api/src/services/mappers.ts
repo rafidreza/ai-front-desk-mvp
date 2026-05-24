@@ -102,24 +102,43 @@ function toConversionChecklist(value: unknown): ClientProfile['conversionCheckli
 function toComplianceProfile(value: unknown): ClientProfile['complianceProfile'] {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const profile = value as Record<string, unknown>;
-  if (profile.dpa === null || typeof profile.dpa !== 'object' || Array.isArray(profile.dpa)) return undefined;
-  const dpa = profile.dpa as Record<string, unknown>;
+  const hasDpa = profile.dpa !== null && typeof profile.dpa === 'object' && !Array.isArray(profile.dpa);
+  const dpa = hasDpa ? (profile.dpa as Record<string, unknown>) : undefined;
+  const retention = normalizeRetentionPolicy(profile.retention);
+  if (dpa === undefined && retention === undefined) return undefined;
   return {
-    dpa: {
-      status:
-        dpa.status === 'sent' || dpa.status === 'signed' || dpa.status === 'countersigned'
-          ? dpa.status
-          : 'not_sent',
-      templateUrl: stringOrUndefined(dpa.templateUrl),
-      sentAt: stringOrUndefined(dpa.sentAt),
-      signerName: stringOrUndefined(dpa.signerName),
-      signerEmail: stringOrUndefined(dpa.signerEmail),
-      signedAt: stringOrUndefined(dpa.signedAt),
-      countersignedAt: stringOrUndefined(dpa.countersignedAt),
-      countersignedPdfUrl: stringOrUndefined(dpa.countersignedPdfUrl),
-      notes: stringOrUndefined(dpa.notes),
-      updatedAt: stringOrUndefined(dpa.updatedAt),
-    },
+    dpa:
+      dpa === undefined
+        ? undefined
+        : {
+            status:
+              dpa.status === 'sent' || dpa.status === 'signed' || dpa.status === 'countersigned'
+                ? dpa.status
+                : 'not_sent',
+            templateUrl: stringOrUndefined(dpa.templateUrl),
+            sentAt: stringOrUndefined(dpa.sentAt),
+            signerName: stringOrUndefined(dpa.signerName),
+            signerEmail: stringOrUndefined(dpa.signerEmail),
+            signedAt: stringOrUndefined(dpa.signedAt),
+            countersignedAt: stringOrUndefined(dpa.countersignedAt),
+            countersignedPdfUrl: stringOrUndefined(dpa.countersignedPdfUrl),
+            notes: stringOrUndefined(dpa.notes),
+            updatedAt: stringOrUndefined(dpa.updatedAt),
+          },
+    retention,
+  };
+}
+
+function normalizeRetentionPolicy(value: unknown): NonNullable<ClientProfile['complianceProfile']>['retention'] {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const policy = value as Record<string, unknown>;
+  const days = typeof policy.days === 'number' && Number.isInteger(policy.days) ? policy.days : 90;
+  return {
+    mode: policy.mode === 'redact' ? 'redact' : 'disabled',
+    days: Math.min(Math.max(days, 30), 3650),
+    lastRunAt: stringOrUndefined(policy.lastRunAt),
+    lastRunCount: typeof policy.lastRunCount === 'number' && Number.isInteger(policy.lastRunCount) ? policy.lastRunCount : undefined,
+    updatedAt: stringOrUndefined(policy.updatedAt),
   };
 }
 

@@ -7,6 +7,7 @@ import {
   ClientDashboardSummary,
   ClientDpaProfile,
   ClientKnowledgeEntry,
+  ClientRetentionPolicy,
   ClientProfile,
   ClientStatus,
   ConversationLog,
@@ -191,6 +192,38 @@ export async function updateClientDpaProfile(
     body: JSON.stringify(input),
   });
   return data.client;
+}
+
+export async function updateClientRetentionPolicy(
+  clientId: string,
+  input: Pick<ClientRetentionPolicy, 'mode' | 'days'>,
+): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/compliance/retention`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+  return data.client;
+}
+
+export async function previewClientRetentionCleanup(clientId: string): Promise<{
+  cutoff: string;
+  count: number;
+  policy: ClientRetentionPolicy;
+}> {
+  return apiFetch<{ cutoff: string; count: number; policy: ClientRetentionPolicy }>(
+    `/clients/${clientId}/compliance/retention/preview`,
+  );
+}
+
+export async function runClientRetentionCleanup(clientId: string): Promise<{
+  cutoff: string;
+  count: number;
+  client: ClientProfile;
+}> {
+  return apiFetch<{ cutoff: string; count: number; client: ClientProfile }>(
+    `/clients/${clientId}/compliance/retention/run`,
+    { method: 'POST' },
+  );
 }
 
 export async function getClientConversionChecklist(

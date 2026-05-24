@@ -20,6 +20,8 @@ export type {
   ClientLifecycleStage,
   ClientOnboardingProfile,
   ClientProfile,
+  ClientRetentionMode,
+  ClientRetentionPolicy,
   ClientStatus,
   ClientWhatsAppSetupPreference,
   ConversionChecklistItem,

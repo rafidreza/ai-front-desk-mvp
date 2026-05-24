@@ -1,17 +1,28 @@
 'use client';
 
-import { Building2, Calculator, FileCheck2, Plus, Power, RefreshCw, RotateCcw, Save, Search, Star, Trash2 } from 'lucide-react';
+import { Building2, Calculator, FileCheck2, Plus, Power, RefreshCw, RotateCcw, Save, Search, ShieldCheck, Star, Trash2 } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   ClientManagementInput,
   createClientFromInternal,
   getClientDashboard,
   getClients,
+  previewClientRetentionCleanup,
+  runClientRetentionCleanup,
   updateClientDpaProfile,
   updateClientFromInternal,
+  updateClientRetentionPolicy,
   updateClientStatus,
 } from '@/lib/api';
-import { ClientDashboardSummary, ClientDpaProfile, ClientProfile, ClientStatus, DpaSigningStatus } from '@/types/domain';
+import {
+  ClientDashboardSummary,
+  ClientDpaProfile,
+  ClientProfile,
+  ClientRetentionMode,
+  ClientRetentionPolicy,
+  ClientStatus,
+  DpaSigningStatus,
+} from '@/types/domain';
 import { EmptyState } from '../_components/EmptyState';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
@@ -62,6 +73,11 @@ type DpaFormState = {
   notes: string;
 };
 
+type RetentionFormState = {
+  mode: ClientRetentionMode;
+  days: string;
+};
+
 const emptyClientForm: ClientFormState = {
   businessName: '',
   pageId: '',
@@ -91,6 +107,11 @@ const emptyDpaForm: DpaFormState = {
   countersignedAt: '',
   countersignedPdfUrl: '',
   notes: '',
+};
+
+const emptyRetentionForm: RetentionFormState = {
+  mode: 'disabled',
+  days: '90',
 };
 
 function formFromClient(client: ClientProfile): ClientFormState {
@@ -140,6 +161,14 @@ function dpaFormFromClient(client?: ClientProfile): DpaFormState {
   };
 }
 
+function retentionFormFromClient(client?: ClientProfile): RetentionFormState {
+  const retention = client?.complianceProfile?.retention;
+  return {
+    mode: retention?.mode ?? 'disabled',
+    days: String(retention?.days ?? 90),
+  };
+}
+
 function payloadFromForm(form: ClientFormState): ClientManagementInput & { businessName: string } {
   return {
     businessName: form.businessName.trim(),
@@ -170,6 +199,13 @@ function dpaPayloadFromForm(form: DpaFormState): Omit<ClientDpaProfile, 'updated
   };
 }
 
+function retentionPayloadFromForm(form: RetentionFormState): Pick<ClientRetentionPolicy, 'mode' | 'days'> {
+  return {
+    mode: form.mode,
+    days: Number.parseInt(form.days, 10),
+  };
+}
+
 export default function InternalClientsPage() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [dashboards, setDashboards] = useState<ClientDashboardSummary[]>([]);
@@ -181,6 +217,9 @@ export default function InternalClientsPage() {
   const [facebookPageForm, setFacebookPageForm] = useState(emptyFacebookPageForm);
   const [dpaForm, setDpaForm] = useState<DpaFormState>(emptyDpaForm);
   const [savedDpaForm, setSavedDpaForm] = useState<DpaFormState>(emptyDpaForm);
+  const [retentionForm, setRetentionForm] = useState<RetentionFormState>(emptyRetentionForm);
+  const [savedRetentionForm, setSavedRetentionForm] = useState<RetentionFormState>(emptyRetentionForm);
+  const [retentionPreview, setRetentionPreview] = useState<{ cutoff: string; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -253,6 +292,9 @@ export default function InternalClientsPage() {
   const isDpaFormDirty = useMemo(() => {
     return JSON.stringify(dpaForm) !== JSON.stringify(savedDpaForm);
   }, [dpaForm, savedDpaForm]);
+  const isRetentionFormDirty = useMemo(() => {
+    return JSON.stringify(retentionForm) !== JSON.stringify(savedRetentionForm);
+  }, [retentionForm, savedRetentionForm]);
   const canSubmitClientForm =
     formMode === 'create'
       ? isClientFormDirty && form.businessName.trim().length >= 2
@@ -263,10 +305,14 @@ export default function InternalClientsPage() {
     if (selectedClient !== undefined) {
       const nextForm = formFromClient(selectedClient);
       const nextDpaForm = dpaFormFromClient(selectedClient);
+      const nextRetentionForm = retentionFormFromClient(selectedClient);
       setForm(nextForm);
       setSavedForm(nextForm);
       setDpaForm(nextDpaForm);
       setSavedDpaForm(nextDpaForm);
+      setRetentionForm(nextRetentionForm);
+      setSavedRetentionForm(nextRetentionForm);
+      setRetentionPreview(null);
     }
   }, [formMode, selectedClient]);
 
@@ -278,6 +324,9 @@ export default function InternalClientsPage() {
     setFacebookPageForm(emptyFacebookPageForm);
     setDpaForm(emptyDpaForm);
     setSavedDpaForm(emptyDpaForm);
+    setRetentionForm(emptyRetentionForm);
+    setSavedRetentionForm(emptyRetentionForm);
+    setRetentionPreview(null);
     setNotice(null);
     setError(null);
   }
@@ -292,6 +341,10 @@ export default function InternalClientsPage() {
     const nextDpaForm = dpaFormFromClient(client);
     setDpaForm(nextDpaForm);
     setSavedDpaForm(nextDpaForm);
+    const nextRetentionForm = retentionFormFromClient(client);
+    setRetentionForm(nextRetentionForm);
+    setSavedRetentionForm(nextRetentionForm);
+    setRetentionPreview(null);
     setNotice(null);
     setError(null);
   }
@@ -448,6 +501,70 @@ export default function InternalClientsPage() {
       await loadClients();
     } catch (dpaError) {
       setError(dpaError instanceof Error ? dpaError.message : 'Unable to update DPA status.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function saveRetentionPolicy(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (selectedClientId === null) return;
+    const payload = retentionPayloadFromForm(retentionForm);
+    if (!Number.isInteger(payload.days) || payload.days < 30 || payload.days > 3650) {
+      setError('Retention days must be between 30 and 3650.');
+      return;
+    }
+    setIsSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const saved = await updateClientRetentionPolicy(selectedClientId, payload);
+      const nextRetentionForm = retentionFormFromClient(saved);
+      setRetentionForm(nextRetentionForm);
+      setSavedRetentionForm(nextRetentionForm);
+      setRetentionPreview(null);
+      setSelectedClientId(saved.id);
+      setNotice('Data retention policy updated.');
+      await loadClients();
+    } catch (retentionError) {
+      setError(retentionError instanceof Error ? retentionError.message : 'Unable to update retention policy.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function previewRetention() {
+    if (selectedClientId === null) return;
+    setIsSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const preview = await previewClientRetentionCleanup(selectedClientId);
+      setRetentionPreview({ cutoff: preview.cutoff, count: preview.count });
+      setNotice(`${preview.count} old message${preview.count === 1 ? '' : 's'} match the current retention policy.`);
+    } catch (retentionError) {
+      setError(retentionError instanceof Error ? retentionError.message : 'Unable to preview retention cleanup.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function runRetention() {
+    if (selectedClientId === null) return;
+    setIsSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await runClientRetentionCleanup(selectedClientId);
+      const nextRetentionForm = retentionFormFromClient(result.client);
+      setRetentionForm(nextRetentionForm);
+      setSavedRetentionForm(nextRetentionForm);
+      setRetentionPreview({ cutoff: result.cutoff, count: 0 });
+      setSelectedClientId(result.client.id);
+      setNotice(`${result.count} old message${result.count === 1 ? '' : 's'} redacted by retention policy.`);
+      await loadClients();
+    } catch (retentionError) {
+      setError(retentionError instanceof Error ? retentionError.message : 'Unable to run retention cleanup.');
     } finally {
       setIsSaving(false);
     }
@@ -734,6 +851,89 @@ export default function InternalClientsPage() {
                       <button className="mini-button" disabled={!isDpaFormDirty || isSaving} type="submit">
                         <Save size={14} />
                         Save DPA
+                      </button>
+                    </div>
+                  </form>
+
+                  <form className="client-channel-panel" onSubmit={saveRetentionPolicy}>
+                    <div className="section-label">
+                      <ShieldCheck size={15} />
+                      Data retention
+                    </div>
+                    <div className="client-management-grid">
+                      <label>
+                        Policy
+                        <select
+                          value={retentionForm.mode}
+                          onChange={(event) =>
+                            setRetentionForm((current) => ({
+                              ...current,
+                              mode: event.target.value as ClientRetentionMode,
+                            }))
+                          }
+                        >
+                          <option value="disabled">Disabled</option>
+                          <option value="redact">Redact old chat messages</option>
+                        </select>
+                      </label>
+                      <label>
+                        Retain chats for
+                        <input
+                          min={30}
+                          max={3650}
+                          type="number"
+                          value={retentionForm.days}
+                          onChange={(event) => setRetentionForm((current) => ({ ...current, days: event.target.value }))}
+                        />
+                      </label>
+                    </div>
+                    <div className="client-info-grid">
+                      <div>
+                        <span>Preview match</span>
+                        <strong>{retentionPreview === null ? 'Not previewed' : `${retentionPreview.count} messages`}</strong>
+                      </div>
+                      <div>
+                        <span>Cutoff</span>
+                        <strong>{retentionPreview === null ? 'Use preview' : retentionPreview.cutoff.slice(0, 10)}</strong>
+                      </div>
+                      <div>
+                        <span>Last run</span>
+                        <strong>
+                          {selectedClient?.complianceProfile?.retention?.lastRunAt === undefined
+                            ? 'Never'
+                            : `${selectedClient.complianceProfile.retention.lastRunAt.slice(0, 10)} (${selectedClient.complianceProfile.retention.lastRunCount ?? 0})`}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="form-actions">
+                      <button
+                        className="mini-button"
+                        disabled={!isRetentionFormDirty || isSaving}
+                        type="button"
+                        onClick={() => setRetentionForm(savedRetentionForm)}
+                      >
+                        <RotateCcw size={14} />
+                        Discard
+                      </button>
+                      <button className="mini-button" disabled={!isRetentionFormDirty || isSaving} type="submit">
+                        <Save size={14} />
+                        Save policy
+                      </button>
+                      <button
+                        className="mini-button"
+                        disabled={isSaving || isRetentionFormDirty || retentionForm.mode === 'disabled'}
+                        type="button"
+                        onClick={() => void previewRetention()}
+                      >
+                        Preview cleanup
+                      </button>
+                      <button
+                        className="mini-button"
+                        disabled={isSaving || isRetentionFormDirty || retentionForm.mode === 'disabled'}
+                        type="button"
+                        onClick={() => void runRetention()}
+                      >
+                        Redact now
                       </button>
                     </div>
                   </form>

@@ -128,8 +128,19 @@ export interface ClientDpaProfile {
   updatedAt?: string;
 }
 
+export type ClientRetentionMode = 'disabled' | 'redact';
+
+export interface ClientRetentionPolicy {
+  mode: ClientRetentionMode;
+  days: number;
+  lastRunAt?: string;
+  lastRunCount?: number;
+  updatedAt?: string;
+}
+
 export interface ClientComplianceProfile {
   dpa?: ClientDpaProfile;
+  retention?: ClientRetentionPolicy;
 }
 
 export interface ClientProfile {
