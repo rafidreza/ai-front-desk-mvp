@@ -5593,3 +5593,147 @@ button {
 .p1-permission-nudge button:hover {
   background: var(--brand-hover);
 }
+
+/* ============================================
+   KB version diff modal (T106)
+   ============================================ */
+
+.kb-diff-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 22, 30, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.kb-diff-modal {
+  width: min(960px, 100%);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.kb-diff-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.kb-diff-modal header h3 {
+  margin: 0;
+  font-size: var(--text-h3);
+  font-weight: var(--fw-heading);
+  color: var(--ink);
+}
+
+.kb-diff-modal header p {
+  margin: 4px 0 0;
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+
+.kb-diff-modal header button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.kb-diff-grid {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 12px 20px 4px;
+}
+
+.kb-diff-col-head {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px 8px 0 0;
+  font-size: var(--text-small);
+}
+
+.kb-diff-col-head strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.kb-diff-col-head small {
+  color: var(--muted);
+  font-size: var(--text-tiny);
+}
+
+.kb-diff-row {
+  display: contents;
+}
+
+.kb-diff-row > .kb-diff-field {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-top: none;
+  background: var(--surface);
+}
+
+.kb-diff-row[data-changed="true"] > .kb-diff-field {
+  background: rgba(245, 220, 215, 0.32);
+  border-color: var(--coral);
+}
+
+.kb-diff-field span {
+  display: block;
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.kb-diff-field pre {
+  margin: 0;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.kb-diff-modal footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.version-card__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}

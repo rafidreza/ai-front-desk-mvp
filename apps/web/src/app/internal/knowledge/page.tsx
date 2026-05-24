@@ -27,6 +27,7 @@ import {
 } from '@/lib/api';
 import { ClientProfile, KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
 import { EmptyState } from '../_components/EmptyState';
+import { KbDiffModal } from '../_components/KbDiffModal';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
 import { UiSelect } from '../_components/UiSelect';
@@ -78,6 +79,7 @@ export default function KnowledgePage() {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<KnowledgeEntry | null>(null);
   const [versions, setVersions] = useState<KnowledgeEntryVersion[]>([]);
+  const [compareVersionId, setCompareVersionId] = useState<string | null>(null);
   const [importResult, setImportResult] = useState<KnowledgeImportResult | null>(null);
   const [status, setStatus] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -279,6 +281,7 @@ export default function KnowledgePage() {
     try {
       const updated = await rollbackKnowledgeEntry(clientId, selectedEntry.id, versionId);
       setNotice('Version restored as a new draft.');
+      setCompareVersionId(null);
       await loadEntries(status, updated.id);
     } catch (rollbackError) {
       setError(getErrorMessage(rollbackError, 'Knowledge version was not restored. Fix: refresh version history, then retry.'));
@@ -286,6 +289,11 @@ export default function KnowledgePage() {
       setIsSaving(false);
     }
   }
+
+  const compareVersion = useMemo(
+    () => versions.find((version) => version.id === compareVersionId) ?? null,
+    [versions, compareVersionId],
+  );
 
   return (
     <InternalShell
@@ -487,15 +495,40 @@ export default function KnowledgePage() {
                 </div>
                 <p>{version.title}</p>
                 <small>{version.status} | {version.keywords.join(', ')}</small>
-                <button className="mini-button" disabled={isSaving} type="button" onClick={() => void rollback(version.id)}>
-                  <RotateCcw size={13} />
-                  Restore
-                </button>
+                <div className="version-card__actions">
+                  <button
+                    className="mini-button"
+                    disabled={isSaving || selectedEntry === null}
+                    onClick={() => setCompareVersionId(version.id)}
+                    type="button"
+                  >
+                    Compare
+                  </button>
+                  <button
+                    className="mini-button"
+                    disabled={isSaving}
+                    onClick={() => void rollback(version.id)}
+                    type="button"
+                  >
+                    <RotateCcw size={13} />
+                    Restore
+                  </button>
+                </div>
               </article>
             ))}
             {versions.length === 0 && <div className="empty">No history yet</div>}
           </div>
         </section>
+
+        {compareVersion !== null && selectedEntry !== null && (
+          <KbDiffModal
+            current={selectedEntry}
+            isRestoring={isSaving}
+            onClose={() => setCompareVersionId(null)}
+            onRestore={() => void rollback(compareVersion.id)}
+            version={compareVersion}
+          />
+        )}
 
         <form className="client-panel stack-form knowledge-create" onSubmit={handleCreate}>
           <div className="section-label">
