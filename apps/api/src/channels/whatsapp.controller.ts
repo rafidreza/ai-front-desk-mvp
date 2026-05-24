@@ -28,6 +28,7 @@ const WhatsAppWebhookSchema = z.object({
                   timestamp: z.string().optional(),
                   type: z.string().optional(),
                   text: z.object({ body: z.string().optional() }).optional(),
+                  audio: z.object({ id: z.string(), mime_type: z.string().optional() }).optional(),
                 }),
               )
               .optional(),
@@ -108,7 +109,7 @@ export class WhatsAppController {
 
         for (const message of change.value.messages ?? []) {
           const text = message.text?.body;
-          if (text === undefined || text.trim() === '') {
+          if ((text === undefined || text.trim() === '') && message.audio === undefined) {
             continue;
           }
 
@@ -136,8 +137,10 @@ export class WhatsAppController {
             channel: 'whatsapp',
             externalConversationId: message.from,
             externalSenderId: message.from,
-            text,
+            text: text?.trim() === '' || text === undefined ? 'Customer sent a voice note. Transcript pending.' : text,
             receivedAt: getReceivedAt(message.timestamp),
+            attachmentType: message.audio === undefined ? undefined : 'voice',
+            attachmentUrl: message.audio === undefined ? undefined : `whatsapp-media:${message.audio.id}`,
           };
 
           const result = await this.conversations.handleIncomingMessage(incoming);

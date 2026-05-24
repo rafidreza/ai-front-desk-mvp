@@ -1,6 +1,6 @@
 'use client';
 
-import { Ban, FlaskConical, Handshake, MessageSquareText, RefreshCw, Search, TicketCheck, X } from 'lucide-react';
+import { Ban, FlaskConical, Handshake, MessageSquareText, RefreshCw, Save, Search, TicketCheck, Volume2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -13,6 +13,7 @@ import {
   takeOverConversation,
   unblockSender,
   unmarkTestCustomer,
+  updateConversationMessageTranscript,
 } from '@/lib/api';
 import { BlockedSender, ConversationLog, ConversationSearchResult, TestCustomer, Ticket } from '@/types/domain';
 import { ConversationsPanel } from '../_components/ConversationsPanel';
@@ -36,6 +37,8 @@ export default function ConversationsPage() {
   const [isBlocking, setIsBlocking] = useState(false);
   const [testCustomersByClient, setTestCustomersByClient] = useState<Record<string, TestCustomer[]>>({});
   const [isTogglingTest, setIsTogglingTest] = useState(false);
+  const [transcriptsByMessage, setTranscriptsByMessage] = useState<Record<string, string>>({});
+  const [savingTranscriptId, setSavingTranscriptId] = useState<string | null>(null);
 
   async function loadConversations() {
     setIsLoading(true);
@@ -107,6 +110,19 @@ export default function ConversationsPage() {
   const linkedTicketId = createdTicket !== null && createdTicket.conversationId === selectedConversation?.id
     ? createdTicket.id
     : selectedConversation?.ticketId;
+
+  useEffect(() => {
+    if (selectedConversation === undefined) return;
+    setTranscriptsByMessage((current) => {
+      const next = { ...current };
+      for (const message of selectedConversation.messages) {
+        if (message.attachmentType === 'voice' && next[message.id] === undefined) {
+          next[message.id] = message.transcript ?? '';
+        }
+      }
+      return next;
+    });
+  }, [selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation === undefined) return;
@@ -277,6 +293,37 @@ export default function ConversationsPage() {
       setError(getErrorMessage(takeoverError, 'Conversation takeover could not start. Fix: refresh the conversation and retry.'));
     } finally {
       setIsTakingOver(false);
+    }
+  }
+
+  async function saveTranscript(messageId: string) {
+    if (selectedConversation === undefined) return;
+    setSavingTranscriptId(messageId);
+    setError(null);
+    setNotice(null);
+    try {
+      const updated = await updateConversationMessageTranscript(
+        selectedConversation.id,
+        messageId,
+        transcriptsByMessage[messageId] ?? '',
+      );
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === selectedConversation.id
+            ? {
+                ...conversation,
+                messages: conversation.messages.map((message) =>
+                  message.id === messageId ? { ...message, transcript: updated.transcript } : message,
+                ),
+              }
+            : conversation,
+        ),
+      );
+      setNotice('Voice transcript saved.');
+    } catch (transcriptError) {
+      setError(getErrorMessage(transcriptError, 'Could not save the voice transcript.'));
+    } finally {
+      setSavingTranscriptId(null);
     }
   }
 
@@ -469,6 +516,40 @@ export default function ConversationsPage() {
                   <article className="bubble" data-direction={message.direction} key={message.id}>
                     <small>{message.direction === 'outbound' ? 'AI response' : 'Customer'}</small>
                     <p>{message.text}</p>
+                    {message.attachmentType === 'voice' && (
+                      <div className="voice-note-card">
+                        <div className="section-label">
+                          <Volume2 size={14} />
+                          Voice note
+                        </div>
+                        {message.attachmentUrl !== undefined && message.attachmentUrl.startsWith('http') ? (
+                          <audio controls src={message.attachmentUrl}>
+                            Voice note playback is not supported in this browser.
+                          </audio>
+                        ) : (
+                          <small>{message.attachmentUrl ?? 'Voice media URL pending'}</small>
+                        )}
+                        <label>
+                          Transcript
+                          <textarea
+                            value={transcriptsByMessage[message.id] ?? ''}
+                            placeholder="Add or edit the customer voice transcript"
+                            onChange={(event) =>
+                              setTranscriptsByMessage((current) => ({ ...current, [message.id]: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <button
+                          className="mini-button"
+                          disabled={savingTranscriptId === message.id}
+                          type="button"
+                          onClick={() => void saveTranscript(message.id)}
+                        >
+                          <Save size={13} />
+                          {savingTranscriptId === message.id ? 'Saving...' : 'Save transcript'}
+                        </button>
+                      </div>
+                    )}
                     <time>{formatTime(message.createdAt)}</time>
                   </article>
                 ))}

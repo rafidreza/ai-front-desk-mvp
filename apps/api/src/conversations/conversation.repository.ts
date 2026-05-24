@@ -34,6 +34,26 @@ function mapTagRows(
   }));
 }
 
+function mapMessageRow(message: {
+  id: string;
+  direction: string;
+  text: string;
+  attachmentType: string | null;
+  attachmentUrl: string | null;
+  transcript: string | null;
+  createdAt: Date;
+}): ConversationMessage {
+  return {
+    id: message.id,
+    direction: message.direction as ConversationMessage['direction'],
+    text: message.text,
+    attachmentType: message.attachmentType === 'voice' || message.attachmentType === 'image' ? message.attachmentType : undefined,
+    attachmentUrl: message.attachmentUrl ?? undefined,
+    transcript: message.transcript ?? undefined,
+    createdAt: message.createdAt.toISOString(),
+  };
+}
+
 @Injectable()
 export class ConversationRepository {
   constructor(private readonly prisma?: PrismaService) {}
@@ -100,12 +120,7 @@ export class ConversationRepository {
         autoQaReason: conversation.autoQaReason ?? undefined,
         autoQaAt: conversation.autoQaAt?.toISOString(),
         autoQaVersion: conversation.autoQaVersion ?? undefined,
-        messages: conversation.messages.map((message) => ({
-          id: message.id,
-          direction: message.direction as ConversationMessage['direction'],
-          text: message.text,
-          createdAt: message.createdAt.toISOString(),
-        })),
+        messages: conversation.messages.map(mapMessageRow),
       };
     }
 
@@ -136,6 +151,9 @@ export class ConversationRepository {
         where: { id: message.id },
         update: {
           text: message.text,
+          attachmentType: message.attachmentType,
+          attachmentUrl: message.attachmentUrl,
+          transcript: message.transcript,
         },
         create: {
           ...message,
@@ -159,6 +177,32 @@ export class ConversationRepository {
     return [...this.conversations.values()].some((conversation) =>
       conversation.messages.some((message) => message.id === messageId),
     );
+  }
+
+  async updateMessageTranscript(input: {
+    conversationId: string;
+    messageId: string;
+    transcript: string;
+  }): Promise<ConversationMessage> {
+    if (this.prisma?.enabled === true) {
+      const result = await this.prisma.message.updateMany({
+        where: { id: input.messageId, conversationId: input.conversationId },
+        data: { transcript: input.transcript },
+      });
+      if (result.count === 0) {
+        throw new ConflictException(`Message not found: ${input.messageId}`);
+      }
+      const message = await this.prisma.message.findUniqueOrThrow({ where: { id: input.messageId } });
+      return mapMessageRow(message);
+    }
+
+    const conversation = this.getConversation(input.conversationId);
+    const message = conversation.messages.find((item) => item.id === input.messageId);
+    if (message === undefined) {
+      throw new ConflictException(`Message not found: ${input.messageId}`);
+    }
+    message.transcript = input.transcript;
+    return message;
   }
 
   async setConversationResult(
@@ -292,12 +336,7 @@ export class ConversationRepository {
         autoQaReason: conversation.autoQaReason ?? undefined,
         autoQaAt: conversation.autoQaAt?.toISOString(),
         autoQaVersion: conversation.autoQaVersion ?? undefined,
-        messages: conversation.messages.map((message) => ({
-          id: message.id,
-          direction: message.direction as ConversationMessage['direction'],
-          text: message.text,
-          createdAt: message.createdAt.toISOString(),
-        })),
+        messages: conversation.messages.map(mapMessageRow),
       }));
     }
 
@@ -1011,6 +1050,9 @@ export class ConversationRepository {
       id: string;
       direction: string;
       text: string;
+      attachmentType: string | null;
+      attachmentUrl: string | null;
+      transcript: string | null;
       createdAt: Date;
     }[];
   }): ConversationLog {
@@ -1035,12 +1077,7 @@ export class ConversationRepository {
       autoQaReason: conversation.autoQaReason ?? undefined,
       autoQaAt: conversation.autoQaAt?.toISOString(),
       autoQaVersion: conversation.autoQaVersion ?? undefined,
-      messages: conversation.messages.map((message) => ({
-        id: message.id,
-        direction: message.direction as ConversationMessage['direction'],
-        text: message.text,
-        createdAt: message.createdAt.toISOString(),
-      })),
+      messages: conversation.messages.map(mapMessageRow),
     };
   }
 

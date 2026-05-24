@@ -22,6 +22,14 @@ const MessengerWebhookSchema = z.object({
             .object({
               mid: z.string().optional(),
               text: z.string().optional(),
+              attachments: z
+                .array(
+                  z.object({
+                    type: z.string(),
+                    payload: z.object({ url: z.string().optional() }).optional(),
+                  }),
+                )
+                .optional(),
               quick_reply: z.object({ payload: z.string().optional() }).optional(),
             })
             .optional(),
@@ -114,18 +122,22 @@ export class MessengerController {
           continue;
         }
 
-        if (event.message?.text === undefined) {
+        const message = event.message;
+        const voiceAttachment = message?.attachments?.find((attachment) => attachment.type === 'audio');
+        if (message === undefined || (message.text === undefined && voiceAttachment === undefined)) {
           continue;
         }
 
         const incoming: IncomingMessage = {
-          id: event.message.mid ?? `${event.sender.id}:${event.timestamp ?? Date.now()}`,
+          id: message.mid ?? `${event.sender.id}:${event.timestamp ?? Date.now()}`,
           clientId: client.id,
           channel: 'messenger',
           externalConversationId: event.sender.id,
           externalSenderId: event.sender.id,
-          text: event.message.text,
+          text: message.text ?? 'Customer sent a voice note. Transcript pending.',
           receivedAt: new Date(event.timestamp ?? Date.now()).toISOString(),
+          attachmentType: voiceAttachment === undefined ? undefined : 'voice',
+          attachmentUrl: voiceAttachment?.payload?.url,
         };
 
         const result = await this.conversations.handleIncomingMessage(incoming);

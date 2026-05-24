@@ -1482,6 +1482,61 @@ button {
   text-transform: uppercase;
 }
 
+.voice-note-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #bfd9cf;
+  background: #f1faf6;
+  border-radius: 8px;
+}
+
+.voice-note-card audio {
+  width: 100%;
+  max-width: 360px;
+}
+
+.voice-note-card label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.voice-note-card textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 9px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+.voice-note-card__transcript {
+  display: grid;
+  gap: 4px;
+}
+
+.voice-note-card__transcript span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.voice-note-card__transcript p {
+  margin: 0;
+}
+
 .client-detail-panel {
   min-height: calc(100vh - 210px);
 }

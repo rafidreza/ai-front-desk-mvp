@@ -431,6 +431,9 @@ model Message {
   conversationId String
   direction      String
   text           String
+  attachmentType String?
+  attachmentUrl  String?
+  transcript     String?
   createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 

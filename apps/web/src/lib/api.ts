@@ -641,3 +641,18 @@ export async function takeOverConversation(conversationId: string): Promise<Tick
   });
   return data.ticket;
 }
+
+export async function updateConversationMessageTranscript(
+  conversationId: string,
+  messageId: string,
+  transcript: string,
+): Promise<ConversationLog['messages'][number]> {
+  const data = await apiFetch<{ message: ConversationLog['messages'][number] }>(
+    `/conversations/${conversationId}/messages/${messageId}/transcript`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ transcript }),
+    },
+  );
+  return data.message;
+}

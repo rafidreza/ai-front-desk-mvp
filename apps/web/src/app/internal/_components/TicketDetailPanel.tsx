@@ -10,6 +10,7 @@ import {
   RefreshCw,
   RotateCcw,
   Send,
+  Volume2,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
@@ -320,6 +321,25 @@ export function TicketDetailPanel({
             {selectedConversation?.messages.map((message) => (
               <article className="bubble" data-direction={message.direction} key={message.id}>
                 <p>{message.text}</p>
+                {message.attachmentType === 'voice' && (
+                  <div className="voice-note-card">
+                    <div className="section-label">
+                      <Volume2 size={14} />
+                      Voice note
+                    </div>
+                    {message.attachmentUrl !== undefined && message.attachmentUrl.startsWith('http') ? (
+                      <audio controls src={message.attachmentUrl}>
+                        Voice note playback is not supported in this browser.
+                      </audio>
+                    ) : (
+                      <small>{message.attachmentUrl ?? 'Voice media URL pending'}</small>
+                    )}
+                    <div className="voice-note-card__transcript">
+                      <span>Transcript</span>
+                      <p>{message.transcript?.trim() || 'Transcript pending'}</p>
+                    </div>
+                  </div>
+                )}
                 <time>{formatTime(message.createdAt)}</time>
               </article>
             ))}

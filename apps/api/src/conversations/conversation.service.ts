@@ -130,6 +130,9 @@ export class ConversationService {
       id: message.id,
       direction: 'inbound',
       text: message.text,
+      attachmentType: message.attachmentType,
+      attachmentUrl: message.attachmentUrl,
+      transcript: message.transcript,
       createdAt: message.receivedAt,
     });
 
@@ -327,6 +330,14 @@ export class ConversationService {
       query: trimmed,
       limit: Math.max(1, Math.min(input.limit ?? 30, 100)),
     });
+  }
+
+  updateMessageTranscript(input: {
+    conversationId: string;
+    messageId: string;
+    transcript: string;
+  }) {
+    return this.repository.updateMessageTranscript(input);
   }
 
   listCalibrationQueue(input: {

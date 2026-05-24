@@ -24,6 +24,10 @@ const TakeoverConversationSchema = z.object({
   actorId: z.string().min(1).optional(),
 });
 
+const MessageTranscriptSchema = z.object({
+  transcript: z.string().trim().max(4000),
+});
+
 @Controller()
 export class ConversationController {
   constructor(private readonly conversations: ConversationService) {}
@@ -80,5 +84,21 @@ export class ConversationController {
     });
 
     return { ticket };
+  }
+
+  @Patch('conversations/:id/messages/:messageId/transcript')
+  async updateMessageTranscript(
+    @Param('id') conversationId: string,
+    @Param('messageId') messageId: string,
+    @Body() body: unknown,
+  ) {
+    const parsed = MessageTranscriptSchema.parse(body);
+    return {
+      message: await this.conversations.updateMessageTranscript({
+        conversationId,
+        messageId,
+        transcript: parsed.transcript,
+      }),
+    };
   }
 }

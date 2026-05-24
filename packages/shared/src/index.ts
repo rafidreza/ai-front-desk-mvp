@@ -407,6 +407,9 @@ export interface IncomingMessage {
   externalSenderId: string;
   text: string;
   receivedAt: string;
+  attachmentType?: 'voice' | 'image';
+  attachmentUrl?: string;
+  transcript?: string;
 }
 
 export interface AgentReply {
@@ -421,6 +424,9 @@ export interface ConversationMessage {
   id: string;
   direction: 'inbound' | 'outbound';
   text: string;
+  attachmentType?: 'voice' | 'image';
+  attachmentUrl?: string;
+  transcript?: string;
   createdAt: string;
 }
 
