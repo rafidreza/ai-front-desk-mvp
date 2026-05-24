@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 21 | 17 | 38 |
-| **TOTAL** | **110** | **37** | **147** |
+| 12 — Use case backlog | 22 | 16 | 38 |
+| **TOTAL** | **111** | **36** | **147** |
 
 ---
 
@@ -263,7 +263,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T106 — USECASE** KB version diff + 1-click rollback UI (highlight what changed between versions). — **DONE (2026-05-24, commit `63a3955`): new `KbDiffModal` opens from a "Compare" button on every version row; side-by-side current vs selected version across Title / Answer / Keywords / Category / Confidence boost with coral data-changed highlighting; modal "Restore as new draft" reuses the existing `rollbackKnowledgeEntry` API (T21's draft-then-publish contract preserved). Backlog T106b: word-level inline diff, restore-and-publish atomic action.**
 - [x] **T107 — USECASE** KB freshness alerts: surface entries not updated in 90 days, prompt operator to re-verify. — **DONE (2026-05-24, commit `b0f52da`): new `markReviewed` API + `POST /clients/:id/knowledge/:entryId/review` endpoint that bumps `updatedAt` without a version snapshot; `KnowledgeEntry.updatedAt` now in shared types; UI `isStale()` flags active entries older than 90 days; amber page banner with count + "Show stale only" toggle, inline `STALE Nd` badge + amber left border per row, "Mark reviewed" CTA on the detail editor for active entries. Backlog T107b: per-client stale-summary email + configurable threshold.**
 - [x] **T108 — USECASE** Seller-facing read-only KB view (client portal) so seller sees what AI knows. Trust signal. — **DONE (2026-05-19, covered by T55): `/client/knowledge` already lists every published KB entry with title + answer + keywords + category, plus a search bar + category filter; client-safe endpoints (T54) prevent any mutation from a client session. No additional work needed for the read-only trust path; backlog T108b: per-entry "preview AI sample reply" affordance + dashboard tile showing "AI knows N entries about your business".**
-- [ ] **T109 — USECASE** Suggest new KB entries from unresolved tickets (auto-draft from ticket text → operator approves).
+- [x] **T109 — USECASE** Suggest new KB entries from unresolved tickets (auto-draft from ticket text → operator approves). — **DONE (2026-05-24, commit `6e2bdae`): new `sourceTicketId` column on `KnowledgeChangeRequest` + partial unique index for idempotency; `KnowledgeChangeRequestService.suggestFromTicket()` auto-builds a `requestType=create` request (title = first sentence of customer message, answer = AI suggested reply, keywords = top non-stopword tokens, `submittedBy='ai-suggestion'`); hooked into `TicketService.createFromEscalation` best-effort; existing `/internal/kb-review` queue (T58) renders a brand-soft "AI suggestion" pill on these rows so operators can triage AI-vs-client suggestions at a glance. Backlog T109b: similarity-cluster recurring messages before suggesting; surface source-ticket link in review detail.**
 
 ### Billing + auth + RBAC
 
