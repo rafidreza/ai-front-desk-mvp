@@ -1,12 +1,14 @@
 'use client';
 
 import { BookOpenText, Building2, Link2, MessageCircle } from 'lucide-react';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
+import { getClientDashboard, submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
+import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import {
   ClientFacebookSetupPreference,
   ClientFocusChannel,
+  ClientProfile,
   ClientWhatsAppSetupPreference,
 } from '@/types/domain';
 
@@ -31,6 +33,7 @@ export default function ClientOnboardingPage() {
   const [whatsappSetup, setWhatsappSetup] = useState<ClientWhatsAppSetupPreference>('assisted');
   const [facebookSetup, setFacebookSetup] = useState<ClientFacebookSetupPreference>('oauth');
   const [businessCategory, setBusinessCategory] = useState('');
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +42,15 @@ export default function ClientOnboardingPage() {
     if (typeof window === 'undefined') return '';
     return new URLSearchParams(window.location.search).get('clientId') ?? '';
   }, []);
+  const copy = getClientPortalCopy(language);
+  const onboardingCopy = copy.onboarding;
+
+  useEffect(() => {
+    if (clientId === '') return;
+    void getClientDashboard(clientId)
+      .then((dashboard) => setLanguage(dashboard.client.defaultLanguage))
+      .catch(() => undefined);
+  }, [clientId]);
 
   function toggleFocus(channel: ClientFocusChannel) {
     setFocusChannels((current) =>
@@ -50,11 +62,11 @@ export default function ClientOnboardingPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     if (clientId === '') {
-      setError('Client session is missing.');
+      setError(onboardingCopy.missingSession);
       return;
     }
     if (focusChannels.length === 0) {
-      setError('Select at least one customer channel.');
+      setError(onboardingCopy.selectChannel);
       return;
     }
 
@@ -75,7 +87,7 @@ export default function ClientOnboardingPage() {
       setBusinessCategory(category);
       setStep('channels');
     } catch (profileError) {
-      setError(profileError instanceof Error ? profileError.message : 'Unable to save business profile.');
+      setError(profileError instanceof Error ? profileError.message : onboardingCopy.profileError);
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +111,7 @@ export default function ClientOnboardingPage() {
       });
       setStep('knowledge');
     } catch (channelError) {
-      setError(channelError instanceof Error ? channelError.message : 'Unable to save channel setup.');
+      setError(channelError instanceof Error ? channelError.message : onboardingCopy.channelError);
     } finally {
       setIsSubmitting(false);
     }
@@ -121,7 +133,7 @@ export default function ClientOnboardingPage() {
       setFacebookSetup('skip');
       setStep('knowledge');
     } catch (channelError) {
-      setError(channelError instanceof Error ? channelError.message : 'Unable to skip channel setup.');
+      setError(channelError instanceof Error ? channelError.message : onboardingCopy.skipError);
     } finally {
       setIsSubmitting(false);
     }
@@ -147,7 +159,7 @@ export default function ClientOnboardingPage() {
       await updateClientOnboarding(clientId, { onboardingStatus: 'onboarding_complete' });
       window.location.href = `/client/dashboard?clientId=${clientId}`;
     } catch (knowledgeError) {
-      setError(knowledgeError instanceof Error ? knowledgeError.message : 'Unable to finish onboarding.');
+      setError(knowledgeError instanceof Error ? knowledgeError.message : onboardingCopy.finishError);
     } finally {
       setIsSubmitting(false);
     }
@@ -159,22 +171,22 @@ export default function ClientOnboardingPage() {
         <div className="client-title-lockup">
           <span className="client-mark">ST</span>
           <div>
-            <p className="eyebrow">Client onboarding</p>
-            <h1>Set up your business</h1>
+            <p className="eyebrow">{onboardingCopy.eyebrow}</p>
+            <h1>{onboardingCopy.title}</h1>
           </div>
         </div>
-        <ClientPortalNav active="onboarding" clientId={clientId} />
+        <ClientPortalNav active="onboarding" clientId={clientId} language={language} />
       </header>
 
       <section className="client-setup-brief">
-        <p>Share the business context, channel setup path, and first knowledge notes for your workspace.</p>
+        <p>{onboardingCopy.brief}</p>
       </section>
 
       <section className="client-panel onboarding-panel">
         <div className="onboarding-steps" aria-label="Onboarding progress">
           {(['profile', 'channels', 'knowledge'] as const).map((item, index) => (
             <span data-active={step === item} key={item}>
-              {index + 1}. {item}
+              {index + 1}. {onboardingCopy.steps[item]}
             </span>
           ))}
         </div>
@@ -186,14 +198,14 @@ export default function ClientOnboardingPage() {
           <form className="stack-form" onSubmit={saveProfile}>
             <div className="section-label">
               <Building2 size={15} />
-              Business profile
+              {onboardingCopy.businessProfile}
             </div>
             <label>
-              Business category
-              <input name="businessCategory" required placeholder="Fashion, dental clinic, electronics" />
+              {onboardingCopy.businessCategory}
+              <input name="businessCategory" required placeholder={onboardingCopy.businessCategoryPlaceholder} />
             </label>
             <fieldset className="choice-fieldset">
-              <legend>Customer channels</legend>
+              <legend>{onboardingCopy.customerChannels}</legend>
               <div className="choice-grid">
                 <label className="choice-control">
                   <input checked={focusChannels.includes('whatsapp')} type="checkbox" onChange={() => toggleFocus('whatsapp')} />
@@ -210,15 +222,15 @@ export default function ClientOnboardingPage() {
               </div>
             </fieldset>
             <label>
-              Website URL
+              {onboardingCopy.websiteUrl}
               <input name="websiteUrl" placeholder="https://example.com" type="url" />
             </label>
             <label>
-              Facebook page URL
+              {onboardingCopy.facebookPageUrl}
               <input name="facebookPageUrl" placeholder="https://facebook.com/your-page" type="url" />
             </label>
             <button className="icon-button" disabled={isSubmitting} type="submit">
-              {isSubmitting ? 'Saving...' : 'Continue to channels'}
+              {isSubmitting ? onboardingCopy.saving : onboardingCopy.continueChannels}
             </button>
           </form>
         )}
@@ -227,21 +239,21 @@ export default function ClientOnboardingPage() {
           <form className="stack-form" onSubmit={saveChannels}>
             <div className="section-label">
               <MessageCircle size={15} />
-              Channel setup
+              {onboardingCopy.channelSetup}
             </div>
             {focusChannels.includes('whatsapp') && (
               <>
                 <label>
-                  WhatsApp setup path
+                  {onboardingCopy.whatsappSetupPath}
                   <select value={whatsappSetup} onChange={(event) => setWhatsappSetup(event.target.value as ClientWhatsAppSetupPreference)}>
-                    <option value="self">I will provide setup details</option>
-                    <option value="assisted">Set it up with me</option>
-                    <option value="skip">Skip for now</option>
+                    <option value="self">{onboardingCopy.whatsappSelf}</option>
+                    <option value="assisted">{onboardingCopy.assisted}</option>
+                    <option value="skip">{onboardingCopy.skipNow}</option>
                   </select>
                 </label>
                 {whatsappSetup === 'self' && (
                   <label>
-                    WhatsApp support number
+                    {onboardingCopy.whatsappSupportNumber}
                     <input name="whatsappPoc" placeholder="+8801..." />
                   </label>
                 )}
@@ -250,17 +262,17 @@ export default function ClientOnboardingPage() {
             {focusChannels.includes('facebook') && (
               <>
                 <label>
-                  Facebook setup path
+                  {onboardingCopy.facebookSetupPath}
                   <select value={facebookSetup} onChange={(event) => setFacebookSetup(event.target.value as ClientFacebookSetupPreference)}>
-                    <option value="oauth">Connect with Facebook OAuth</option>
-                    <option value="assisted">Set it up with me</option>
-                    <option value="skip">Skip for now</option>
+                    <option value="oauth">{onboardingCopy.facebookOauth}</option>
+                    <option value="assisted">{onboardingCopy.assisted}</option>
+                    <option value="skip">{onboardingCopy.skipNow}</option>
                   </select>
                 </label>
-                {facebookSetup === 'oauth' && <div className="inline-success">Facebook OAuth setup requested.</div>}
+                {facebookSetup === 'oauth' && <div className="inline-success">{onboardingCopy.facebookOauthRequested}</div>}
                 {facebookSetup !== 'skip' && (
                   <label>
-                    Facebook Page ID
+                    {onboardingCopy.facebookPageId}
                     <input name="pageId" placeholder="Optional until the page connection is ready" />
                   </label>
                 )}
@@ -269,15 +281,15 @@ export default function ClientOnboardingPage() {
             {!focusChannels.includes('whatsapp') && !focusChannels.includes('facebook') && (
               <div className="inline-success">
                 <Link2 size={14} />
-                Website channel noted. The dashboard will keep the web widget ready.
+                {onboardingCopy.websiteNoted}
               </div>
             )}
             <div className="form-actions">
               <button className="icon-button" disabled={isSubmitting} type="submit">
-                {isSubmitting ? 'Saving...' : 'Continue to knowledge'}
+                {isSubmitting ? onboardingCopy.saving : onboardingCopy.continueKnowledge}
               </button>
               <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void skipChannels()}>
-                Skip channel setup
+                {onboardingCopy.skipChannelSetup}
               </button>
             </div>
           </form>
@@ -287,26 +299,26 @@ export default function ClientOnboardingPage() {
           <form className="stack-form" onSubmit={finishOnboarding}>
             <div className="section-label">
               <BookOpenText size={15} />
-              First knowledge notes
+              {onboardingCopy.firstKnowledge}
             </div>
             <label>
-              Knowledge title
+              {onboardingCopy.knowledgeTitle}
               <input name="knowledgeTitle" placeholder="Delivery, returns, pricing, support hours" />
             </label>
             <label>
-              Business knowledge
+              {onboardingCopy.businessKnowledge}
               <textarea name="knowledge" placeholder="Share policies, process notes, FAQ answers, product details, and anything customers ask often." />
             </label>
             <label>
-              Keywords
+              {onboardingCopy.keywords}
               <input name="keywords" placeholder="delivery, refund, support hours" />
             </label>
             <div className="form-actions">
               <button className="icon-button" disabled={isSubmitting} type="submit">
-                {isSubmitting ? 'Finishing...' : 'Finish onboarding'}
+                {isSubmitting ? onboardingCopy.finishing : onboardingCopy.finish}
               </button>
               <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void finishOnboarding()}>
-                Skip knowledge for now
+                {onboardingCopy.skipKnowledge}
               </button>
             </div>
           </form>

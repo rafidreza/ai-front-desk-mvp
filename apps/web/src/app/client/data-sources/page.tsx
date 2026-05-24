@@ -11,6 +11,7 @@ import {
   saveGoogleSheetDataSource,
   syncExternalDataSource,
 } from '@/lib/api';
+import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { formatLocalizedDateTime, formatLocalizedNumber } from '@/lib/localized-format';
 import { ClientProfile, ExternalDataSource, ExternalDataSyncRun, OrderRecord, ProductRecord } from '@/types/domain';
 
@@ -34,8 +35,8 @@ const emptyForm: SheetForm = {
   orderFreshnessMinutes: '5',
 };
 
-function formatTime(value: string | undefined, language: ClientProfile['defaultLanguage']) {
-  if (value === undefined) return 'Never';
+function formatTime(value: string | undefined, language: ClientProfile['defaultLanguage'], emptyLabel: string) {
+  if (value === undefined) return emptyLabel;
   return formatLocalizedDateTime(value, language);
 }
 
@@ -76,6 +77,8 @@ export default function ClientDataSourcesPage() {
   }, []);
 
   const source = sources[0];
+  const copy = getClientPortalCopy(language);
+  const dataCopy = copy.dataSources;
 
   async function loadData(nextSource = source) {
     setIsLoading(true);
@@ -99,7 +102,7 @@ export default function ClientDataSourcesPage() {
         setOrders([]);
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load data sources.');
+      setError(loadError instanceof Error ? loadError.message : dataCopy.loadError);
     } finally {
       setIsLoading(false);
     }
@@ -130,10 +133,10 @@ export default function ClientDataSourcesPage() {
         orderFreshnessMinutes: toNumber(form.orderFreshnessMinutes, 5),
       });
       setSources([saved]);
-      setNotice('Google Sheet source saved.');
+      setNotice(dataCopy.saved);
       await loadData(saved);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to save Google Sheet source.');
+      setError(saveError instanceof Error ? saveError.message : dataCopy.saveError);
     } finally {
       setIsSaving(false);
     }
@@ -148,14 +151,11 @@ export default function ClientDataSourcesPage() {
       const result = await syncExternalDataSource(clientId, source.id);
       setLastSyncRun(result.syncRun);
       setNotice(
-        `Sync complete: ${formatLocalizedNumber(result.syncRun.productsImported, language)} products and ${formatLocalizedNumber(
-          result.syncRun.ordersImported,
-          language,
-        )} orders imported.`,
+        dataCopy.syncComplete(result.syncRun.productsImported, result.syncRun.ordersImported),
       );
       await loadData(result.source);
     } catch (syncError) {
-      setError(syncError instanceof Error ? syncError.message : 'Unable to sync Google Sheet.');
+      setError(syncError instanceof Error ? syncError.message : dataCopy.syncError);
       await loadData(source);
     } finally {
       setIsSyncing(false);
@@ -168,18 +168,18 @@ export default function ClientDataSourcesPage() {
         <div className="client-title-lockup">
           <span className="client-mark">DS</span>
           <div>
-            <p className="eyebrow">Live business data</p>
-            <h1>Data Sources</h1>
+            <p className="eyebrow">{dataCopy.eyebrow}</p>
+            <h1>{dataCopy.title}</h1>
           </div>
         </div>
         <ClientPortalNav active="data-sources" clientId={clientId} language={language} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadData()}>
             <RefreshCw size={16} />
-            Refresh
+            {copy.common.refresh}
           </button>
           <button className="icon-button" type="button" onClick={() => void logout()}>
-            Sign out
+            {copy.common.signOut}
           </button>
         </div>
       </header>
@@ -189,21 +189,17 @@ export default function ClientDataSourcesPage() {
 
       <section className="client-data-command">
         <div>
-          <p className="eyebrow">Google Sheet</p>
-          <h2>{source?.lastSyncStatus === 'succeeded' ? 'Product and order data is connected' : 'Connect product and order data'}</h2>
-          <p>
-            Last sync: {formatTime(source?.lastSuccessfulSyncAt, language)}. Products stay fresh for{' '}
-            {formatLocalizedNumber(source?.productFreshnessMinutes ?? 15, language)} minutes; orders stay fresh for{' '}
-            {formatLocalizedNumber(source?.orderFreshnessMinutes ?? 5, language)} minutes.
-          </p>
+          <p className="eyebrow">{dataCopy.googleSheet}</p>
+          <h2>{source?.lastSyncStatus === 'succeeded' ? dataCopy.connectedTitle : dataCopy.connectTitle}</h2>
+          <p>{dataCopy.lastSyncLine(formatTime(source?.lastSuccessfulSyncAt, language, dataCopy.notSynced), source?.productFreshnessMinutes ?? 15, source?.orderFreshnessMinutes ?? 5)}</p>
         </div>
         <div className="knowledge-command-stats">
           <div>
-            <span>Products</span>
+            <span>{dataCopy.products}</span>
             <strong>{formatLocalizedNumber(products.length, language)}</strong>
           </div>
           <div>
-            <span>Orders</span>
+            <span>{dataCopy.orders}</span>
             <strong>{formatLocalizedNumber(orders.length, language)}</strong>
           </div>
         </div>
@@ -214,54 +210,54 @@ export default function ClientDataSourcesPage() {
           <div className="panel-header">
             <div className="panel-title">
               <Link2 size={16} />
-              Google Sheet link
+              {dataCopy.sheetLink}
             </div>
             <span className="badge" data-tone={source?.lastSyncStatus === 'failed' ? 'coral' : source?.lastSyncStatus === 'succeeded' ? 'green' : 'blue'}>
-              {source?.lastSyncStatus ?? 'not synced'}
+              {source?.lastSyncStatus ?? dataCopy.notSynced}
             </span>
           </div>
 
           <form className="stack-form data-source-form" onSubmit={(event) => void handleSave(event)}>
             <label>
-              Source name
+              {dataCopy.sourceName}
               <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
             </label>
             <label>
-              Google Sheet URL
+              {dataCopy.sheetUrl}
               <input value={form.sheetUrl} placeholder="https://docs.google.com/spreadsheets/d/..." onChange={(event) => setForm((current) => ({ ...current, sheetUrl: event.target.value }))} />
             </label>
             <div className="data-form-row">
               <label>
-                Products tab
+                {dataCopy.productsTab}
                 <input value={form.productsTabName} onChange={(event) => setForm((current) => ({ ...current, productsTabName: event.target.value }))} />
               </label>
               <label>
-                Orders tab
+                {dataCopy.ordersTab}
                 <input value={form.ordersTabName} onChange={(event) => setForm((current) => ({ ...current, ordersTabName: event.target.value }))} />
               </label>
             </div>
             <div className="data-form-row">
               <label>
-                Sync minutes
+                {dataCopy.syncMinutes}
                 <input type="number" min="5" value={form.syncIntervalMinutes} onChange={(event) => setForm((current) => ({ ...current, syncIntervalMinutes: event.target.value }))} />
               </label>
               <label>
-                Product freshness
+                {dataCopy.productFreshness}
                 <input type="number" min="1" value={form.productFreshnessMinutes} onChange={(event) => setForm((current) => ({ ...current, productFreshnessMinutes: event.target.value }))} />
               </label>
               <label>
-                Order freshness
+                {dataCopy.orderFreshness}
                 <input type="number" min="1" value={form.orderFreshnessMinutes} onChange={(event) => setForm((current) => ({ ...current, orderFreshnessMinutes: event.target.value }))} />
               </label>
             </div>
             <div className="form-actions">
               <button className="icon-button" disabled={isSaving} type="submit">
                 <Save size={16} />
-                Save
+                {dataCopy.save}
               </button>
               <button className="icon-button" disabled={source === undefined || isSyncing} type="button" onClick={() => void handleSync()}>
                 <RefreshCw size={16} />
-                Sync now
+                {dataCopy.syncNow}
               </button>
             </div>
           </form>
@@ -271,21 +267,21 @@ export default function ClientDataSourcesPage() {
           <div className="panel-header">
             <div className="panel-title">
               <TableProperties size={16} />
-              Sync status
+              {dataCopy.syncStatus}
             </div>
-            {source !== undefined && <span className="count">{formatTime(source.lastSyncAt, language)}</span>}
+            {source !== undefined && <span className="count">{formatTime(source.lastSyncAt, language, dataCopy.notSynced)}</span>}
           </div>
           <div className="data-source-status">
             <div>
-              <span>Last result</span>
-              <strong>{source?.lastSyncStatus ?? 'Not synced'}</strong>
+              <span>{dataCopy.lastResult}</span>
+              <strong>{source?.lastSyncStatus ?? dataCopy.notSynced}</strong>
             </div>
             <div>
-              <span>Products imported</span>
+              <span>{dataCopy.productsImported}</span>
               <strong>{formatLocalizedNumber(lastSyncRun?.productsImported ?? products.length, language)}</strong>
             </div>
             <div>
-              <span>Orders imported</span>
+              <span>{dataCopy.ordersImported}</span>
               <strong>{formatLocalizedNumber(lastSyncRun?.ordersImported ?? orders.length, language)}</strong>
             </div>
           </div>
@@ -303,7 +299,7 @@ export default function ClientDataSourcesPage() {
       <section className="client-data-grid">
         <section className="client-panel data-source-panel">
           <div className="panel-header">
-            <div className="panel-title">Products</div>
+            <div className="panel-title">{dataCopy.products}</div>
             <span className="count">{formatLocalizedNumber(products.length, language)}</span>
           </div>
           <div className="data-record-list">
@@ -311,20 +307,20 @@ export default function ClientDataSourcesPage() {
               <article className="data-record-row" key={product.id}>
                 <div>
                   <strong>{product.productName}</strong>
-                  <small>{[product.sku, product.variant].filter(Boolean).join(' / ') || 'No SKU'}</small>
+                  <small>{[product.sku, product.variant].filter(Boolean).join(' / ') || dataCopy.noSku}</small>
                 </div>
                 <span className="badge" data-tone={product.availabilityStatus === 'in_stock' ? 'green' : product.availabilityStatus === 'out_of_stock' ? 'coral' : 'amber'}>
                   {product.availabilityStatus.replace(/_/g, ' ')}
                 </span>
               </article>
             ))}
-            {products.length === 0 && <div className="empty">No products synced</div>}
+            {products.length === 0 && <div className="empty">{dataCopy.noProducts}</div>}
           </div>
         </section>
 
         <section className="client-panel data-source-panel">
           <div className="panel-header">
-            <div className="panel-title">Orders</div>
+            <div className="panel-title">{dataCopy.orders}</div>
             <span className="count">{formatLocalizedNumber(orders.length, language)}</span>
           </div>
           <div className="data-record-list">
@@ -339,7 +335,7 @@ export default function ClientDataSourcesPage() {
                 </span>
               </article>
             ))}
-            {orders.length === 0 && <div className="empty">No orders synced</div>}
+            {orders.length === 0 && <div className="empty">{dataCopy.noOrders}</div>}
           </div>
         </section>
       </section>

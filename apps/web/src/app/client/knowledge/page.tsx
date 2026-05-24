@@ -10,6 +10,7 @@ import {
   submitClientKnowledgeEditRequest,
   submitClientKnowledgeRequest,
 } from '@/lib/api';
+import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { formatLocalizedNumber } from '@/lib/localized-format';
 import {
   ClientKnowledgeEntry,
@@ -98,6 +99,8 @@ export default function ClientKnowledgePage() {
     if (typeof window === 'undefined') return 'pilot-client';
     return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
   }, []);
+  const copy = getClientPortalCopy(language);
+  const knowledgeCopy = copy.knowledge;
 
   const categories = useMemo(() => {
     return ['all', ...Array.from(new Set(entries.map((entry) => entry.category ?? 'general'))).sort()];
@@ -125,7 +128,7 @@ export default function ClientKnowledgePage() {
       setRequests(loadedRequests);
       setLanguage(dashboard.client.defaultLanguage);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load knowledge.');
+      setError(loadError instanceof Error ? loadError.message : knowledgeCopy.loadError);
     } finally {
       setIsLoading(false);
     }
@@ -164,15 +167,15 @@ export default function ClientKnowledgePage() {
     const proposedKeywords = parseKeywords(form.keywords);
 
     if (proposedTitle.length < 2) {
-      setFormError('Title must be at least 2 characters.');
+      setFormError(knowledgeCopy.titleError);
       return;
     }
     if (proposedAnswer.length < 2) {
-      setFormError('Answer must be at least 2 characters.');
+      setFormError(knowledgeCopy.answerError);
       return;
     }
     if (proposedKeywords.length === 0) {
-      setFormError('Add at least one keyword.');
+      setFormError(knowledgeCopy.keywordError);
       return;
     }
 
@@ -191,11 +194,11 @@ export default function ClientKnowledgePage() {
       } else {
         await submitClientKnowledgeEditRequest(clientId, editingEntry.id, input);
       }
-      setNotice(editingEntry === null ? 'Knowledge request submitted.' : 'Edit request submitted.');
+      setNotice(editingEntry === null ? knowledgeCopy.requestSubmitted : knowledgeCopy.editSubmitted);
       resetForm();
       await loadKnowledge(requestStatus);
     } catch (submitError) {
-      setFormError(submitError instanceof Error ? submitError.message : 'Unable to submit request.');
+      setFormError(submitError instanceof Error ? submitError.message : knowledgeCopy.submitError);
     } finally {
       setIsSubmitting(false);
     }
@@ -207,18 +210,18 @@ export default function ClientKnowledgePage() {
         <div className="client-title-lockup">
           <span className="client-mark">KB</span>
           <div>
-            <p className="eyebrow">Business knowledge</p>
-            <h1>Knowledge Base</h1>
+            <p className="eyebrow">{knowledgeCopy.eyebrow}</p>
+            <h1>{knowledgeCopy.title}</h1>
           </div>
         </div>
         <ClientPortalNav active="knowledge" clientId={clientId} language={language} />
         <div className="panel-actions">
           <button className="icon-button" disabled={isLoading} type="button" onClick={() => void loadKnowledge()}>
             <RefreshCw size={16} />
-            Refresh
+            {copy.common.refresh}
           </button>
           <button className="icon-button" type="button" onClick={() => void logout()}>
-            Sign out
+            {copy.common.signOut}
           </button>
         </div>
       </header>
@@ -228,17 +231,17 @@ export default function ClientKnowledgePage() {
 
       <section className="client-knowledge-command">
         <div>
-          <p className="eyebrow">Approved answers</p>
-          <h2>{formatLocalizedNumber(filteredEntries.length, language)} published entries available to your AI support agent</h2>
-          <p>These are the customer-facing facts currently approved for replies. Submitted updates stay in review until the operations team publishes them.</p>
+          <p className="eyebrow">{knowledgeCopy.approvedAnswers}</p>
+          <h2>{knowledgeCopy.commandTitle(filteredEntries.length)}</h2>
+          <p>{knowledgeCopy.commandDescription}</p>
         </div>
         <div className="knowledge-command-stats">
           <div>
-            <span>Published</span>
+            <span>{knowledgeCopy.published}</span>
             <strong>{formatLocalizedNumber(entries.length, language)}</strong>
           </div>
           <div>
-            <span>Requests</span>
+            <span>{knowledgeCopy.requests}</span>
             <strong>{formatLocalizedNumber(requests.length, language)}</strong>
           </div>
         </div>
@@ -249,7 +252,7 @@ export default function ClientKnowledgePage() {
           <div className="panel-header">
             <div className="panel-title">
               <BookOpenText size={16} />
-              Published knowledge
+              {knowledgeCopy.publishedKnowledge}
             </div>
             <span className="count">{formatLocalizedNumber(filteredEntries.length, language)}</span>
           </div>
@@ -257,7 +260,7 @@ export default function ClientKnowledgePage() {
           <div className="client-knowledge-tools">
             <label className="search-control">
               <Search size={14} />
-              <input value={query} placeholder="Search entries" onChange={(event) => setQuery(event.target.value)} />
+              <input value={query} placeholder={knowledgeCopy.searchPlaceholder} onChange={(event) => setQuery(event.target.value)} />
             </label>
             <div className="filter-row">
               {categories.map((item) => (
@@ -284,7 +287,7 @@ export default function ClientKnowledgePage() {
                   </div>
                   <span className="badge" data-tone="green">
                     <ShieldCheck size={12} />
-                    approved
+                    {knowledgeCopy.approved}
                   </span>
                 </div>
                 <p>{entry.answer}</p>
@@ -295,11 +298,11 @@ export default function ClientKnowledgePage() {
                 </div>
                 <button className="mini-button knowledge-edit-button" type="button" onClick={() => selectEdit(entry)}>
                   <Pencil size={13} />
-                  Suggest edit
+                  {knowledgeCopy.suggestEdit}
                 </button>
               </article>
             ))}
-            {!isLoading && filteredEntries.length === 0 && <div className="empty">No published entries match this view</div>}
+            {!isLoading && filteredEntries.length === 0 && <div className="empty">{knowledgeCopy.emptyEntries}</div>}
           </div>
         </section>
 
@@ -308,21 +311,21 @@ export default function ClientKnowledgePage() {
             <div className="panel-header">
               <div className="panel-title">
                 {editingEntry === null ? <Plus size={16} /> : <Pencil size={16} />}
-                {editingEntry === null ? 'Add knowledge request' : 'Suggest edit'}
+                {editingEntry === null ? knowledgeCopy.addRequest : knowledgeCopy.suggestEdit}
               </div>
               {editingEntry !== null && (
                 <button className="mini-button" type="button" onClick={resetForm}>
-                  New
+                  {knowledgeCopy.new}
                 </button>
               )}
             </div>
 
             <form className="stack-form knowledge-request-form" onSubmit={handleSubmit}>
               {formError !== null && <div className="inline-alert">{formError}</div>}
-              {editingEntry !== null && <div className="inline-success">Editing request for {editingEntry.title}</div>}
+              {editingEntry !== null && <div className="inline-success">{knowledgeCopy.editingRequest(editingEntry.title)}</div>}
 
               <label>
-                Title
+                {knowledgeCopy.titleLabel}
                 <input
                   value={form.title}
                   placeholder="Delivery cutoff, return policy, sizing note"
@@ -331,7 +334,7 @@ export default function ClientKnowledgePage() {
               </label>
 
               <label>
-                Answer
+                {knowledgeCopy.answer}
                 <textarea
                   value={form.answer}
                   placeholder="Write the exact customer-facing answer you want reviewed."
@@ -340,7 +343,7 @@ export default function ClientKnowledgePage() {
               </label>
 
               <label>
-                Keywords
+                {knowledgeCopy.keywords}
                 <input
                   value={form.keywords}
                   placeholder="delivery, eid, cutoff"
@@ -350,7 +353,7 @@ export default function ClientKnowledgePage() {
 
               <div className="knowledge-form-row">
                 <label>
-                  Category
+                  {knowledgeCopy.category}
                   <input
                     value={form.category}
                     placeholder="delivery"
@@ -358,19 +361,19 @@ export default function ClientKnowledgePage() {
                   />
                 </label>
                 <label>
-                  Urgency
+                  {knowledgeCopy.urgency}
                   <select
                     value={form.urgency}
                     onChange={(event) => setForm((current) => ({ ...current, urgency: event.target.value as KnowledgeChangeRequestUrgency }))}
                   >
-                    <option value="normal">Normal</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="normal">{knowledgeCopy.normal}</option>
+                    <option value="urgent">{knowledgeCopy.urgent}</option>
                   </select>
                 </label>
               </div>
 
               <label>
-                Business note
+                {knowledgeCopy.businessNote}
                 <textarea
                   value={form.note}
                   placeholder="Add context for the operations team."
@@ -381,10 +384,10 @@ export default function ClientKnowledgePage() {
               <div className="form-actions">
                 <button className="icon-button" disabled={isSubmitting} type="submit">
                   <Send size={15} />
-                  {isSubmitting ? 'Submitting' : editingEntry === null ? 'Submit request' : 'Submit edit'}
+                  {isSubmitting ? knowledgeCopy.submitting : editingEntry === null ? knowledgeCopy.submitRequest : knowledgeCopy.submitEdit}
                 </button>
                 <button className="mini-button" disabled={isSubmitting} type="button" onClick={resetForm}>
-                  Clear
+                  {knowledgeCopy.clear}
                 </button>
               </div>
             </form>
@@ -394,7 +397,7 @@ export default function ClientKnowledgePage() {
             <div className="panel-header">
               <div className="panel-title">
                 <Filter size={16} />
-                Update requests
+                {knowledgeCopy.updateRequests}
               </div>
               <span className="count">{formatLocalizedNumber(requests.length, language)}</span>
             </div>
@@ -402,7 +405,7 @@ export default function ClientKnowledgePage() {
             <div className="client-filter-bar knowledge-request-filter">
               <div>
                 <Filter size={15} />
-                Status
+                {knowledgeCopy.status}
               </div>
               <div className="filter-row">
                 {statusFilters.map((status) => (
@@ -436,13 +439,13 @@ export default function ClientKnowledgePage() {
                   </span>
                 {(request.clientVisibleMessage ?? request.reviewerNote) !== undefined && (
                   <div className="knowledge-request-feedback">
-                    <span>Feedback</span>
+                    <span>{knowledgeCopy.feedback}</span>
                     <p>{request.clientVisibleMessage ?? request.reviewerNote}</p>
                   </div>
                 )}
               </article>
             ))}
-              {!isLoading && requests.length === 0 && <div className="empty">No update requests yet</div>}
+              {!isLoading && requests.length === 0 && <div className="empty">{knowledgeCopy.noRequests}</div>}
             </div>
           </section>
         </div>

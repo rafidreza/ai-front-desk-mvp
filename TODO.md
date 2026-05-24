@@ -32,8 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| 13 — UX Audit follow-up | 5 | 2 | 7 |
-| **TOTAL** | **129** | **25** | **154** |
+| 13 — UX Audit follow-up | 6 | 1 | 7 |
+| **TOTAL** | **130** | **24** | **154** |
 
 ---
 
@@ -299,7 +299,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T129 — UXAUDIT** Refine widget PDPA consent UX: hide or de-emphasize the disabled input before consent and reposition the "Live demo" tag so it does not overlap the widget header on mobile/desktop. — **DONE (2026-05-24): the widget now hides the message input until PDPA consent is accepted, the live demo label sits above the iframe instead of over the widget header, and the demo iframe loads eagerly so accessibility checks inspect the real widget document. Verified with web lint/build and focused uxaudit accessibility/usability checks on desktop and mobile.**
 - [ ] **T130 — UXAUDIT** Clarify deferred billing/payment surfaces: keep payment work deferred per user direction, and rename/hide billing-adjacent internal labels like pricing/MRR so they read as non-billing estimates only. — **DEFERRED (2026-05-24): user instructed us to skip anything billing/payment related for now. No billing/payment UI or copy changes have been implemented.**
 - [x] **T131 — UXAUDIT** Improve client login failure recovery: distinguish unknown identifier, unconfigured delivery, and backend failure; include examples for client ID, email, and WhatsApp fallback. — **DONE (2026-05-24): client login now gives clearer recovery copy for unmatched/unusable identifiers, unconfigured email/WhatsApp delivery, inactive clients, backend/service outages, and invalid/expired codes, with examples for client ID, owner email, and WhatsApp number. Verified with web lint/build and focused uxaudit checks on `/client/login` with no failures.**
-- [ ] **T132 — UXAUDIT** Finish client portal localization coverage: apply the client portal copy/localized formatting system to Data Sources, Knowledge, and Onboarding pages, not just dashboard/tickets.
+- [x] **T132 — UXAUDIT** Finish client portal localization coverage: apply the client portal copy/localized formatting system to Data Sources, Knowledge, and Onboarding pages, not just dashboard/tickets. — **DONE (2026-05-24): extended the shared client portal copy system with Data Sources, Knowledge, and Onboarding sections for Bangla, English, and mixed language clients, then wired those pages to localized nav/action labels, headings, empty states, form labels, notices, and number/date formatting. Verified with web lint/build.**
 
 ---
 
