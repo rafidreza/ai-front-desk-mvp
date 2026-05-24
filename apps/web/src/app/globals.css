@@ -6154,3 +6154,106 @@ button {
   min-height: 28px;
   padding: 0 10px;
 }
+
+/* ============================================
+   Onboarding review screen (T120)
+   ============================================ */
+
+.onboarding-review-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.onboarding-review-side {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  position: sticky;
+  top: 16px;
+}
+
+.onboarding-review-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.onboarding-review-meta dt {
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.onboarding-review-meta dd {
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--ink);
+  text-transform: capitalize;
+}
+
+.onboarding-review-form {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.onboarding-review-form .form-field input,
+.onboarding-review-form .form-field select {
+  font-size: var(--text-small);
+}
+
+.focus-channels-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.focus-channel-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  font-size: var(--text-small);
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.focus-channel-pill input {
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+.focus-channel-pill:has(input:checked) {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.onboarding-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+@media (max-width: 880px) {
+  .onboarding-review-layout {
+    grid-template-columns: 1fr;
+  }
+  .onboarding-review-side {
+    position: static;
+  }
+}

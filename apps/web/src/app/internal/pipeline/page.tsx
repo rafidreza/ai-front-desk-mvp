@@ -145,6 +145,9 @@ export default function PipelinePage() {
                         <Link className="mini-button" href={`/internal/clients?clientId=${client.id}`}>
                           Open
                         </Link>
+                        <Link className="mini-button" href={`/internal/onboarding?clientId=${client.id}`}>
+                          Onboarding
+                        </Link>
                         {next !== null && (
                           <button
                             className="btn-primary"
