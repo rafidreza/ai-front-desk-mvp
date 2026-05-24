@@ -5799,3 +5799,57 @@ button {
   flex-wrap: wrap;
   margin-top: 6px;
 }
+
+/* ============================================
+   KB freshness alerts (T107)
+   ============================================ */
+
+.kb-freshness-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 0 0 14px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  border-radius: 10px;
+  font-size: var(--text-small);
+}
+
+.kb-freshness-banner strong {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.kb-freshness-banner span {
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+.kb-freshness-banner button {
+  margin-left: auto;
+  background: var(--amber);
+  color: #ffffff;
+  border-color: var(--amber);
+}
+
+.kb-stale-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--amber-soft);
+  color: var(--amber);
+  border: 1px solid var(--amber);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.knowledge-row[data-stale="true"] {
+  border-left: 3px solid var(--amber);
+}

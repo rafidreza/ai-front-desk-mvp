@@ -27,6 +27,7 @@ function mapEntry(entry: {
   embeddedAt?: Date | null;
   sourceTicketId?: string | null;
   templateKey?: string | null;
+  updatedAt?: Date;
 }): KnowledgeEntry {
   return {
     id: entry.id,
@@ -43,6 +44,7 @@ function mapEntry(entry: {
     archivedAt: entry.archivedAt?.toISOString(),
     sourceTicketId: entry.sourceTicketId ?? undefined,
     templateKey: entry.templateKey ?? undefined,
+    updatedAt: entry.updatedAt?.toISOString(),
   };
 }
 
@@ -284,6 +286,19 @@ export class KnowledgeService {
     });
 
     return mapEntry(entry);
+  }
+
+  async markReviewed(clientId: string, entryId: string, _actorId?: string): Promise<KnowledgeEntry> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.knowledgeEntry.findFirst({ where: { id: entryId, clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Knowledge entry not found: ${entryId}`);
+    }
+    const updated = await prisma.knowledgeEntry.update({
+      where: { id: entryId },
+      data: { updatedAt: new Date() },
+    });
+    return mapEntry(updated);
   }
 
   async setStatus(

@@ -3,6 +3,7 @@
 import {
   Archive,
   Building2,
+  CheckCheck,
   DatabaseZap,
   FileUp,
   History,
@@ -21,11 +22,27 @@ import {
   getKnowledgeEntries,
   getKnowledgeVersions,
   importKnowledgeFiles,
+  markKnowledgeReviewed,
   rollbackKnowledgeEntry,
   setKnowledgeStatus,
   updateKnowledgeEntry,
 } from '@/lib/api';
 import { ClientProfile, KnowledgeEntry, KnowledgeEntryVersion, KnowledgeImportResult } from '@/types/domain';
+
+const STALE_DAYS = 90;
+
+function isStale(entry: KnowledgeEntry, now: Date = new Date()): boolean {
+  if (entry.status !== 'active') return false;
+  if (entry.updatedAt === undefined) return false;
+  const ageMs = now.getTime() - new Date(entry.updatedAt).getTime();
+  return ageMs >= STALE_DAYS * 24 * 60 * 60 * 1000;
+}
+
+function staleDays(entry: KnowledgeEntry, now: Date = new Date()): number {
+  if (entry.updatedAt === undefined) return 0;
+  const ageMs = now.getTime() - new Date(entry.updatedAt).getTime();
+  return Math.floor(ageMs / (24 * 60 * 60 * 1000));
+}
 import { EmptyState } from '../_components/EmptyState';
 import { KbDiffModal } from '../_components/KbDiffModal';
 import { ListSkeleton } from '../_components/ListSkeleton';
@@ -80,6 +97,7 @@ export default function KnowledgePage() {
   const [selectedEntry, setSelectedEntry] = useState<KnowledgeEntry | null>(null);
   const [versions, setVersions] = useState<KnowledgeEntryVersion[]>([]);
   const [compareVersionId, setCompareVersionId] = useState<string | null>(null);
+  const [showStaleOnly, setShowStaleOnly] = useState(false);
   const [importResult, setImportResult] = useState<KnowledgeImportResult | null>(null);
   const [status, setStatus] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -152,6 +170,7 @@ export default function KnowledgePage() {
 
   const filteredEntries = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    const now = new Date();
     return entries.filter((entry) => {
       const categoryMatches = categoryFilter === 'all' || (entry.category ?? 'general') === categoryFilter;
       const queryMatches =
@@ -159,9 +178,15 @@ export default function KnowledgePage() {
         [entry.title, entry.answer, entry.category, entry.status, ...entry.keywords]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(normalizedQuery));
-      return categoryMatches && queryMatches;
+      const staleMatches = !showStaleOnly || isStale(entry, now);
+      return categoryMatches && queryMatches && staleMatches;
     });
-  }, [categoryFilter, entries, query]);
+  }, [categoryFilter, entries, query, showStaleOnly]);
+
+  const staleCount = useMemo(() => {
+    const now = new Date();
+    return entries.filter((entry) => isStale(entry, now)).length;
+  }, [entries]);
 
   const categoryCounts = useMemo(() => {
     return entries.reduce<Record<string, number>>((counts, entry) => {
@@ -273,6 +298,21 @@ export default function KnowledgePage() {
     }
   }
 
+  async function handleMarkReviewed(entry: KnowledgeEntry) {
+    setIsSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await markKnowledgeReviewed(clientId, entry.id);
+      setNotice(`"${entry.title}" marked as reviewed.`);
+      await loadEntries(status, entry.id);
+    } catch (reviewError) {
+      setError(getErrorMessage(reviewError, 'Could not mark this entry as reviewed.'));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function rollback(versionId: string) {
     if (selectedEntry === null) return;
     setIsSaving(true);
@@ -356,6 +396,22 @@ export default function KnowledgePage() {
         </div>
       </section>
 
+      {staleCount > 0 && (
+        <div className="kb-freshness-banner" role="status">
+          <strong>
+            {staleCount} {staleCount === 1 ? 'entry has' : 'entries have'} not been touched in {STALE_DAYS}+ days.
+          </strong>
+          <span>Review the answer is still correct, then mark reviewed to clear the alert.</span>
+          <button
+            className="mini-button"
+            onClick={() => setShowStaleOnly((value) => !value)}
+            type="button"
+          >
+            {showStaleOnly ? 'Show all entries' : 'Show stale only'}
+          </button>
+        </div>
+      )}
+
       <section className="knowledge-layout">
         <section className="client-panel">
           <div className="panel-header">
@@ -395,19 +451,30 @@ export default function KnowledgePage() {
           </div>
           <div className="client-list">
             {isLoading && filteredEntries.length === 0 && <ListSkeleton rows={5} variant="default" />}
-            {filteredEntries.map((entry) => (
-              <button
-                className="knowledge-row"
-                data-selected={selectedEntry?.id === entry.id}
-                key={entry.id}
-                type="button"
-                onClick={() => void selectEntry(entry)}
-              >
-                <strong>{entry.title}</strong>
-                <small>{categoryLabel(entry.category)} | {entry.status} | v{entry.version}</small>
-                <small>{entry.keywords.join(', ')}</small>
-              </button>
-            ))}
+            {filteredEntries.map((entry) => {
+              const stale = isStale(entry);
+              return (
+                <button
+                  className="knowledge-row"
+                  data-selected={selectedEntry?.id === entry.id}
+                  data-stale={stale ? 'true' : undefined}
+                  key={entry.id}
+                  type="button"
+                  onClick={() => void selectEntry(entry)}
+                >
+                  <strong>
+                    {entry.title}
+                    {stale && (
+                      <span className="kb-stale-badge" title={`Last touched ${staleDays(entry)} days ago`}>
+                        Stale {staleDays(entry)}d
+                      </span>
+                    )}
+                  </strong>
+                  <small>{categoryLabel(entry.category)} | {entry.status} | v{entry.version}</small>
+                  <small>{entry.keywords.join(', ')}</small>
+                </button>
+              );
+            })}
             {!isLoading && filteredEntries.length === 0 && (
               <EmptyState
                 icon={<DatabaseZap size={20} />}
@@ -474,6 +541,22 @@ export default function KnowledgePage() {
                   <Archive size={15} />
                   Archive
                 </button>
+                {selectedEntry.status === 'active' && (
+                  <button
+                    className="icon-button"
+                    disabled={isSaving}
+                    onClick={() => void handleMarkReviewed(selectedEntry)}
+                    title={
+                      selectedEntry.updatedAt !== undefined
+                        ? `Last touched ${staleDays(selectedEntry)} days ago`
+                        : 'Mark reviewed'
+                    }
+                    type="button"
+                  >
+                    <CheckCheck size={15} />
+                    Mark reviewed
+                  </button>
+                )}
               </div>
             </form>
           )}

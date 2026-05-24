@@ -438,6 +438,20 @@ export async function rollbackKnowledgeEntry(
   return data.entry;
 }
 
+export async function markKnowledgeReviewed(
+  clientId: string,
+  entryId: string,
+): Promise<KnowledgeEntry> {
+  const data = await apiFetch<{ entry: KnowledgeEntry }>(
+    `/clients/${clientId}/knowledge/${entryId}/review`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ actorId: 'internal-console' }),
+    },
+  );
+  return data.entry;
+}
+
 export async function getPromptProfiles(clientId: string, status = 'all'): Promise<PromptProfile[]> {
   const data = await apiFetch<{ profiles: PromptProfile[] }>(`/clients/${clientId}/prompts?status=${status}`);
   return data.profiles;

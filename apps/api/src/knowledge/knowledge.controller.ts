@@ -34,6 +34,10 @@ const RollbackSchema = z.object({
   actorId: z.string().trim().min(2).optional(),
 });
 
+const MarkReviewedSchema = z.object({
+  actorId: z.string().trim().min(2).optional(),
+});
+
 const KnowledgeImportSchema = z.object({
   actorId: z.string().trim().min(2).optional(),
   files: z
@@ -159,5 +163,15 @@ export class KnowledgeController {
   async rollback(@Param('clientId') clientId: string, @Param('entryId') entryId: string, @Body() body: unknown) {
     const parsed = RollbackSchema.parse(body);
     return { entry: await this.knowledge.rollback({ clientId, entryId, versionId: parsed.versionId, actorId: parsed.actorId }) };
+  }
+
+  @Post(':entryId/review')
+  async markReviewed(
+    @Param('clientId') clientId: string,
+    @Param('entryId') entryId: string,
+    @Body() body: unknown,
+  ) {
+    const parsed = MarkReviewedSchema.parse(body ?? {});
+    return { entry: await this.knowledge.markReviewed(clientId, entryId, parsed.actorId) };
   }
 }
