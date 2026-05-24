@@ -787,6 +787,14 @@ button {
   gap: 5px;
 }
 
+.ticket-main__headline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .ticket-main strong,
 .conversation-copy strong {
   overflow: hidden;
@@ -805,9 +813,24 @@ button {
 }
 
 .ticket-meta {
-  display: grid;
-  justify-items: end;
-  gap: 5px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 42%;
+}
+
+.ticket-row__metadata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ticket-row__metadata .escalation-chips {
+  margin-top: 0;
 }
 
 .badge {
@@ -4250,11 +4273,15 @@ button {
     height: 48px;
   }
 
+  .ticket-main__headline {
+    display: grid;
+    gap: 6px;
+  }
+
   .ticket-meta {
-    grid-column: 2;
     display: flex;
     flex-wrap: wrap;
-    justify-items: start;
+    max-width: 100%;
     justify-content: flex-start;
   }
 
@@ -4974,7 +5001,7 @@ button {
 
 .ticket-row__main {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) auto;
+  grid-template-columns: 10px minmax(0, 1fr);
   gap: 10px;
   width: 100%;
   border: none;

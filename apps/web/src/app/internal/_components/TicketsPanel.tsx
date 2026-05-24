@@ -130,9 +130,22 @@ export function TicketsPanel({
                   >
                     <span className="priority-dot" data-priority={ticket.priority} />
                     <span className="ticket-main">
-                      <strong>{ticket.customerMessage}</strong>
+                      <span className="ticket-main__headline">
+                        <strong>{ticket.customerMessage}</strong>
+                        <span className="ticket-meta" aria-label="Ticket priority and status">
+                          <span className="badge" data-tone={priorityTone(ticket.priority)}>
+                            {ticket.priority}
+                          </span>
+                          <span className="badge" data-tone={statusTone(ticket.status)}>
+                            {statusLabels[ticket.status]}
+                          </span>
+                        </span>
+                      </span>
                       <small>{assigneeLabel(assigneeOptions, ticket.assigneeId)}</small>
-                      <EscalationChips ticket={ticket} />
+                      <span className="ticket-row__metadata" aria-label="Ticket SLA and escalation context">
+                        <SlaBadge ticket={ticket} />
+                        <EscalationChips ticket={ticket} />
+                      </span>
                       {ticket.tags !== undefined && ticket.tags.length > 0 && (
                         <span className="ticket-tags">
                           {ticket.tags.map((tag) => (
@@ -140,15 +153,6 @@ export function TicketsPanel({
                           ))}
                         </span>
                       )}
-                    </span>
-                    <span className="ticket-meta">
-                      <span className="badge" data-tone={priorityTone(ticket.priority)}>
-                        {ticket.priority}
-                      </span>
-                      <span className="badge" data-tone={statusTone(ticket.status)}>
-                        {statusLabels[ticket.status]}
-                      </span>
-                      <SlaBadge ticket={ticket} />
                     </span>
                   </button>
                 </div>
