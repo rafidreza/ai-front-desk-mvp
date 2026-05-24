@@ -7,6 +7,13 @@ import { AiProviderHealth, ApiHealth } from '@/types/domain';
 import { P1AlertCenter } from './P1AlertCenter';
 import { Sidebar } from './Sidebar';
 
+type InternalSessionUser = {
+  id: string;
+  label: string;
+  email?: string;
+  role: 'admin' | 'operator' | 'read-only';
+};
+
 interface InternalShellProps {
   activeView:
     | 'operations'
@@ -30,6 +37,7 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
   const [health, setHealth] = useState<ApiHealth | null>(null);
   const [aiHealth, setAiHealth] = useState<AiProviderHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
+  const [sessionUser, setSessionUser] = useState<InternalSessionUser | null>(null);
 
   async function loadHealth() {
     setHealthError(null);
@@ -52,6 +60,10 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
 
   useEffect(() => {
     void loadHealth();
+    void fetch('/api/internal-session')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { user?: InternalSessionUser | null } | null) => setSessionUser(data?.user ?? null))
+      .catch(() => setSessionUser(null));
   }, []);
 
   return (
@@ -60,6 +72,7 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
         activeView={activeView}
         health={health}
         healthError={healthError}
+        sessionUser={sessionUser}
         onLogout={() => void handleLogout()}
       />
 

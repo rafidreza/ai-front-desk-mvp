@@ -87,6 +87,7 @@ export async function createInternalUser(input: {
   label: string;
   email?: string;
   role: string;
+  password: string;
 }): Promise<InternalUser> {
   const data = await apiFetch<{ user: InternalUser }>('/internal/users', {
     method: 'POST',

@@ -30,6 +30,7 @@ export type {
   ExternalDataSyncStatus,
   OrderRecord,
   InternalUser,
+  InternalUserRole,
   KnowledgeChangeRequest,
   KnowledgeChangeRequestEvent,
   KnowledgeChangeRequestReviewDetail,

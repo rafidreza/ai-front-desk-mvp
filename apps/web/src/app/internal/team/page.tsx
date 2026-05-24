@@ -40,7 +40,8 @@ export default function InternalTeamPage() {
       const user = await createInternalUser({
         label: String(form.get('label') ?? ''),
         email: String(form.get('email') ?? ''),
-        role: String(form.get('role') ?? 'support'),
+        role: String(form.get('role') ?? 'operator'),
+        password: String(form.get('password') ?? ''),
       });
       event.currentTarget.reset();
       setUsers((current) => [...current, user].sort((left, right) => left.label.localeCompare(right.label)));
@@ -85,7 +86,7 @@ export default function InternalTeamPage() {
                 </div>
                 <div className="team-row-meta">
                   <span className="badge" data-tone={user.role === 'admin' ? 'green' : 'blue'}>
-                    {user.role ?? 'support'}
+                    {user.role ?? 'operator'}
                   </span>
                   <span className="badge">{user.status ?? 'active'}</span>
                 </div>
@@ -110,16 +111,18 @@ export default function InternalTeamPage() {
           </label>
           <label>
             Role
-            <UiSelect name="role" defaultValue="support">
+            <UiSelect name="role" defaultValue="operator">
               <option value="admin">Admin</option>
-              <option value="support">Support</option>
-              <option value="sales">Sales</option>
-              <option value="qa">QA</option>
-              <option value="viewer">Viewer</option>
+              <option value="operator">Operator</option>
+              <option value="read-only">Read-only</option>
             </UiSelect>
           </label>
+          <label>
+            Temporary password
+            <input name="password" required minLength={8} type="password" placeholder="At least 8 characters" />
+          </label>
           <p className="form-hint">
-            New people become available as ticket owners immediately. Login permissions can be hardened later with invite emails and role-based access.
+            Admins manage setup and team access. Operators work queues and KB. Read-only users can inspect data without changing it.
           </p>
           <button className="icon-button" disabled={isSaving} type="submit">
             <UserPlus size={15} />

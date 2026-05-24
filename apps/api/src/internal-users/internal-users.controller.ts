@@ -2,25 +2,28 @@ import { Body, Controller, Get, Post } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { PrismaService } from '../database/prisma.service';
+import { InternalUserRole } from '../types/domain';
+import { InternalAuthService } from './internal-auth.service';
 
 type InternalUserRecord = {
   id: string;
   label: string;
   email?: string;
-  role: string;
+  role: InternalUserRole;
   status: string;
 };
 
 export const internalUsers: InternalUserRecord[] = [
-  { id: 'ops-nabil', label: 'Nabil', role: 'admin', status: 'active' },
-  { id: 'ops-support', label: 'Support', role: 'support', status: 'active' },
-  { id: 'ops-sales', label: 'Sales', role: 'sales', status: 'active' },
+  { id: 'ops-admin', label: 'Admin', email: 'admin@aifrontdesk.local', role: 'admin', status: 'active' },
+  { id: 'ops-operator', label: 'Operator', email: 'operator@aifrontdesk.local', role: 'operator', status: 'active' },
+  { id: 'ops-viewer', label: 'Read Only', email: 'viewer@aifrontdesk.local', role: 'read-only', status: 'active' },
 ];
 
 const CreateInternalUserSchema = z.object({
   label: z.string().trim().min(2).max(80),
   email: z.string().trim().email().optional().or(z.literal('')),
-  role: z.enum(['admin', 'support', 'sales', 'qa', 'viewer']).default('support'),
+  role: z.enum(['admin', 'operator', 'read-only']).default('operator'),
+  password: z.string().min(8).max(120),
 });
 
 function toInternalUser(user: {
@@ -45,11 +48,15 @@ function toInternalUser(user: {
 
 @Controller('internal/users')
 export class InternalUsersController {
-  constructor(private readonly prisma?: PrismaService) {}
+  constructor(
+    private readonly internalAuth: InternalAuthService,
+    private readonly prisma?: PrismaService,
+  ) {}
 
   @Get()
   async listUsers() {
     if (this.prisma?.enabled === true) {
+      await this.internalAuth.ensureDevelopmentSeedUsers();
       const users = await this.prisma.internalUser.findMany({
         orderBy: [{ status: 'asc' }, { label: 'asc' }],
       });
@@ -83,6 +90,7 @@ export class InternalUsersController {
         email,
         role: parsed.role,
         status: 'active',
+        passwordHash: this.internalAuth.hashPassword(parsed.password),
       },
     });
 

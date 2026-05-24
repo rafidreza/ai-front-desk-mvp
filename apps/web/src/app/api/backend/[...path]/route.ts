@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getInternalSession, InternalSessionRole } from '@/lib/internal-auth';
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
@@ -22,9 +23,35 @@ function getApiToken() {
   return token ?? 'dev-internal-api-token-only-for-local-work';
 }
 
+function isAdminOnlyMutation(path: string) {
+  return (
+    path === '/clients' ||
+    /^\/clients\/[^/]+(?:\/status|\/channels(?:\/[^/]+(?:\/delete)?)?|\/digests\/[^/]+\/send|\/external-data(?:\/|$))/.test(path) ||
+    /^\/clients\/[^/]+\/(?:prompts|auto-replies|whatsapp\/templates|industry-templates)(?:\/|$)/.test(path) ||
+    /^\/internal\/users(?:\/|$)/.test(path)
+  );
+}
+
+function canMutate(role: InternalSessionRole, path: string) {
+  if (role === 'admin') return true;
+  if (role === 'read-only') return false;
+  return !isAdminOnlyMutation(path);
+}
+
 async function proxy(request: NextRequest, context: RouteContext) {
   const { path } = await context.params;
-  const targetUrl = new URL(`/${path.join('/')}`, getApiBaseUrl());
+  const apiPath = `/${path.join('/')}`;
+  const internalSession = await getInternalSession(request);
+  const isMutation = request.method !== 'GET' && request.method !== 'HEAD';
+
+  if (internalSession !== null && isMutation && !canMutate(internalSession.role, apiPath)) {
+    return NextResponse.json(
+      { error: `${internalSession.role} cannot perform this action.` },
+      { status: 403 },
+    );
+  }
+
+  const targetUrl = new URL(apiPath, getApiBaseUrl());
   targetUrl.search = request.nextUrl.search;
 
   const response = await fetch(targetUrl, {
@@ -32,6 +59,12 @@ async function proxy(request: NextRequest, context: RouteContext) {
     headers: {
       'Content-Type': request.headers.get('content-type') ?? 'application/json',
       Authorization: `Bearer ${getApiToken()}`,
+      ...(internalSession === null
+        ? {}
+        : {
+            'x-internal-user-id': internalSession.userId,
+            'x-internal-user-role': internalSession.role,
+          }),
     },
     body: request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text(),
     cache: 'no-store',

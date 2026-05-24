@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 22 | 16 | 38 |
-| **TOTAL** | **111** | **36** | **147** |
+| 12 — Use case backlog | 23 | 15 | 38 |
+| **TOTAL** | **112** | **35** | **147** |
 
 ---
 
@@ -270,7 +270,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [ ] **T110 — USECASE** Billing surface: plan picker, invoice list, payment method (SSLCOMMERZ + bKash UI). — **DEFERRED (2026-05-24): user requested skipping billing/payment-related work for now.**
 - [ ] **T111 — USECASE** Trial countdown ("12 days left") + monthly quota meter ("8,400 / 10,000 msgs"). — **DEFERRED (2026-05-24): user considers trial/quota tied to billing; skip billing/payment-related work for now.**
 - [ ] **T112 — USECASE** Internal per-client LLM cost dashboard (USD spend per client per day, alert > threshold). — **DEFERRED (2026-05-24): user requested skipping billing/payment/cost-related work for now.**
-- [ ] **T113 — USECASE** RBAC: admin / operator / read-only roles (replace single shared `INTERNAL_CONSOLE_PASSWORD`).
+- [x] **T113 — USECASE** RBAC: admin / operator / read-only roles (replace single shared `INTERNAL_CONSOLE_PASSWORD`). — **DONE (2026-05-24): replaced passcode-only internal login with email/id + password authentication backed by internal user password hashes, seeded local admin/operator/read-only users, role-bearing internal sessions, proxy-side mutation enforcement, and updated team/login UI for the three-role model.**
 - [ ] **T114 — USECASE** Audit log: who deleted KB entry, who changed prompt profile, who closed ticket (compliance + DPA).
 - [ ] **T115 — USECASE** Magic-link expiry + clear re-request CTA on failure page.
 - [ ] **T116 — USECASE** WhatsApp OTP fallback when SMS fails (voice call / alt-channel option).

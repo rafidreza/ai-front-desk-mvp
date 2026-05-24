@@ -9,6 +9,7 @@ type FeedbackTone = 'idle' | 'info' | 'error' | 'success';
 export function InternalLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [identifier, setIdentifier] = useState('admin@aifrontdesk.local');
   const [password, setPassword] = useState('');
   const [feedback, setFeedback] = useState<{ tone: FeedbackTone; message: string }>({
     tone: 'idle',
@@ -25,12 +26,12 @@ export function InternalLoginForm() {
     const response = await fetch('/api/internal-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: password.trim() }),
+      body: JSON.stringify({ identifier: identifier.trim(), password }),
     });
 
     if (!response.ok) {
       const data = (await response.json().catch(() => null)) as { error?: string } | null;
-      setFeedback({ tone: 'error', message: data?.error ?? 'Password did not match.' });
+      setFeedback({ tone: 'error', message: data?.error ?? 'User or password did not match.' });
       setIsSubmitting(false);
       return;
     }
@@ -41,7 +42,7 @@ export function InternalLoginForm() {
     router.refresh();
   }
 
-  const isDisabled = isSubmitting || password.length === 0;
+  const isDisabled = isSubmitting || identifier.trim().length === 0 || password.length === 0;
 
   return (
     <section className="login-panel">
@@ -64,10 +65,21 @@ export function InternalLoginForm() {
       </div>
 
       <form className="login-form" onSubmit={handleSubmit}>
+        <label htmlFor="identifier">Email or user ID</label>
+        <input
+          autoComplete="username"
+          autoFocus
+          disabled={isSubmitting}
+          id="identifier"
+          onChange={(event) => setIdentifier(event.target.value)}
+          placeholder="admin@aifrontdesk.local"
+          type="text"
+          value={identifier}
+        />
+
         <label htmlFor="password">Passcode</label>
         <input
           autoComplete="current-password"
-          autoFocus
           disabled={isSubmitting}
           id="password"
           onChange={(event) => setPassword(event.target.value)}

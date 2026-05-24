@@ -628,11 +628,13 @@ export interface AiProviderHealth {
   message: string;
 }
 
+export type InternalUserRole = 'admin' | 'operator' | 'read-only';
+
 export interface InternalUser {
   id: string;
   label: string;
   email?: string;
-  role?: string;
+  role?: InternalUserRole;
   status?: 'active' | 'invited' | 'disabled';
   createdAt?: string;
   updatedAt?: string;

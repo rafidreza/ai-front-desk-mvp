@@ -22,6 +22,8 @@ import { AutoQaService } from './conversations/auto-qa.service';
 import { PrismaService } from './database/prisma.service';
 import { ExternalDataService } from './external-data/external-data.service';
 import { HealthController } from './health/health.controller';
+import { InternalAuthController } from './internal-users/internal-auth.controller';
+import { InternalAuthService } from './internal-users/internal-auth.service';
 import { InternalUsersController } from './internal-users/internal-users.controller';
 import { ClientAuthController } from './clients/client-auth.controller';
 import { ClientAuthService } from './clients/client-auth.service';
@@ -62,6 +64,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     ConversationController,
     HealthController,
     IndustryTemplateController,
+    InternalAuthController,
     InternalUsersController,
     KnowledgeChangeRequestController,
     KnowledgeController,
@@ -89,6 +92,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     EmbeddingService,
     ExternalDataService,
     IndustryTemplateService,
+    InternalAuthService,
     AuthCodeDeliveryService,
     EmailDeliveryService,
     KnowledgeChangeRequestService,

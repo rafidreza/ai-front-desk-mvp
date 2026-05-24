@@ -36,6 +36,7 @@ export type {
   ExternalDataSyncRun,
   ExternalDataSyncStatus,
   IncomingMessage,
+  InternalUserRole,
   KnowledgeEntry,
   KnowledgeChangeRequest,
   KnowledgeChangeRequestEvent,

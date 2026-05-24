@@ -239,13 +239,14 @@ model OrderRecord {
 }
 
 model InternalUser {
-  id        String   @id
-  label     String
-  email     String?  @unique
-  role      String   @default("support")
-  status    String   @default("active")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id
+  label        String
+  email        String?  @unique
+  role         String   @default("operator")
+  status       String   @default("active")
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([status])
   @@index([role])

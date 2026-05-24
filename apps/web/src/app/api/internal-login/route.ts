@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
 import { shouldUseSecureCookie } from '@/lib/cookies';
 import { createInternalSessionCookie, internalSessionCookieName } from '@/lib/internal-auth';
+import { backendFetch } from '@/lib/server-backend';
 
 const attempts = new Map<string, { count: number; resetAt: number }>();
 const maxAttempts = 5;
 const windowMs = 5 * 60 * 1000;
-
-function getExpectedPassword() {
-  const password = process.env.INTERNAL_CONSOLE_PASSWORD;
-  if (process.env.NODE_ENV === 'production' && (password === undefined || password.length < 12)) {
-    throw new Error('INTERNAL_CONSOLE_PASSWORD must be set to at least 12 characters in production.');
-  }
-  return password ?? 'dev-internal-pass';
-}
 
 function getClientKey(request: NextRequest) {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
@@ -54,12 +46,6 @@ function isSameOrigin(request: NextRequest) {
   return false;
 }
 
-function passwordMatches(received: string, expected: string) {
-  const receivedBuffer = Buffer.from(received);
-  const expectedBuffer = Buffer.from(expected);
-  return receivedBuffer.length === expectedBuffer.length && timingSafeEqual(receivedBuffer, expectedBuffer);
-}
-
 export async function POST(request: NextRequest) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ error: 'Invalid request origin.' }, { status: 403 });
@@ -70,17 +56,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Too many login attempts.' }, { status: 429 });
   }
 
-  const body = (await request.json().catch(() => null)) as { password?: string } | null;
-  const expectedPassword = getExpectedPassword();
+  const body = (await request.json().catch(() => null)) as { identifier?: string; password?: string } | null;
 
-  if (body?.password === undefined || !passwordMatches(body.password.trim(), expectedPassword)) {
-    return NextResponse.json({ error: 'Invalid password.' }, { status: 401 });
+  if (body?.identifier === undefined || body.password === undefined) {
+    return NextResponse.json({ error: 'Email/id and password are required.' }, { status: 400 });
+  }
+
+  const auth = await backendFetch<{
+    user: { id: string; label: string; email?: string; role: 'admin' | 'operator' | 'read-only' };
+  }>('/internal/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      identifier: body.identifier.trim(),
+      password: body.password,
+    }),
+  }).catch(() => null);
+
+  if (auth === null) {
+    return NextResponse.json({ error: 'Invalid user or password.' }, { status: 401 });
   }
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set({
     name: internalSessionCookieName,
-    value: await createInternalSessionCookie(),
+    value: await createInternalSessionCookie({
+      userId: auth.user.id,
+      label: auth.user.label,
+      email: auth.user.email,
+      role: auth.user.role,
+    }),
     httpOnly: true,
     sameSite: 'strict',
     secure: shouldUseSecureCookie(request),

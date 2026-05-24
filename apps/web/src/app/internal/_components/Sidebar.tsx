@@ -32,10 +32,11 @@ interface SidebarProps {
   onChangeView?: (view: 'operations' | 'qa') => void;
   health: ApiHealth | null;
   healthError: string | null;
+  sessionUser?: { label: string; role: 'admin' | 'operator' | 'read-only' } | null;
   onLogout: () => void;
 }
 
-export function Sidebar({ activeView, onChangeView, health, healthError, onLogout }: SidebarProps) {
+export function Sidebar({ activeView, onChangeView, health, healthError, sessionUser, onLogout }: SidebarProps) {
   const topLinks = [
     { view: 'operations' as const, label: 'Operations', icon: <LayoutDashboard size={17} />, href: '/internal' },
     { view: 'clients' as const, label: 'Clients', icon: <Building2 size={17} />, href: '/internal/clients' },
@@ -97,6 +98,15 @@ export function Sidebar({ activeView, onChangeView, health, healthError, onLogou
       </nav>
 
       <div className="sidebar-footer">
+        {sessionUser !== undefined && sessionUser !== null && (
+          <div className="side-status" data-ok>
+            <span />
+            <div>
+              <strong>{sessionUser.label}</strong>
+              <small>{sessionUser.role}</small>
+            </div>
+          </div>
+        )}
         <div className="side-status" data-ok={health?.database.ok === true}>
           <span />
           <div>
