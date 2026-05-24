@@ -25,6 +25,7 @@ interface InternalShellProps {
     | 'conversations'
     | 'knowledge'
     | 'kb-review'
+    | 'audit-log'
     | 'data-sources'
     | 'agent-config';
   eyebrow: string;

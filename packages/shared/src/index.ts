@@ -640,6 +640,19 @@ export interface InternalUser {
   updatedAt?: string;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  clientId?: string;
+  actorId: string;
+  actorRole: string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  summary: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface ClientDashboardSummary {
   client: ClientProfile;
   totals: {

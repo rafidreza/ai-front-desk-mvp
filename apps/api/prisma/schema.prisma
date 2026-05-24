@@ -54,6 +54,7 @@ model Client {
   autoReplyRules          ClientAutoReplyRule[]
   blockedSenders          BlockedSender[]
   testCustomers           TestCustomer[]
+  auditLogs               AuditLog[]
 
   @@index([status])
 }
@@ -250,6 +251,26 @@ model InternalUser {
 
   @@index([status])
   @@index([role])
+}
+
+model AuditLog {
+  id         String   @id
+  clientId   String?
+  actorId    String
+  actorRole  String
+  action     String
+  entityType String
+  entityId   String?
+  summary    String
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+  client     Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([actorId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
 }
 
 model KnowledgeEntry {

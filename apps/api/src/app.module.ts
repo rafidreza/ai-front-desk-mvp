@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { AuditLogController } from './audit/audit-log.controller';
+import { AuditLogService } from './audit/audit-log.service';
 import { AiService } from './ai/ai.service';
 import { ChannelHealthController } from './channels/channel-health.controller';
 import { ChannelHealthService } from './channels/channel-health.service';
@@ -57,6 +59,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
 
 @Module({
   controllers: [
+    AuditLogController,
     ClientController,
     ClientAuthController,
     AutoReplyController,
@@ -80,6 +83,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
   ],
   providers: [
     AiService,
+    AuditLogService,
     AutoQaService,
     AutoReplyService,
     ChannelHealthService,

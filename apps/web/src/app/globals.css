@@ -1676,6 +1676,84 @@ button {
   line-height: 1.45;
 }
 
+.audit-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) repeat(3, minmax(150px, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.audit-filter-bar label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.audit-filter-bar input,
+.audit-filter-bar select {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 0 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.audit-log-panel {
+  display: grid;
+  min-height: 520px;
+  background: var(--surface);
+}
+
+.audit-log-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 14px;
+}
+
+.audit-log-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.55fr);
+  gap: 12px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.audit-log-row__main,
+.audit-log-row__meta {
+  display: grid;
+  gap: 5px;
+}
+
+.audit-log-row__main strong {
+  font-size: 14px;
+}
+
+.audit-log-row__main p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.audit-log-row__meta {
+  justify-items: end;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .client-detail-panel {
   min-height: calc(100vh - 210px);
 }

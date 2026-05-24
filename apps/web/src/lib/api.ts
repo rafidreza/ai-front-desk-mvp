@@ -1,6 +1,7 @@
 import {
   ApiHealth,
   AiProviderHealth,
+  AuditLogEntry,
   CalibrationQueueFilter,
   CalibrationQueueResult,
   ClientDashboardSummary,
@@ -81,6 +82,24 @@ export async function getTickets(): Promise<Ticket[]> {
 export async function getInternalUsers(): Promise<InternalUser[]> {
   const data = await apiFetch<{ users: InternalUser[] }>('/internal/users');
   return data.users;
+}
+
+export async function getAuditLogEntries(input: {
+  clientId?: string;
+  actorId?: string;
+  entityType?: string;
+  action?: string;
+  limit?: number;
+} = {}): Promise<AuditLogEntry[]> {
+  const params = new URLSearchParams();
+  if (input.clientId !== undefined && input.clientId.trim() !== '') params.set('clientId', input.clientId.trim());
+  if (input.actorId !== undefined && input.actorId.trim() !== '') params.set('actorId', input.actorId.trim());
+  if (input.entityType !== undefined && input.entityType.trim() !== '') params.set('entityType', input.entityType.trim());
+  if (input.action !== undefined && input.action.trim() !== '') params.set('action', input.action.trim());
+  if (input.limit !== undefined) params.set('limit', String(input.limit));
+  const query = params.toString();
+  const data = await apiFetch<{ entries: AuditLogEntry[] }>(`/internal/audit-log${query === '' ? '' : `?${query}`}`);
+  return data.entries;
 }
 
 export async function createInternalUser(input: {

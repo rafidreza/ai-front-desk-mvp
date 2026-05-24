@@ -1,5 +1,6 @@
 export type {
   ApiHealth,
+  AuditLogEntry,
   AiProviderHealth,
   CalibrationQueueFilter,
   CalibrationQueueResult,
