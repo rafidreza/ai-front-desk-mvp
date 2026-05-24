@@ -441,6 +441,48 @@ button {
   white-space: nowrap;
 }
 
+.idle-timeout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.44);
+}
+
+.idle-timeout-modal {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 100%);
+  padding: 18px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+}
+
+.idle-timeout-modal h3,
+.idle-timeout-modal p {
+  margin: 0;
+}
+
+.idle-timeout-modal h3 {
+  font-size: 18px;
+}
+
+.idle-timeout-modal p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.idle-timeout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .triage-grid {
   display: grid;
   grid-template-columns: minmax(300px, 0.82fr) minmax(330px, 1fr) minmax(420px, 1.25fr);

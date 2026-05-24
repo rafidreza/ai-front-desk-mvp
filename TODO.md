@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 30 | 8 | 38 |
-| **TOTAL** | **119** | **28** | **147** |
+| 12 — Use case backlog | 31 | 7 | 38 |
+| **TOTAL** | **120** | **27** | **147** |
 
 ---
 
@@ -274,7 +274,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T114 — USECASE** Audit log: who deleted KB entry, who changed prompt profile, who closed ticket (compliance + DPA). — **DONE (2026-05-24): added `AuditLog` persistence, filtered internal audit API, proxy-level successful mutation capture for internal and client-portal actors, summaries for ticket/KB/prompt/channel/template/tag/client/data-source changes, and an internal Audit Log screen with client/actor/entity/action filters.**
 - [x] **T115 — USECASE** Magic-link expiry + clear re-request CTA on failure page. — **DONE (2026-05-24): client login now preserves the last identifier/channel, detects expired codes from `expiresAt`, disables expired-code submission, shows clear expired/used/invalid guidance, and offers a one-click "Send a new code" CTA from the verify step.**
 - [x] **T116 — USECASE** WhatsApp OTP fallback when SMS fails (voice call / alt-channel option). — **DONE (2026-05-24): client login now preserves failed OTP requests, offers "Try WhatsApp instead" / "Try email instead" fallback CTAs after request or verification failures, and surfaces skipped delivery mode guidance so sellers can switch channels without restarting the login flow.**
-- [ ] **T117 — USECASE** Session idle-timeout + warning modal on internal console (security on shared laptops).
+- [x] **T117 — USECASE** Session idle-timeout + warning modal on internal console (security on shared laptops). — **DONE (2026-05-24): internal console now tracks inactivity from mouse/keyboard/scroll/touch events, warns after 25 minutes, offers "Stay signed in" or "Sign out now", and automatically clears the internal session after 30 minutes of inactivity.**
 
 ### Onboarding + lifecycle (internal)
 

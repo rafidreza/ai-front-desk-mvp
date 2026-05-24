@@ -1,11 +1,14 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { getAiProviderHealth, getDatabaseHealth } from '@/lib/api';
 import { AiProviderHealth, ApiHealth } from '@/types/domain';
 import { P1AlertCenter } from './P1AlertCenter';
 import { Sidebar } from './Sidebar';
+
+const idleWarningMs = 25 * 60 * 1000;
+const idleLogoutMs = 30 * 60 * 1000;
 
 type InternalSessionUser = {
   id: string;
@@ -40,6 +43,13 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
   const [aiHealth, setAiHealth] = useState<AiProviderHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [sessionUser, setSessionUser] = useState<InternalSessionUser | null>(null);
+  const [idleWarningVisible, setIdleWarningVisible] = useState(false);
+  const [idleRemainingSeconds, setIdleRemainingSeconds] = useState(5 * 60);
+  const warningTimerRef = useRef<number | null>(null);
+  const logoutTimerRef = useRef<number | null>(null);
+  const countdownTimerRef = useRef<number | null>(null);
+  const idleWarningVisibleRef = useRef(false);
+  const logoutAtRef = useRef(Date.now() + idleLogoutMs);
 
   async function loadHealth() {
     setHealthError(null);
@@ -55,10 +65,40 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
     }
   }
 
-  async function handleLogout() {
+  const handleLogout = useCallback(async () => {
     await fetch('/api/internal-logout', { method: 'POST' });
     window.location.href = '/internal/login';
-  }
+  }, []);
+
+  const clearIdleTimers = useCallback(() => {
+    if (warningTimerRef.current !== null) window.clearTimeout(warningTimerRef.current);
+    if (logoutTimerRef.current !== null) window.clearTimeout(logoutTimerRef.current);
+    if (countdownTimerRef.current !== null) window.clearInterval(countdownTimerRef.current);
+    warningTimerRef.current = null;
+    logoutTimerRef.current = null;
+    countdownTimerRef.current = null;
+  }, []);
+
+  const resetIdleTimer = useCallback(() => {
+    clearIdleTimers();
+    idleWarningVisibleRef.current = false;
+    setIdleWarningVisible(false);
+    setIdleRemainingSeconds(5 * 60);
+    logoutAtRef.current = Date.now() + idleLogoutMs;
+
+    warningTimerRef.current = window.setTimeout(() => {
+      idleWarningVisibleRef.current = true;
+      setIdleWarningVisible(true);
+      setIdleRemainingSeconds(Math.max(0, Math.ceil((logoutAtRef.current - Date.now()) / 1000)));
+      countdownTimerRef.current = window.setInterval(() => {
+        setIdleRemainingSeconds(Math.max(0, Math.ceil((logoutAtRef.current - Date.now()) / 1000)));
+      }, 1000);
+    }, idleWarningMs);
+
+    logoutTimerRef.current = window.setTimeout(() => {
+      void handleLogout();
+    }, idleLogoutMs);
+  }, [clearIdleTimers, handleLogout]);
 
   useEffect(() => {
     void loadHealth();
@@ -67,6 +107,26 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
       .then((data: { user?: InternalSessionUser | null } | null) => setSessionUser(data?.user ?? null))
       .catch(() => setSessionUser(null));
   }, []);
+
+  useEffect(() => {
+    resetIdleTimer();
+
+    const activityEvents: Array<keyof WindowEventMap> = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    const handleActivity = () => {
+      if (!idleWarningVisibleRef.current) resetIdleTimer();
+    };
+
+    for (const eventName of activityEvents) {
+      window.addEventListener(eventName, handleActivity, { passive: true });
+    }
+
+    return () => {
+      for (const eventName of activityEvents) {
+        window.removeEventListener(eventName, handleActivity);
+      }
+      clearIdleTimers();
+    };
+  }, [clearIdleTimers, resetIdleTimer]);
 
   return (
     <main className="app-frame">
@@ -96,6 +156,34 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
         {children}
       </section>
       <P1AlertCenter />
+      {idleWarningVisible && (
+        <div className="idle-timeout-overlay" role="presentation">
+          <section
+            aria-labelledby="idle-timeout-title"
+            aria-modal="true"
+            className="idle-timeout-modal"
+            role="dialog"
+          >
+            <div className="section-label">
+              <AlertTriangle size={15} />
+              Session timeout
+            </div>
+            <h3 id="idle-timeout-title">You will be signed out soon</h3>
+            <p>
+              No activity has been detected. For shared-laptop safety, this internal console will
+              sign out in {Math.ceil(idleRemainingSeconds / 60)} minute{Math.ceil(idleRemainingSeconds / 60) === 1 ? '' : 's'}.
+            </p>
+            <div className="idle-timeout-actions">
+              <button className="btn-primary" type="button" onClick={resetIdleTimer}>
+                Stay signed in
+              </button>
+              <button className="icon-button" type="button" onClick={() => void handleLogout()}>
+                Sign out now
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
