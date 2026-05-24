@@ -26,7 +26,7 @@ export default function LandingPage() {
             Client login
           </Link>
           <Link className="btn-primary" href="/signup">
-            Get started
+            Create account
           </Link>
         </div>
       </nav>
@@ -41,7 +41,7 @@ export default function LandingPage() {
           </p>
           <div className="landing-hero-ctas">
             <Link className="btn-primary" href="/signup">
-              Get started
+              Create client account
             </Link>
             <Link className="btn-ghost" href="/internal/login">
               Internal access →
@@ -72,7 +72,7 @@ export default function LandingPage() {
           <span className="landing-pillar-icon">
             <MessageSquare size={18} />
           </span>
-          <h3>Auto-answers buyer DMs</h3>
+          <h2>Auto-answers buyer DMs</h2>
           <p>
             Price, delivery charge, COD, sizing, availability — answered in Bangla, Banglish, or
             English from your own knowledge base.
@@ -82,7 +82,7 @@ export default function LandingPage() {
           <span className="landing-pillar-icon">
             <Inbox size={18} />
           </span>
-          <h3>Only sends you tickets</h3>
+          <h2>Only sends you tickets</h2>
           <p>
             Refunds, custom orders, complaints — escalated as a ticket with full context. P1 alerts
             ping you on WhatsApp.
@@ -92,7 +92,7 @@ export default function LandingPage() {
           <span className="landing-pillar-icon">
             <BotMessageSquare size={18} />
           </span>
-          <h3>We do the setup</h3>
+          <h2>We do the setup</h2>
           <p>
             You share your chat history and price list once. We build the knowledge base, tune the
             agent, and run quality review before going live.

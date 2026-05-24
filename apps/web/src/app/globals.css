@@ -4523,7 +4523,7 @@ button {
   border-radius: 8px;
 }
 
-.landing-pillar h3 {
+.landing-pillar h2 {
   margin: 0;
   font-size: var(--text-h3);
   line-height: var(--lh-heading);
@@ -4664,7 +4664,7 @@ button {
 
 .landing-mock-pill.p1 {
   background: var(--coral-soft);
-  color: var(--coral);
+  color: #8c2f28;
 }
 
 .landing-mock-pill.p2 {
@@ -4679,7 +4679,7 @@ button {
 
 .landing-mock-time {
   font-size: var(--text-tiny);
-  color: var(--faint);
+  color: #52606d;
   font-variant-numeric: tabular-nums;
 }
 

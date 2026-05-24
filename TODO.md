@@ -32,7 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| **TOTAL** | **124** | **23** | **147** |
+| 13 — UX Audit follow-up | 1 | 6 | 7 |
+| **TOTAL** | **125** | **29** | **154** |
 
 ---
 
@@ -289,6 +290,16 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T123 — USECASE** Per-client data retention controls ("delete chats older than 90 days"). — **DONE (2026-05-24): added per-client retention policy under compliance profile (`disabled` or `redact`, 30-3650 days), preview endpoint for old chat-message count, manual redaction endpoint that preserves conversation/ticket records while replacing message text and clearing transcript/OCR/attachment URL fields, and internal Clients UI to save policy, preview, and run cleanup with last-run details.**
 - [x] **T124 — USECASE** Bangla number formatting (১২,৩৪৫) + BDT currency (৳) on all numeric surfaces. — **DONE (2026-05-24): added shared client-side localized number/date/currency helpers and applied them to client portal dashboard metrics, channel counts, ticket protected-sale values, CSAT buttons, knowledge counts/version numbers, and Google Sheet sync/product/order counts. Bangla clients now see Bangla digits and `৳`; mixed/English keep English digits while still using the BDT symbol. IDs, phone numbers, and order identifiers stay unchanged.**
 - [x] **T125 — USECASE** PDPA consent banner on embeddable customer chat widget (collects phone / address PII). — **DONE (2026-05-24): widget now shows a per-client consent banner before chat, stores consent in localStorage with version `pdpa-widget-v1`, disables the message box until accepted, and sends consent metadata with each web-chat message. Nest and Hono public web-chat endpoints now reject messages missing PDPA consent, with regression tests covering the guard.**
+
+## Tier 13 — UX Audit Follow-up (2026-05-24 re-audit)
+
+- [x] **T126 — UXAUDIT** Fix public landing accessibility: resolve P1 badge contrast, repair heading hierarchy (`h1` → `h2` → `h3`), and replace vague "Get started" CTAs with action-specific labels. — **DONE (2026-05-24): landing CTA labels now identify the signup action, pillar headings follow the `h1` → `h2` hierarchy, and low-contrast mock ticket metadata now meets axe contrast checks. Verified with web lint/build and focused uxaudit accessibility/usability checks on desktop and mobile.**
+- [ ] **T127 — UXAUDIT** Improve internal API failure recovery: replace generic `API request failed: 500` banners on Clients, Data Sources, and KB Review with route-specific guidance, retry actions, and safe diagnostic context.
+- [ ] **T128 — UXAUDIT** Clean up internal ticket row density: reduce overlapping/crowded chips, prioritize customer issue text, and move secondary SLA/confidence/reason details into a scannable metadata row.
+- [ ] **T129 — UXAUDIT** Refine widget PDPA consent UX: hide or de-emphasize the disabled input before consent and reposition the "Live demo" tag so it does not overlap the widget header on mobile/desktop.
+- [ ] **T130 — UXAUDIT** Clarify deferred billing/payment surfaces: keep payment work deferred per user direction, and rename/hide billing-adjacent internal labels like pricing/MRR so they read as non-billing estimates only.
+- [ ] **T131 — UXAUDIT** Improve client login failure recovery: distinguish unknown identifier, unconfigured delivery, and backend failure; include examples for client ID, email, and WhatsApp fallback.
+- [ ] **T132 — UXAUDIT** Finish client portal localization coverage: apply the client portal copy/localized formatting system to Data Sources, Knowledge, and Onboarding pages, not just dashboard/tickets.
 
 ---
 
