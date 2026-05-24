@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 26 | 12 | 38 |
-| **TOTAL** | **115** | **32** | **147** |
+| 12 — Use case backlog | 30 | 8 | 38 |
+| **TOTAL** | **119** | **28** | **147** |
 
 ---
 
@@ -278,10 +278,10 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 
 ### Onboarding + lifecycle (internal)
 
-- [ ] **T118 — USECASE** Internal onboarding pipeline screen: per-seller card showing stage (call scheduled / Meta connected / KB v1 building / shadow / live).
-- [ ] **T119 — USECASE** Shadow-mode QA dashboard: side-by-side AI reply vs operator-edited reply before go-live.
-- [ ] **T120 — USECASE** Onboarding bot Q&A review screen: see + edit collected answers before generating KB v1.0.
-- [ ] **T121 — USECASE** Pilot → paid conversion checklist (per-client gating UI).
+- [x] **T118 — USECASE** Internal onboarding pipeline screen: per-seller card showing stage (call scheduled / Meta connected / KB v1 building / shadow / live). — **DONE (2026-05-24, commit `fe6a8f7`): new `Client.lifecycleStage` field with vocab `lead | onboarding | kb_building | shadow | live | paid | churned` (separate from existing `onboardingStatus`); migration backfills from prior status; PATCH `/clients/:id/lifecycle-stage` + service mutator; `/internal/pipeline` 7-col kanban with "Move to next stage" CTA per card; "Pipeline" sidebar entry. Backlog T118b: drag-and-drop, time-in-stage metrics, per-stage filter on clients directory.**
+- [x] **T119 — USECASE** Shadow-mode QA dashboard: side-by-side AI reply vs operator-edited reply before go-live. — **DONE (2026-05-24, commit `edafafb`): read-only `/internal/shadow` page shows every conversation for clients in the `shadow` lifecycle stage; customer bubble (blue) + AI reply (brand) + first ticket-comment operator note (amber) in a three-column compare; client filter, ticket deep-link, lazy comment fetch with cache. Reached from pipeline card "Shadow QA" button. Backlog T119b: real shadow infrastructure (route AI replies to a queue instead of customer, operator approves before send), correction edits stored as `ShadowReply` audits.**
+- [x] **T120 — USECASE** Onboarding bot Q&A review screen: see + edit collected answers before generating KB v1.0. — **DONE (2026-05-24, commit `ef3add1`): `/internal/onboarding` review screen for the existing structured signup answers (businessCategory, pageId, whatsappPoc, focus channels, websiteUrl, facebookPageUrl, whatsappSetup, facebookSetup) via the existing PATCH `/clients/:id/onboarding` endpoint; sticky client picker + read-only metadata strip + focus-channel multi-pill + brand-primary Save. Reached from pipeline card "Onboarding" button. Backlog T120b: Q&A list rendering once Messenger onboarding bot (T19) produces OnboardingAnswer records.**
+- [x] **T121 — USECASE** Pilot → paid conversion checklist (per-client gating UI). — **DONE (2026-05-24, commit `6287fcd`): new `ConversionChecklistService.compute(clientId)` builds a 10-item hybrid list (5 auto checks derived from ClientChannel / KnowledgeEntry / WhatsAppTemplate counts + onboarding status + days-in-stage; 5 manual ticks persisted in `Client.conversionChecklist` JSON shipped with T118); GET `/clients/:id/conversion-checklist` returns the merged set; `/internal/conversion` UI groups auto vs manual, optimistic toggle on manual items with rollback, header meter flips amber when any auto check is still failing. Reached from pipeline card "Checklist" button. Backlog T121b: per-stage default checklist, auto-derive first_digest_delivered from digest send log, CSV export for sales standup.**
 
 ### Compliance + Bangladesh-specific
 
