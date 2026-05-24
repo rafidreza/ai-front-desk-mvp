@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { z } from 'zod';
 import { PilotClientService } from './pilot-client.service';
 import { ClientDashboardService } from './client-dashboard.service';
+import { ConversionChecklistService } from './conversion-checklist.service';
 import { DigestDeliveryService } from './digest-delivery.service';
 import { ExternalDataService } from '../external-data/external-data.service';
 
@@ -123,6 +124,7 @@ export class ClientController {
     private readonly dashboard: ClientDashboardService,
     private readonly digests: DigestDeliveryService,
     private readonly externalData: ExternalDataService,
+    private readonly conversionChecklist: ConversionChecklistService,
   ) {}
 
   @Get()
@@ -191,6 +193,12 @@ export class ClientController {
   async updateConversionChecklist(@Param('clientId') clientId: string, @Body() body: unknown) {
     const parsed = ConversionChecklistSchema.parse(body);
     return { client: await this.clients.updateConversionChecklist(clientId, parsed.items) };
+  }
+
+  @Get(':clientId/conversion-checklist')
+  async getConversionChecklist(@Param('clientId') clientId: string) {
+    const items = await this.conversionChecklist.compute(clientId);
+    return { items };
   }
 
   @Get(':clientId/dashboard')

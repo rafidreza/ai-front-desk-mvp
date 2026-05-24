@@ -31,6 +31,7 @@ import { ClientAuthController } from './clients/client-auth.controller';
 import { ClientAuthService } from './clients/client-auth.service';
 import { ClientController } from './clients/client.controller';
 import { ClientDashboardService } from './clients/client-dashboard.service';
+import { ConversionChecklistService } from './clients/conversion-checklist.service';
 import { DigestDeliveryService } from './clients/digest-delivery.service';
 import { KnowledgeService } from './knowledge/knowledge.service';
 import { KnowledgeController } from './knowledge/knowledge.controller';
@@ -92,6 +93,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     ConversationService,
     ClientAuthService,
     ClientDashboardService,
+    ConversionChecklistService,
     DigestDeliveryService,
     EmbeddingService,
     ExternalDataService,

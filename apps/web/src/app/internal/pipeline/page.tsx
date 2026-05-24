@@ -153,6 +153,9 @@ export default function PipelinePage() {
                             Shadow QA
                           </Link>
                         )}
+                        <Link className="mini-button" href={`/internal/conversion?clientId=${client.id}`}>
+                          Checklist
+                        </Link>
                         {next !== null && (
                           <button
                             className="btn-primary"

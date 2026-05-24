@@ -6422,3 +6422,146 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   Pilot -> paid conversion checklist (T121)
+   ============================================ */
+
+.conversion-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.conversion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.conversion-meter {
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+  text-align: right;
+}
+
+.conversion-meter strong {
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.conversion-meter[data-blocked="true"] strong {
+  color: var(--amber);
+}
+
+.conversion-meter span {
+  font-size: var(--text-tiny);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.conversion-meter small {
+  font-size: var(--text-tiny);
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.conversion-group {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.conversion-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--text-h3);
+  color: var(--ink);
+}
+
+.conversion-group__hint {
+  margin: 0 0 6px;
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+
+.conversion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.conversion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+
+.conversion-item[data-done="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.conversion-item label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.conversion-item label input {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+}
+
+.conversion-item__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+}
+
+.conversion-item[data-done="true"] .conversion-item__icon {
+  background: var(--brand);
+  color: var(--brand-on);
+  border-color: var(--brand);
+}
+
+.conversion-item strong {
+  display: block;
+  font-size: var(--text-small);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.conversion-item small {
+  display: block;
+  font-size: var(--text-tiny);
+  color: var(--muted);
+}

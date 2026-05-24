@@ -181,6 +181,15 @@ export async function updateClientConversionChecklist(
   return data.client;
 }
 
+export async function getClientConversionChecklist(
+  clientId: string,
+): Promise<import('@/types/domain').ConversionChecklistItem[]> {
+  const data = await apiFetch<{ items: import('@/types/domain').ConversionChecklistItem[] }>(
+    `/clients/${clientId}/conversion-checklist`,
+  );
+  return data.items;
+}
+
 export async function signupClient(input: {
   businessName: string;
   ownerName: string;
