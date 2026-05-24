@@ -25,6 +25,7 @@ export default function ClientLoginPage() {
   const [challenge, setChallenge] = useState<ChallengeResponse['challenge'] | null>(null);
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [lastRequest, setLastRequest] = useState<CodeRequest | null>(null);
+  const [failedRequest, setFailedRequest] = useState<CodeRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,6 +50,9 @@ export default function ClientLoginPage() {
   const resendLabel = challenge === null
     ? 'Send code'
     : `Send a new code to ${challenge.destination}`;
+  const fallbackRequest = lastRequest ?? failedRequest;
+  const fallbackChannel = fallbackRequest?.channel === 'email' ? 'whatsapp' : 'email';
+  const fallbackChannelLabel = fallbackChannel === 'email' ? 'email' : 'WhatsApp';
 
   useEffect(() => {
     if (challenge === null) return;
@@ -75,10 +79,16 @@ export default function ClientLoginPage() {
         );
       }
       setLastRequest(input);
+      setFailedRequest(null);
       setChallenge(data.challenge);
-      setNotice(`New code sent to ${data.challenge.destination}.`);
+      setNotice(
+        data.challenge.deliveryMode === 'skipped'
+          ? `Code created for ${data.challenge.destination}, but delivery is not fully configured. Try the other channel if you do not receive it.`
+          : `New code sent to ${data.challenge.destination}.`,
+      );
       setNow(Date.now());
     } catch (requestError) {
+      setFailedRequest(input);
       setError(
         requestError instanceof Error
           ? requestError.message
@@ -107,6 +117,14 @@ export default function ClientLoginPage() {
       return;
     }
     await requestCodeFor(lastRequest);
+  }
+
+  async function requestFallbackCode() {
+    if (fallbackRequest === undefined) return;
+    await requestCodeFor({
+      ...fallbackRequest,
+      channel: fallbackChannel,
+    });
   }
 
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
@@ -210,6 +228,11 @@ export default function ClientLoginPage() {
               <button className="icon-button" disabled={isSubmitting} type="submit">
                 {isSubmitting ? 'Sending...' : 'Send code'}
               </button>
+              {error !== null && failedRequest !== null && (
+                <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestFallbackCode()}>
+                  {isSubmitting ? 'Sending...' : `Try ${fallbackChannelLabel} instead`}
+                </button>
+              )}
               <p className="auth-switch-copy">
                 No workspace yet? <a href="/signup">Create client account</a>
               </p>
@@ -241,6 +264,11 @@ export default function ClientLoginPage() {
               {(error !== null || challengeExpired) && (
                 <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestNewCode()}>
                   {isSubmitting ? 'Sending...' : resendLabel}
+                </button>
+              )}
+              {(error !== null || challengeExpired || challenge.deliveryMode === 'skipped') && fallbackRequest !== undefined && (
+                <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestFallbackCode()}>
+                  {isSubmitting ? 'Sending...' : `Try ${fallbackChannelLabel} instead`}
                 </button>
               )}
               <p className="auth-switch-copy">
