@@ -120,7 +120,7 @@ export default function ClientLoginPage() {
   }
 
   async function requestFallbackCode() {
-    if (fallbackRequest === undefined) return;
+    if (fallbackRequest === null) return;
     await requestCodeFor({
       ...fallbackRequest,
       channel: fallbackChannel,
@@ -266,7 +266,7 @@ export default function ClientLoginPage() {
                   {isSubmitting ? 'Sending...' : resendLabel}
                 </button>
               )}
-              {(error !== null || challengeExpired || challenge.deliveryMode === 'skipped') && fallbackRequest !== undefined && (
+              {(error !== null || challengeExpired || challenge.deliveryMode === 'skipped') && fallbackRequest !== null && (
                 <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestFallbackCode()}>
                   {isSubmitting ? 'Sending...' : `Try ${fallbackChannelLabel} instead`}
                 </button>
