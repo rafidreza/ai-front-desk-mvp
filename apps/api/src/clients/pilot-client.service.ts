@@ -2,7 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
-import { Channel, ClientChannel, ClientIntegrationStatus, ClientOnboardingProfile, ClientProfile, ClientStatus, ConversionChecklistItem } from '../types/domain';
+import {
+  Channel,
+  ClientChannel,
+  ClientComplianceProfile,
+  ClientDpaProfile,
+  ClientIntegrationStatus,
+  ClientOnboardingProfile,
+  ClientProfile,
+  ClientStatus,
+  ConversionChecklistItem,
+} from '../types/domain';
 
 type ClientLanguage = ClientProfile['defaultLanguage'];
 type ClientChannelInput = {
@@ -27,6 +37,7 @@ type ClientMutationInput = {
   onboardingStatus?: string;
   onboardingProfile?: ClientOnboardingProfile;
 };
+type DpaProfileInput = Omit<ClientDpaProfile, 'updatedAt'>;
 
 type ClientChannelRecord = {
   id: string;
@@ -55,6 +66,7 @@ function toClientProfile(client: {
   onboardingProfile: unknown;
   lifecycleStage?: string;
   conversionChecklist?: unknown;
+  complianceProfile?: unknown;
   defaultLanguage: string;
   tone: string;
   escalationKeywords: string[];
@@ -80,6 +92,7 @@ function toClientProfile(client: {
     onboardingStatus: client.onboardingStatus,
     lifecycleStage: toLifecycleStage(client.lifecycleStage),
     conversionChecklist: toConversionChecklist(client.conversionChecklist),
+    complianceProfile: toComplianceProfile(client.complianceProfile),
     onboardingProfile: toOnboardingProfile(client.onboardingProfile),
     defaultLanguage,
     tone: client.tone,
@@ -88,6 +101,38 @@ function toClientProfile(client: {
     digestEmail: client.digestEmail ?? undefined,
     channels: normalizeClientChannels(client),
   };
+}
+
+function toComplianceProfile(value: unknown): ClientComplianceProfile | undefined {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const profile = value as Record<string, unknown>;
+  const dpa = normalizeDpaProfile(profile.dpa);
+  return dpa === undefined ? undefined : { dpa };
+}
+
+function normalizeDpaProfile(value: unknown): ClientDpaProfile | undefined {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const profile = value as Record<string, unknown>;
+  const status =
+    profile.status === 'sent' || profile.status === 'signed' || profile.status === 'countersigned'
+      ? profile.status
+      : 'not_sent';
+  return {
+    status,
+    templateUrl: optionalString(profile.templateUrl),
+    sentAt: optionalString(profile.sentAt),
+    signerName: optionalString(profile.signerName),
+    signerEmail: optionalString(profile.signerEmail),
+    signedAt: optionalString(profile.signedAt),
+    countersignedAt: optionalString(profile.countersignedAt),
+    countersignedPdfUrl: optionalString(profile.countersignedPdfUrl),
+    notes: optionalString(profile.notes),
+    updatedAt: optionalString(profile.updatedAt),
+  };
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
 function toLifecycleStage(value: unknown): ClientProfile['lifecycleStage'] {
@@ -109,14 +154,17 @@ function toConversionChecklist(value: unknown): ClientProfile['conversionCheckli
   if (!Array.isArray(value)) return undefined;
   return value
     .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
-    .map((item) => ({
-      id: String(item.id ?? ''),
-      label: String(item.label ?? ''),
-      done: item.done === true,
-      source: item.source === 'auto' ? 'auto' : 'manual',
-      detail: typeof item.detail === 'string' ? item.detail : undefined,
-      updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
-    }))
+    .map((item): ConversionChecklistItem => {
+      const source: ConversionChecklistItem['source'] = item.source === 'auto' ? 'auto' : 'manual';
+      return {
+        id: String(item.id ?? ''),
+        label: String(item.label ?? ''),
+        done: item.done === true,
+        source,
+        detail: typeof item.detail === 'string' ? item.detail : undefined,
+        updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
+      };
+    })
     .filter((item) => item.id.length > 0 && item.label.length > 0);
 }
 
@@ -187,6 +235,7 @@ const pilotClientFallback: ClientProfile = {
   escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
   status: 'active',
   onboardingStatus: 'live',
+  lifecycleStage: 'live',
   channels: [
     {
       id: 'pilot-client:messenger:pilot-page',
@@ -437,6 +486,38 @@ export class PilotClientService {
     const client = await prisma.client.update({
       where: { id: clientId },
       data: { conversionChecklist: items as unknown as Prisma.InputJsonValue },
+      include: { channels: true },
+    });
+    return toClientProfile(client);
+  }
+
+  async updateDpaProfile(clientId: string, input: DpaProfileInput): Promise<ClientProfile> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+
+    const existingCompliance = toComplianceProfile(existing.complianceProfile);
+    const complianceProfile: ClientComplianceProfile = {
+      ...existingCompliance,
+      dpa: {
+        status: input.status,
+        templateUrl: input.templateUrl,
+        sentAt: input.sentAt,
+        signerName: input.signerName,
+        signerEmail: input.signerEmail,
+        signedAt: input.signedAt,
+        countersignedAt: input.countersignedAt,
+        countersignedPdfUrl: input.countersignedPdfUrl,
+        notes: input.notes,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: { complianceProfile: complianceProfile as unknown as Prisma.InputJsonValue },
       include: { channels: true },
     });
     return toClientProfile(client);

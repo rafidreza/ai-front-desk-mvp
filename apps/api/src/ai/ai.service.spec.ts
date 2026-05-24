@@ -7,6 +7,7 @@ const baseClient: ClientProfile = {
   businessName: 'Test Seller',
   pageId: 'test-page',
   status: 'active',
+  lifecycleStage: 'live',
   defaultLanguage: 'mixed',
   tone: 'friendly',
   escalationKeywords: ['refund', 'cancel', 'রিফান্ড'],

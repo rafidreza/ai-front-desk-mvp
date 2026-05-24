@@ -20,6 +20,7 @@ export const pilotClientFallback: ClientProfile = {
   businessName: 'Pilot F-Commerce Seller',
   pageId: 'pilot-page',
   status: 'active',
+  lifecycleStage: 'live',
   defaultLanguage: 'mixed',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
   escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],

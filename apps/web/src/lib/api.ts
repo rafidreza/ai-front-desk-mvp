@@ -5,6 +5,7 @@ import {
   CalibrationQueueFilter,
   CalibrationQueueResult,
   ClientDashboardSummary,
+  ClientDpaProfile,
   ClientKnowledgeEntry,
   ClientProfile,
   ClientStatus,
@@ -177,6 +178,17 @@ export async function updateClientConversionChecklist(
   const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/conversion-checklist`, {
     method: 'PATCH',
     body: JSON.stringify({ items }),
+  });
+  return data.client;
+}
+
+export async function updateClientDpaProfile(
+  clientId: string,
+  input: Omit<ClientDpaProfile, 'updatedAt'>,
+): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/compliance/dpa`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
   });
   return data.client;
 }

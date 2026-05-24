@@ -113,6 +113,25 @@ export type ConversionChecklistItem = {
   updatedAt?: string;
 };
 
+export type DpaSigningStatus = 'not_sent' | 'sent' | 'signed' | 'countersigned';
+
+export interface ClientDpaProfile {
+  status: DpaSigningStatus;
+  templateUrl?: string;
+  sentAt?: string;
+  signerName?: string;
+  signerEmail?: string;
+  signedAt?: string;
+  countersignedAt?: string;
+  countersignedPdfUrl?: string;
+  notes?: string;
+  updatedAt?: string;
+}
+
+export interface ClientComplianceProfile {
+  dpa?: ClientDpaProfile;
+}
+
 export interface ClientProfile {
   id: string;
   businessName: string;
@@ -125,6 +144,7 @@ export interface ClientProfile {
   onboardingStatus: string;
   lifecycleStage: ClientLifecycleStage;
   conversionChecklist?: ConversionChecklistItem[];
+  complianceProfile?: ClientComplianceProfile;
   defaultLanguage: 'bangla' | 'english' | 'mixed';
   tone: string;
   escalationKeywords: string[];

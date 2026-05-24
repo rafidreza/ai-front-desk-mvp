@@ -33,6 +33,7 @@ model Client {
   onboardingProfile       Json?
   lifecycleStage          String                   @default("lead")
   conversionChecklist     Json?
+  complianceProfile       Json?
   defaultLanguage         String
   tone                    String
   escalationKeywords      String[]

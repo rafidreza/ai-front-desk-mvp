@@ -16,6 +16,7 @@ const client: ClientProfile & {
   businessName: 'Pilot Commerce',
   pageId: 'pilot-page',
   status: 'active',
+  lifecycleStage: 'live',
   onboardingStatus: 'active',
   defaultLanguage: 'mixed',
   tone: 'friendly',

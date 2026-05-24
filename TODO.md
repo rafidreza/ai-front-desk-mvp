@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 31 | 7 | 38 |
-| **TOTAL** | **120** | **27** | **147** |
+| 12 — Use case backlog | 32 | 6 | 38 |
+| **TOTAL** | **121** | **26** | **147** |
 
 ---
 
@@ -285,7 +285,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 
 ### Compliance + Bangladesh-specific
 
-- [ ] **T122 — USECASE** DPA signing flow: send template → seller signs → store countersigned PDF per client.
+- [x] **T122 — USECASE** DPA signing flow: send template → seller signs → store countersigned PDF per client. — **DONE (2026-05-24): added a per-client compliance profile with DPA status, signer, sent/signed/countersigned dates, template URL, countersigned PDF URL, and notes; exposed PATCH `/clients/:id/compliance/dpa`; internal Clients UI now has a DPA signing panel for manual ops tracking. Also restored red CI build paths by adding missing lifecycle-stage fixtures and aligning Hono's ticket status enum with `reopened`.**
 - [ ] **T123 — USECASE** Per-client data retention controls ("delete chats older than 90 days").
 - [ ] **T124 — USECASE** Bangla number formatting (১২,৩৪৫) + BDT currency (৳) on all numeric surfaces.
 - [ ] **T125 — USECASE** PDPA consent banner on embeddable customer chat widget (collects phone / address PII).

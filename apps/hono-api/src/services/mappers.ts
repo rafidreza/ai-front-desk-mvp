@@ -32,6 +32,9 @@ export function toClientProfile(client: {
   businessCategory?: string | null;
   onboardingStatus: string;
   onboardingProfile?: Record<string, unknown> | null;
+  complianceProfile?: Record<string, unknown> | null;
+  lifecycleStage?: string | null;
+  conversionChecklist?: unknown;
   defaultLanguage: string;
   tone: string;
   escalationKeywords: string[];
@@ -49,6 +52,9 @@ export function toClientProfile(client: {
     businessCategory: client.businessCategory ?? undefined,
     onboardingStatus: client.onboardingStatus,
     onboardingProfile: client.onboardingProfile ?? undefined,
+    lifecycleStage: toLifecycleStage(client.lifecycleStage),
+    conversionChecklist: toConversionChecklist(client.conversionChecklist),
+    complianceProfile: toComplianceProfile(client.complianceProfile),
     defaultLanguage:
       client.defaultLanguage === 'bangla' || client.defaultLanguage === 'english' || client.defaultLanguage === 'mixed'
         ? client.defaultLanguage
@@ -58,6 +64,67 @@ export function toClientProfile(client: {
     whatsappPoc: client.whatsappPoc ?? undefined,
     digestEmail: client.digestEmail ?? undefined,
   };
+}
+
+function toLifecycleStage(value: unknown): ClientProfile['lifecycleStage'] {
+  if (
+    value === 'lead' ||
+    value === 'onboarding' ||
+    value === 'kb_building' ||
+    value === 'shadow' ||
+    value === 'live' ||
+    value === 'paid' ||
+    value === 'churned'
+  ) {
+    return value;
+  }
+  return 'lead';
+}
+
+function toConversionChecklist(value: unknown): ClientProfile['conversionChecklist'] {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+    .map((item) => {
+      const source: 'auto' | 'manual' = item.source === 'auto' ? 'auto' : 'manual';
+      return {
+        id: String(item.id ?? ''),
+        label: String(item.label ?? ''),
+        done: item.done === true,
+        source,
+        detail: typeof item.detail === 'string' ? item.detail : undefined,
+        updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
+      };
+    })
+    .filter((item) => item.id.length > 0 && item.label.length > 0);
+}
+
+function toComplianceProfile(value: unknown): ClientProfile['complianceProfile'] {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const profile = value as Record<string, unknown>;
+  if (profile.dpa === null || typeof profile.dpa !== 'object' || Array.isArray(profile.dpa)) return undefined;
+  const dpa = profile.dpa as Record<string, unknown>;
+  return {
+    dpa: {
+      status:
+        dpa.status === 'sent' || dpa.status === 'signed' || dpa.status === 'countersigned'
+          ? dpa.status
+          : 'not_sent',
+      templateUrl: stringOrUndefined(dpa.templateUrl),
+      sentAt: stringOrUndefined(dpa.sentAt),
+      signerName: stringOrUndefined(dpa.signerName),
+      signerEmail: stringOrUndefined(dpa.signerEmail),
+      signedAt: stringOrUndefined(dpa.signedAt),
+      countersignedAt: stringOrUndefined(dpa.countersignedAt),
+      countersignedPdfUrl: stringOrUndefined(dpa.countersignedPdfUrl),
+      notes: stringOrUndefined(dpa.notes),
+      updatedAt: stringOrUndefined(dpa.updatedAt),
+    },
+  };
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
 export function toTicket(ticket: {

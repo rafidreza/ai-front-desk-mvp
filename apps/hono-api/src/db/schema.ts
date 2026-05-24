@@ -20,7 +20,7 @@ const vector = customType<{ data: string }>({
 });
 
 export const ticketPriorityEnum = pgEnum('TicketPriority', ['P1', 'P2', 'P3']);
-export const ticketStatusEnum = pgEnum('TicketStatus', ['open', 'assigned', 'waiting_client', 'resolved']);
+export const ticketStatusEnum = pgEnum('TicketStatus', ['open', 'assigned', 'waiting_client', 'resolved', 'reopened']);
 
 export const clients = pgTable(
   'Client',
@@ -34,6 +34,7 @@ export const clients = pgTable(
     businessCategory: text('businessCategory'),
     onboardingStatus: text('onboardingStatus').notNull().default('draft'),
     onboardingProfile: jsonb('onboardingProfile').$type<Record<string, unknown> | null>(),
+    complianceProfile: jsonb('complianceProfile').$type<Record<string, unknown> | null>(),
     defaultLanguage: text('defaultLanguage').notNull(),
     tone: text('tone').notNull(),
     escalationKeywords: text('escalationKeywords').array().notNull(),

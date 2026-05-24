@@ -1,16 +1,17 @@
 'use client';
 
-import { Building2, Calculator, Plus, Power, RefreshCw, RotateCcw, Save, Search, Star, Trash2 } from 'lucide-react';
+import { Building2, Calculator, FileCheck2, Plus, Power, RefreshCw, RotateCcw, Save, Search, Star, Trash2 } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   ClientManagementInput,
   createClientFromInternal,
   getClientDashboard,
   getClients,
+  updateClientDpaProfile,
   updateClientFromInternal,
   updateClientStatus,
 } from '@/lib/api';
-import { ClientDashboardSummary, ClientProfile, ClientStatus } from '@/types/domain';
+import { ClientDashboardSummary, ClientDpaProfile, ClientProfile, ClientStatus, DpaSigningStatus } from '@/types/domain';
 import { EmptyState } from '../_components/EmptyState';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
@@ -49,6 +50,18 @@ type ClientFormState = {
   onboardingStatus: string;
 };
 
+type DpaFormState = {
+  status: DpaSigningStatus;
+  templateUrl: string;
+  sentAt: string;
+  signerName: string;
+  signerEmail: string;
+  signedAt: string;
+  countersignedAt: string;
+  countersignedPdfUrl: string;
+  notes: string;
+};
+
 const emptyClientForm: ClientFormState = {
   businessName: '',
   pageId: '',
@@ -66,6 +79,18 @@ const emptyClientForm: ClientFormState = {
 const emptyFacebookPageForm = {
   externalId: '',
   label: '',
+};
+
+const emptyDpaForm: DpaFormState = {
+  status: 'not_sent',
+  templateUrl: '',
+  sentAt: '',
+  signerName: '',
+  signerEmail: '',
+  signedAt: '',
+  countersignedAt: '',
+  countersignedPdfUrl: '',
+  notes: '',
 };
 
 function formFromClient(client: ClientProfile): ClientFormState {
@@ -89,6 +114,32 @@ function optional(value: string) {
   return trimmed === '' ? undefined : trimmed;
 }
 
+function dateInputFromIso(value?: string) {
+  if (value === undefined) return '';
+  return value.slice(0, 10);
+}
+
+function isoFromDateInput(value: string) {
+  const trimmed = value.trim();
+  if (trimmed === '') return undefined;
+  return new Date(`${trimmed}T00:00:00.000Z`).toISOString();
+}
+
+function dpaFormFromClient(client?: ClientProfile): DpaFormState {
+  const dpa = client?.complianceProfile?.dpa;
+  return {
+    status: dpa?.status ?? 'not_sent',
+    templateUrl: dpa?.templateUrl ?? '',
+    sentAt: dateInputFromIso(dpa?.sentAt),
+    signerName: dpa?.signerName ?? '',
+    signerEmail: dpa?.signerEmail ?? '',
+    signedAt: dateInputFromIso(dpa?.signedAt),
+    countersignedAt: dateInputFromIso(dpa?.countersignedAt),
+    countersignedPdfUrl: dpa?.countersignedPdfUrl ?? '',
+    notes: dpa?.notes ?? '',
+  };
+}
+
 function payloadFromForm(form: ClientFormState): ClientManagementInput & { businessName: string } {
   return {
     businessName: form.businessName.trim(),
@@ -105,6 +156,20 @@ function payloadFromForm(form: ClientFormState): ClientManagementInput & { busin
   };
 }
 
+function dpaPayloadFromForm(form: DpaFormState): Omit<ClientDpaProfile, 'updatedAt'> {
+  return {
+    status: form.status,
+    templateUrl: optional(form.templateUrl),
+    sentAt: isoFromDateInput(form.sentAt),
+    signerName: optional(form.signerName),
+    signerEmail: optional(form.signerEmail),
+    signedAt: isoFromDateInput(form.signedAt),
+    countersignedAt: isoFromDateInput(form.countersignedAt),
+    countersignedPdfUrl: optional(form.countersignedPdfUrl),
+    notes: optional(form.notes),
+  };
+}
+
 export default function InternalClientsPage() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [dashboards, setDashboards] = useState<ClientDashboardSummary[]>([]);
@@ -114,6 +179,8 @@ export default function InternalClientsPage() {
   const [form, setForm] = useState<ClientFormState>(emptyClientForm);
   const [savedForm, setSavedForm] = useState<ClientFormState>(emptyClientForm);
   const [facebookPageForm, setFacebookPageForm] = useState(emptyFacebookPageForm);
+  const [dpaForm, setDpaForm] = useState<DpaFormState>(emptyDpaForm);
+  const [savedDpaForm, setSavedDpaForm] = useState<DpaFormState>(emptyDpaForm);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -183,6 +250,9 @@ export default function InternalClientsPage() {
   const isClientFormDirty = useMemo(() => {
     return JSON.stringify(form) !== JSON.stringify(savedForm);
   }, [form, savedForm]);
+  const isDpaFormDirty = useMemo(() => {
+    return JSON.stringify(dpaForm) !== JSON.stringify(savedDpaForm);
+  }, [dpaForm, savedDpaForm]);
   const canSubmitClientForm =
     formMode === 'create'
       ? isClientFormDirty && form.businessName.trim().length >= 2
@@ -192,8 +262,11 @@ export default function InternalClientsPage() {
     if (formMode === 'create') return;
     if (selectedClient !== undefined) {
       const nextForm = formFromClient(selectedClient);
+      const nextDpaForm = dpaFormFromClient(selectedClient);
       setForm(nextForm);
       setSavedForm(nextForm);
+      setDpaForm(nextDpaForm);
+      setSavedDpaForm(nextDpaForm);
     }
   }, [formMode, selectedClient]);
 
@@ -203,6 +276,8 @@ export default function InternalClientsPage() {
     setForm(emptyClientForm);
     setSavedForm(emptyClientForm);
     setFacebookPageForm(emptyFacebookPageForm);
+    setDpaForm(emptyDpaForm);
+    setSavedDpaForm(emptyDpaForm);
     setNotice(null);
     setError(null);
   }
@@ -214,6 +289,9 @@ export default function InternalClientsPage() {
     setForm(nextForm);
     setSavedForm(nextForm);
     setFacebookPageForm(emptyFacebookPageForm);
+    const nextDpaForm = dpaFormFromClient(client);
+    setDpaForm(nextDpaForm);
+    setSavedDpaForm(nextDpaForm);
     setNotice(null);
     setError(null);
   }
@@ -349,6 +427,27 @@ export default function InternalClientsPage() {
       await loadClients();
     } catch (channelError) {
       setError(channelError instanceof Error ? channelError.message : 'Unable to remove Facebook page.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function saveDpaProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (selectedClientId === null) return;
+    setIsSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const saved = await updateClientDpaProfile(selectedClientId, dpaPayloadFromForm(dpaForm));
+      const nextDpaForm = dpaFormFromClient(saved);
+      setDpaForm(nextDpaForm);
+      setSavedDpaForm(nextDpaForm);
+      setSelectedClientId(saved.id);
+      setNotice('DPA signing status updated.');
+      await loadClients();
+    } catch (dpaError) {
+      setError(dpaError instanceof Error ? dpaError.message : 'Unable to update DPA status.');
     } finally {
       setIsSaving(false);
     }
@@ -533,6 +632,111 @@ export default function InternalClientsPage() {
                       <span>{selectedDashboard.totals.containmentRate}% containment</span>
                     </div>
                   </section>
+
+                  <form className="client-channel-panel" onSubmit={saveDpaProfile}>
+                    <div className="section-label">
+                      <FileCheck2 size={15} />
+                      DPA signing
+                    </div>
+                    <div className="client-management-grid">
+                      <label>
+                        Status
+                        <select
+                          value={dpaForm.status}
+                          onChange={(event) =>
+                            setDpaForm((current) => ({ ...current, status: event.target.value as DpaSigningStatus }))
+                          }
+                        >
+                          <option value="not_sent">Not sent</option>
+                          <option value="sent">Sent to seller</option>
+                          <option value="signed">Seller signed</option>
+                          <option value="countersigned">Countersigned PDF stored</option>
+                        </select>
+                      </label>
+                      <label>
+                        Template URL
+                        <input
+                          value={dpaForm.templateUrl}
+                          placeholder="https://..."
+                          type="url"
+                          onChange={(event) => setDpaForm((current) => ({ ...current, templateUrl: event.target.value }))}
+                        />
+                      </label>
+                      <label>
+                        Sent date
+                        <input
+                          value={dpaForm.sentAt}
+                          type="date"
+                          onChange={(event) => setDpaForm((current) => ({ ...current, sentAt: event.target.value }))}
+                        />
+                      </label>
+                      <label>
+                        Seller signed date
+                        <input
+                          value={dpaForm.signedAt}
+                          type="date"
+                          onChange={(event) => setDpaForm((current) => ({ ...current, signedAt: event.target.value }))}
+                        />
+                      </label>
+                      <label>
+                        Signer name
+                        <input
+                          value={dpaForm.signerName}
+                          placeholder="Owner or authorized signer"
+                          onChange={(event) => setDpaForm((current) => ({ ...current, signerName: event.target.value }))}
+                        />
+                      </label>
+                      <label>
+                        Signer email
+                        <input
+                          value={dpaForm.signerEmail}
+                          placeholder="signer@example.com"
+                          type="email"
+                          onChange={(event) => setDpaForm((current) => ({ ...current, signerEmail: event.target.value }))}
+                        />
+                      </label>
+                      <label>
+                        Countersigned date
+                        <input
+                          value={dpaForm.countersignedAt}
+                          type="date"
+                          onChange={(event) => setDpaForm((current) => ({ ...current, countersignedAt: event.target.value }))}
+                        />
+                      </label>
+                      <label>
+                        Countersigned PDF URL
+                        <input
+                          value={dpaForm.countersignedPdfUrl}
+                          placeholder="https://..."
+                          type="url"
+                          onChange={(event) => setDpaForm((current) => ({ ...current, countersignedPdfUrl: event.target.value }))}
+                        />
+                      </label>
+                    </div>
+                    <label>
+                      Notes
+                      <textarea
+                        value={dpaForm.notes}
+                        placeholder="Manual follow-up notes, signer authority, or document location details"
+                        onChange={(event) => setDpaForm((current) => ({ ...current, notes: event.target.value }))}
+                      />
+                    </label>
+                    <div className="form-actions">
+                      <button
+                        className="mini-button"
+                        disabled={!isDpaFormDirty || isSaving}
+                        type="button"
+                        onClick={() => setDpaForm(savedDpaForm)}
+                      >
+                        <RotateCcw size={14} />
+                        Discard
+                      </button>
+                      <button className="mini-button" disabled={!isDpaFormDirty || isSaving} type="submit">
+                        <Save size={14} />
+                        Save DPA
+                      </button>
+                    </div>
+                  </form>
 
                   <section className="client-channel-panel">
                     <div className="section-label">

@@ -90,6 +90,18 @@ const ConversionChecklistSchema = z.object({
     .max(40),
 });
 
+const DpaProfileSchema = z.object({
+  status: z.enum(['not_sent', 'sent', 'signed', 'countersigned']),
+  templateUrl: z.string().trim().url().optional(),
+  sentAt: z.string().datetime().optional(),
+  signerName: z.string().trim().min(2).max(120).optional(),
+  signerEmail: z.string().trim().email().optional(),
+  signedAt: z.string().datetime().optional(),
+  countersignedAt: z.string().datetime().optional(),
+  countersignedPdfUrl: z.string().trim().url().optional(),
+  notes: z.string().trim().max(800).optional(),
+});
+
 const CsatSchema = z.object({
   score: z.number().int().min(1).max(5),
   comment: z.string().trim().max(500).optional(),
@@ -199,6 +211,12 @@ export class ClientController {
   async getConversionChecklist(@Param('clientId') clientId: string) {
     const items = await this.conversionChecklist.compute(clientId);
     return { items };
+  }
+
+  @Patch(':clientId/compliance/dpa')
+  async updateDpaProfile(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = DpaProfileSchema.parse(body);
+    return { client: await this.clients.updateDpaProfile(clientId, parsed) };
   }
 
   @Get(':clientId/dashboard')
