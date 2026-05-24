@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 16 | 22 | 38 |
-| **TOTAL** | **105** | **42** | **147** |
+| 12 — Use case backlog | 17 | 21 | 38 |
+| **TOTAL** | **106** | **41** | **147** |
 
 ---
 
@@ -242,7 +242,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T91 — USECASE** Channel health dashboard: Meta page token TTL countdown, WhatsApp number status, webhook deliverability stats. — **DONE (2026-05-24): added internal channel health checks for Messenger page-token configuration/TTL, WhatsApp access-token and number-ID readiness, last webhook activity, 24h traffic counts, and WhatsApp template approval counts on the Channels dashboard.**
 - [x] **T92 — USECASE** Holiday / off-hours auto-reply calendar (Eid, Puja, custom dates) with per-client override. — **DONE (2026-05-24): added per-client auto-reply rules with disabled editable Bangladesh holiday suggestions and daily after-hours template, internal Channels UI to edit/enable/delete rules, and inbound conversation short-circuiting so active holiday/off-hours windows send the configured reply before the AI path.**
 - [x] **T93 — USECASE** Voice note ingest UI in chat (operator can play customer voice + see transcribed text inline). — **DONE (2026-05-24): added voice attachment metadata and transcript storage on messages, Messenger/WhatsApp voice-note ingestion fallbacks, an internal transcript edit endpoint, conversation playback/transcript editing UI, and read-only voice context inside ticket details.**
-- [ ] **T94 — USECASE** Image OCR ingest UI in chat (customer photos product → operator sees extracted text + matched product candidates).
+- [x] **T94 — USECASE** Image OCR ingest UI in chat (customer photos product → operator sees extracted text + matched product candidates). — **DONE (2026-05-24): added image attachment metadata, OCR text/status storage, Google Vision OCR attempt for reachable image URLs, matched Google Sheet product candidate snapshots, Messenger/WhatsApp image ingestion, and internal conversation/ticket UI for product photos, OCR status, and candidate products.**
 - [ ] **T95 — USECASE** Unified customer history view across pages (same phone number → one timeline).
 
 ### Ticket operations

@@ -48,6 +48,7 @@ export type {
   OrderStatus,
   PaymentStatus,
   ProductAvailabilityStatus,
+  ProductCandidate,
   ProductRecord,
   PromptProfile,
   PromptProfileVersion,

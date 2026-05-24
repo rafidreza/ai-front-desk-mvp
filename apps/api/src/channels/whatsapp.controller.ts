@@ -29,6 +29,7 @@ const WhatsAppWebhookSchema = z.object({
                   type: z.string().optional(),
                   text: z.object({ body: z.string().optional() }).optional(),
                   audio: z.object({ id: z.string(), mime_type: z.string().optional() }).optional(),
+                  image: z.object({ id: z.string(), mime_type: z.string().optional(), caption: z.string().optional() }).optional(),
                 }),
               )
               .optional(),
@@ -108,10 +109,11 @@ export class WhatsAppController {
         const client = await this.clients.findByWhatsAppIdentifier(change.value.metadata.phone_number_id);
 
         for (const message of change.value.messages ?? []) {
-          const text = message.text?.body;
-          if ((text === undefined || text.trim() === '') && message.audio === undefined) {
+          const text = message.text?.body ?? message.image?.caption;
+          if ((text === undefined || text.trim() === '') && message.audio === undefined && message.image === undefined) {
             continue;
           }
+          const attachmentType = message.audio !== undefined ? 'voice' : message.image !== undefined ? 'image' : undefined;
 
           const csatScore = parseCsatScore(text);
           if (csatScore !== null) {
@@ -137,10 +139,20 @@ export class WhatsAppController {
             channel: 'whatsapp',
             externalConversationId: message.from,
             externalSenderId: message.from,
-            text: text?.trim() === '' || text === undefined ? 'Customer sent a voice note. Transcript pending.' : text,
+            text:
+              text?.trim() === '' || text === undefined
+                ? attachmentType === 'image'
+                  ? 'Customer sent a product photo. OCR not configured.'
+                  : 'Customer sent a voice note. Transcript pending.'
+                : text,
             receivedAt: getReceivedAt(message.timestamp),
-            attachmentType: message.audio === undefined ? undefined : 'voice',
-            attachmentUrl: message.audio === undefined ? undefined : `whatsapp-media:${message.audio.id}`,
+            attachmentType,
+            attachmentUrl:
+              message.audio !== undefined
+                ? `whatsapp-media:${message.audio.id}`
+                : message.image !== undefined
+                  ? `whatsapp-media:${message.image.id}`
+                  : undefined,
           };
 
           const result = await this.conversations.handleIncomingMessage(incoming);

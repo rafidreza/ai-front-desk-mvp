@@ -1,6 +1,6 @@
 'use client';
 
-import { Ban, FlaskConical, Handshake, MessageSquareText, RefreshCw, Save, Search, TicketCheck, Volume2, X } from 'lucide-react';
+import { Ban, FlaskConical, Handshake, Image as ImageIcon, MessageSquareText, RefreshCw, Save, Search, TicketCheck, Volume2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -19,6 +19,11 @@ import { BlockedSender, ConversationLog, ConversationSearchResult, TestCustomer,
 import { ConversationsPanel } from '../_components/ConversationsPanel';
 import { InternalShell } from '../_components/InternalShell';
 import { formatTime, getErrorMessage } from '../_lib/helpers';
+
+function formatProductPrice(product: NonNullable<ConversationLog['messages'][number]['matchedProducts']>[number]) {
+  if (product.price === undefined) return null;
+  return `${product.currency ?? 'BDT'} ${product.price}`;
+}
 
 export default function ConversationsPage() {
   const [conversations, setConversations] = useState<ConversationLog[]>([]);
@@ -548,6 +553,42 @@ export default function ConversationsPage() {
                           <Save size={13} />
                           {savingTranscriptId === message.id ? 'Saving...' : 'Save transcript'}
                         </button>
+                      </div>
+                    )}
+                    {message.attachmentType === 'image' && (
+                      <div className="image-ocr-card">
+                        <div className="section-label">
+                          <ImageIcon size={14} />
+                          Product photo
+                        </div>
+                        {message.attachmentUrl !== undefined && message.attachmentUrl.startsWith('http') ? (
+                          <img alt="Customer uploaded product" src={message.attachmentUrl} />
+                        ) : (
+                          <small>{message.attachmentUrl ?? 'Image media URL pending'}</small>
+                        )}
+                        <div className="image-ocr-card__text">
+                          <span>OCR text</span>
+                          <p>{message.extractedText?.trim() || 'OCR not configured.'}</p>
+                        </div>
+                        <div className="image-ocr-card__matches">
+                          <span>Matched products</span>
+                          {(message.matchedProducts ?? []).length > 0 ? (
+                            <div className="product-candidate-list">
+                              {(message.matchedProducts ?? []).map((product) => (
+                                <article className="product-candidate" key={product.id}>
+                                  <strong>{[product.productName, product.variant].filter(Boolean).join(' - ')}</strong>
+                                  <small>
+                                    {product.sku !== undefined ? `${product.sku} · ` : ''}
+                                    {product.availabilityStatus.replace(/_/g, ' ')}
+                                    {formatProductPrice(product) === null ? '' : ` · ${formatProductPrice(product)}`}
+                                  </small>
+                                </article>
+                              ))}
+                            </div>
+                          ) : (
+                            <p>No product candidates yet</p>
+                          )}
+                        </div>
                       </div>
                     )}
                     <time>{formatTime(message.createdAt)}</time>

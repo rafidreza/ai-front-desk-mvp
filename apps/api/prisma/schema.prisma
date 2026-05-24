@@ -434,10 +434,13 @@ model Message {
   attachmentType String?
   attachmentUrl  String?
   transcript     String?
+  extractedText  String?
+  matchedProducts Json        @default("[]")
   createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
+  @@index([attachmentType])
 }
 
 model Ticket {

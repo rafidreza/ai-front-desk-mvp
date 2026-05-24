@@ -11,6 +11,7 @@ import {
   OrderStatus,
   PaymentStatus,
   ProductAvailabilityStatus,
+  ProductCandidate,
   ProductRecord,
 } from '../types/domain';
 
@@ -600,6 +601,28 @@ export class ExternalDataService {
       LIMIT 500
     `;
     return rows.map(mapProduct);
+  }
+
+  async findProductCandidates(clientId: string, text: string, limit = 4): Promise<ProductCandidate[]> {
+    const source = await this.getActiveGoogleSheetSource(clientId);
+    if (source === null || !this.isFresh(source.lastSuccessfulSyncAt, source.productFreshnessMinutes)) {
+      return [];
+    }
+
+    return this.rankProducts(await this.listProducts(clientId, source.id), text)
+      .slice(0, Math.max(1, Math.min(limit, 8)))
+      .map(({ product, score }) => ({
+        id: product.id,
+        sku: product.sku,
+        productName: product.productName,
+        variant: product.variant,
+        availabilityStatus: product.availabilityStatus,
+        stockQuantity: product.stockQuantity,
+        price: product.price,
+        currency: product.currency,
+        productUrl: product.productUrl,
+        score,
+      }));
   }
 
   async listOrders(clientId: string, sourceId?: string): Promise<OrderRecord[]> {

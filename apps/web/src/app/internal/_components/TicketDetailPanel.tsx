@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock3,
   History,
+  Image as ImageIcon,
   Lock,
   MessageSquarePlus,
   RefreshCw,
@@ -17,6 +18,11 @@ import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } fro
 import { assigneeLabel, eventTitle, formatTime, operatorLabel, priorityTone, statusLabels, statuses } from '../_lib/helpers';
 import { EscalationChips } from './EscalationChips';
 import { SlaBadge } from './SlaBadge';
+
+function formatProductPrice(product: NonNullable<ConversationLog['messages'][number]['matchedProducts']>[number]) {
+  if (product.price === undefined) return null;
+  return `${product.currency ?? 'BDT'} ${product.price}`;
+}
 
 interface TicketDetailPanelProps {
   activeTicket?: Ticket;
@@ -337,6 +343,42 @@ export function TicketDetailPanel({
                     <div className="voice-note-card__transcript">
                       <span>Transcript</span>
                       <p>{message.transcript?.trim() || 'Transcript pending'}</p>
+                    </div>
+                  </div>
+                )}
+                {message.attachmentType === 'image' && (
+                  <div className="image-ocr-card">
+                    <div className="section-label">
+                      <ImageIcon size={14} />
+                      Product photo
+                    </div>
+                    {message.attachmentUrl !== undefined && message.attachmentUrl.startsWith('http') ? (
+                      <img alt="Customer uploaded product" src={message.attachmentUrl} />
+                    ) : (
+                      <small>{message.attachmentUrl ?? 'Image media URL pending'}</small>
+                    )}
+                    <div className="image-ocr-card__text">
+                      <span>OCR text</span>
+                      <p>{message.extractedText?.trim() || 'OCR not configured.'}</p>
+                    </div>
+                    <div className="image-ocr-card__matches">
+                      <span>Matched products</span>
+                      {(message.matchedProducts ?? []).length > 0 ? (
+                        <div className="product-candidate-list">
+                          {(message.matchedProducts ?? []).map((product) => (
+                            <article className="product-candidate" key={product.id}>
+                              <strong>{[product.productName, product.variant].filter(Boolean).join(' - ')}</strong>
+                              <small>
+                                {product.sku !== undefined ? `${product.sku} · ` : ''}
+                                {product.availabilityStatus.replace(/_/g, ' ')}
+                                {formatProductPrice(product) === null ? '' : ` · ${formatProductPrice(product)}`}
+                              </small>
+                            </article>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>No product candidates yet</p>
+                      )}
                     </div>
                   </div>
                 )}

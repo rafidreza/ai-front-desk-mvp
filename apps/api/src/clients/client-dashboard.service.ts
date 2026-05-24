@@ -185,6 +185,10 @@ export class ClientDashboardService {
           attachmentType: message.attachmentType as ConversationLog['messages'][number]['attachmentType'],
           attachmentUrl: message.attachmentUrl ?? undefined,
           transcript: message.transcript ?? undefined,
+          extractedText: message.extractedText ?? undefined,
+          matchedProducts: Array.isArray(message.matchedProducts)
+            ? (message.matchedProducts as unknown as ConversationLog['messages'][number]['matchedProducts'])
+            : [],
           createdAt: message.createdAt.toISOString(),
         })),
       },
@@ -238,6 +242,10 @@ export class ClientDashboardService {
         attachmentType: message.attachmentType as ConversationLog['messages'][number]['attachmentType'],
         attachmentUrl: message.attachmentUrl ?? undefined,
         transcript: message.transcript ?? undefined,
+        extractedText: message.extractedText ?? undefined,
+        matchedProducts: Array.isArray(message.matchedProducts)
+          ? (message.matchedProducts as unknown as ConversationLog['messages'][number]['matchedProducts'])
+          : [],
         createdAt: message.createdAt.toISOString(),
       })),
     };
@@ -334,6 +342,10 @@ export class ClientDashboardService {
         attachmentType: message.attachmentType as ConversationLog['messages'][number]['attachmentType'],
         attachmentUrl: message.attachmentUrl ?? undefined,
         transcript: message.transcript ?? undefined,
+        extractedText: message.extractedText ?? undefined,
+        matchedProducts: Array.isArray(message.matchedProducts)
+          ? (message.matchedProducts as unknown as ConversationLog['messages'][number]['matchedProducts'])
+          : [],
         createdAt: message.createdAt.toISOString(),
       })),
     }));

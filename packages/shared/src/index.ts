@@ -212,6 +212,19 @@ export interface ProductRecord {
   rawRow: Record<string, unknown>;
 }
 
+export interface ProductCandidate {
+  id: string;
+  sku?: string;
+  productName: string;
+  variant?: string;
+  availabilityStatus: ProductAvailabilityStatus;
+  stockQuantity?: number;
+  price?: number;
+  currency?: string;
+  productUrl?: string;
+  score: number;
+}
+
 export interface OrderRecord {
   id: string;
   dataSourceId: string;
@@ -245,6 +258,7 @@ export interface KnowledgeEntry {
   archivedAt?: string;
   sourceTicketId?: string;
   templateKey?: string;
+  updatedAt?: string;
 }
 
 export interface ClientKnowledgeEntry {
@@ -410,6 +424,8 @@ export interface IncomingMessage {
   attachmentType?: 'voice' | 'image';
   attachmentUrl?: string;
   transcript?: string;
+  extractedText?: string;
+  matchedProducts?: ProductCandidate[];
 }
 
 export interface AgentReply {
@@ -427,6 +443,8 @@ export interface ConversationMessage {
   attachmentType?: 'voice' | 'image';
   attachmentUrl?: string;
   transcript?: string;
+  extractedText?: string;
+  matchedProducts?: ProductCandidate[];
   createdAt: string;
 }
 

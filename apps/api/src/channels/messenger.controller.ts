@@ -124,9 +124,11 @@ export class MessengerController {
 
         const message = event.message;
         const voiceAttachment = message?.attachments?.find((attachment) => attachment.type === 'audio');
-        if (message === undefined || (message.text === undefined && voiceAttachment === undefined)) {
+        const imageAttachment = message?.attachments?.find((attachment) => attachment.type === 'image');
+        if (message === undefined || (message.text === undefined && voiceAttachment === undefined && imageAttachment === undefined)) {
           continue;
         }
+        const attachmentType = voiceAttachment !== undefined ? 'voice' : imageAttachment !== undefined ? 'image' : undefined;
 
         const incoming: IncomingMessage = {
           id: message.mid ?? `${event.sender.id}:${event.timestamp ?? Date.now()}`,
@@ -134,10 +136,14 @@ export class MessengerController {
           channel: 'messenger',
           externalConversationId: event.sender.id,
           externalSenderId: event.sender.id,
-          text: message.text ?? 'Customer sent a voice note. Transcript pending.',
+          text:
+            message.text ??
+            (attachmentType === 'image'
+              ? 'Customer sent a product photo. OCR not configured.'
+              : 'Customer sent a voice note. Transcript pending.'),
           receivedAt: new Date(event.timestamp ?? Date.now()).toISOString(),
-          attachmentType: voiceAttachment === undefined ? undefined : 'voice',
-          attachmentUrl: voiceAttachment?.payload?.url,
+          attachmentType,
+          attachmentUrl: voiceAttachment?.payload?.url ?? imageAttachment?.payload?.url,
         };
 
         const result = await this.conversations.handleIncomingMessage(incoming);

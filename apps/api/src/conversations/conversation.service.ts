@@ -126,49 +126,53 @@ export class ConversationService {
       };
     }
 
+    const enrichedMessage = await this.enrichImageMessage(message);
     await this.repository.addMessage(conversationId, {
-      id: message.id,
+      id: enrichedMessage.id,
       direction: 'inbound',
-      text: message.text,
-      attachmentType: message.attachmentType,
-      attachmentUrl: message.attachmentUrl,
-      transcript: message.transcript,
-      createdAt: message.receivedAt,
+      text: enrichedMessage.text,
+      attachmentType: enrichedMessage.attachmentType,
+      attachmentUrl: enrichedMessage.attachmentUrl,
+      transcript: enrichedMessage.transcript,
+      extractedText: enrichedMessage.extractedText,
+      matchedProducts: enrichedMessage.matchedProducts,
+      createdAt: enrichedMessage.receivedAt,
     });
 
-    const client = await this.clients.findById(message.clientId);
+    const client = await this.clients.findById(enrichedMessage.clientId);
     const autoReply = await this.autoReplies?.findActiveReply({
       clientId: client.id,
-      at: new Date(message.receivedAt),
+      at: new Date(enrichedMessage.receivedAt),
     });
     if (autoReply !== undefined) {
       return this.completeReplyFlow({
         conversation,
         conversationId,
         client,
-        message,
+        message: enrichedMessage,
         outboundMessageId,
         reply: autoReply,
       });
     }
 
-    const operationalReply = await this.externalData?.findOperationalReply(client.id, message.text);
+    const customerLookupText = this.buildCustomerLookupText(enrichedMessage);
+    const operationalReply = await this.externalData?.findOperationalReply(client.id, customerLookupText);
     if (operationalReply !== undefined && operationalReply !== null) {
       return this.completeReplyFlow({
         conversation,
         conversationId,
         client,
-        message,
+        message: enrichedMessage,
         outboundMessageId,
         reply: operationalReply,
       });
     }
 
-    const match = await this.knowledge.findRelevant(client.id, message.text);
+    const match = await this.knowledge.findRelevant(client.id, customerLookupText);
     const promptProfile = await this.prompts?.getActiveForClient(client);
     const reply = await this.aiService.generateReply({
       client,
-      customerText: message.text,
+      customerText: customerLookupText,
       knowledgeEntries: match.entries,
       promptProfile,
       retrievalConfidence: match.confidence,
@@ -178,10 +182,71 @@ export class ConversationService {
       conversation,
       conversationId,
       client,
-      message,
+      message: enrichedMessage,
       outboundMessageId,
       reply,
     });
+  }
+
+  private async enrichImageMessage(message: IncomingMessage): Promise<IncomingMessage> {
+    if (message.attachmentType !== 'image') return message;
+
+    const extractedText = message.extractedText ?? (await this.extractImageText(message.attachmentUrl));
+    const lookupText = this.buildCustomerLookupText({ ...message, extractedText });
+    const matchedProducts =
+      lookupText.trim().length === 0 ? [] : await this.externalData?.findProductCandidates(message.clientId, lookupText, 4);
+
+    return {
+      ...message,
+      extractedText,
+      matchedProducts: matchedProducts ?? [],
+    };
+  }
+
+  private buildCustomerLookupText(message: IncomingMessage) {
+    return [message.text, message.extractedText]
+      .filter((part): part is string => part !== undefined && part.trim().length > 0 && part !== 'OCR not configured.')
+      .join('\n')
+      .trim();
+  }
+
+  private async extractImageText(attachmentUrl?: string) {
+    const apiKey = process.env.GOOGLE_CLOUD_VISION_API_KEY?.trim();
+    if (apiKey === undefined || apiKey === '') return 'OCR not configured.';
+    if (attachmentUrl === undefined || !/^https?:\/\//i.test(attachmentUrl)) return 'OCR media URL unavailable.';
+
+    try {
+      const mediaResponse = await fetch(attachmentUrl);
+      if (!mediaResponse.ok) return `OCR media fetch failed: ${mediaResponse.status}`;
+      const contentType = mediaResponse.headers.get('content-type') ?? 'image/jpeg';
+      const bytes = Buffer.from(await mediaResponse.arrayBuffer());
+      if (bytes.length === 0) return 'OCR media file is empty.';
+      if (bytes.length > 4 * 1024 * 1024) return 'OCR media file is larger than the 4 MB alpha limit.';
+
+      const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requests: [
+            {
+              image: { content: bytes.toString('base64') },
+              features: [{ type: 'TEXT_DETECTION', maxResults: 1 }],
+              imageContext: contentType === 'image/webp' ? undefined : { languageHints: ['bn', 'en'] },
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) return `OCR failed: ${response.status}`;
+      const data = (await response.json()) as {
+        responses?: { fullTextAnnotation?: { text?: string }; error?: { message?: string } }[];
+      };
+      const first = data.responses?.[0];
+      if (first?.error?.message !== undefined) return `OCR failed: ${first.error.message}`;
+      return first?.fullTextAnnotation?.text?.trim() || 'No readable text found.';
+    } catch (error) {
+      return `OCR failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
   }
 
   private async completeReplyFlow(input: {

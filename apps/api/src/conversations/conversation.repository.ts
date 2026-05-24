@@ -12,6 +12,8 @@ import {
   ConversationQaDefect,
   ConversationQaGrade,
   ConversationSearchResult,
+  ProductAvailabilityStatus,
+  ProductCandidate,
   Tag,
   TagColor,
   Ticket,
@@ -34,6 +36,38 @@ function mapTagRows(
   }));
 }
 
+function coerceProductCandidates(value: unknown): ProductCandidate[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is Record<string, unknown> => item !== null && typeof item === 'object' && !Array.isArray(item))
+    .map((item) => ({
+      id: typeof item.id === 'string' ? item.id : '',
+      sku: typeof item.sku === 'string' ? item.sku : undefined,
+      productName: typeof item.productName === 'string' ? item.productName : 'Unknown product',
+      variant: typeof item.variant === 'string' ? item.variant : undefined,
+      availabilityStatus:
+        item.availabilityStatus === 'in_stock' ||
+        item.availabilityStatus === 'low_stock' ||
+        item.availabilityStatus === 'out_of_stock' ||
+        item.availabilityStatus === 'preorder' ||
+        item.availabilityStatus === 'discontinued' ||
+        item.availabilityStatus === 'unknown'
+          ? (item.availabilityStatus as ProductAvailabilityStatus)
+          : 'unknown',
+      stockQuantity: typeof item.stockQuantity === 'number' ? item.stockQuantity : undefined,
+      price: typeof item.price === 'number' ? item.price : undefined,
+      currency: typeof item.currency === 'string' ? item.currency : undefined,
+      productUrl: typeof item.productUrl === 'string' ? item.productUrl : undefined,
+      score: typeof item.score === 'number' ? item.score : 0,
+    }))
+    .filter((item) => item.id !== '')
+    .slice(0, 5);
+}
+
+function productCandidatesToJson(products?: ProductCandidate[]): Prisma.InputJsonValue | undefined {
+  return products === undefined ? undefined : (products as unknown as Prisma.InputJsonValue);
+}
+
 function mapMessageRow(message: {
   id: string;
   direction: string;
@@ -41,6 +75,8 @@ function mapMessageRow(message: {
   attachmentType: string | null;
   attachmentUrl: string | null;
   transcript: string | null;
+  extractedText: string | null;
+  matchedProducts: unknown;
   createdAt: Date;
 }): ConversationMessage {
   return {
@@ -50,6 +86,8 @@ function mapMessageRow(message: {
     attachmentType: message.attachmentType === 'voice' || message.attachmentType === 'image' ? message.attachmentType : undefined,
     attachmentUrl: message.attachmentUrl ?? undefined,
     transcript: message.transcript ?? undefined,
+    extractedText: message.extractedText ?? undefined,
+    matchedProducts: coerceProductCandidates(message.matchedProducts),
     createdAt: message.createdAt.toISOString(),
   };
 }
@@ -154,11 +192,14 @@ export class ConversationRepository {
           attachmentType: message.attachmentType,
           attachmentUrl: message.attachmentUrl,
           transcript: message.transcript,
+          extractedText: message.extractedText,
+          matchedProducts: productCandidatesToJson(message.matchedProducts) ?? [],
         },
         create: {
           ...message,
           conversationId,
           createdAt: new Date(message.createdAt),
+          matchedProducts: productCandidatesToJson(message.matchedProducts) ?? [],
         },
       });
       return;
@@ -1053,6 +1094,8 @@ export class ConversationRepository {
       attachmentType: string | null;
       attachmentUrl: string | null;
       transcript: string | null;
+      extractedText: string | null;
+      matchedProducts: unknown;
       createdAt: Date;
     }[];
   }): ConversationLog {
