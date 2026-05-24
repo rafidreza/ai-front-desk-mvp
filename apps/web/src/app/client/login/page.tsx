@@ -21,6 +21,50 @@ type CodeRequest = {
   channel: 'email' | 'whatsapp';
 };
 
+const identifierExamples = 'Examples: client ID pilot-client, owner email owner@example.com, or WhatsApp +8801XXXXXXXXX.';
+
+function channelLabel(channel: CodeRequest['channel']) {
+  return channel === 'email' ? 'email' : 'WhatsApp';
+}
+
+function fallbackChannelLabelFor(channel: CodeRequest['channel']) {
+  return channel === 'email' ? 'WhatsApp' : 'email';
+}
+
+function deliveryIssueMessage(input: CodeRequest) {
+  return `No live login code was sent for that ${channelLabel(input.channel)} request. Check that the client ID, owner email, or WhatsApp number matches the workspace, then try again. ${identifierExamples}`;
+}
+
+function requestFailureMessage(message: string, input: CodeRequest) {
+  if (message.includes(identifierExamples)) return message;
+
+  if (/does not have an? (email|whatsapp) destination configured/i.test(message)) {
+    return `${channelLabel(input.channel)} login is not configured for this workspace yet. Try ${fallbackChannelLabelFor(input.channel)} instead, or ask the team to add a ${channelLabel(input.channel)} destination to the client profile.`;
+  }
+
+  if (/inactive/i.test(message)) {
+    return 'This client workspace is inactive. Ask the internal team to reactivate the client before requesting another code.';
+  }
+
+  if (/fetch failed|failed to fetch|backend request failed|internal server error|econnrefused|service is unavailable/i.test(message)) {
+    return `The client login service is unavailable right now. Check that the API server is running, then retry. ${identifierExamples}`;
+  }
+
+  return `${message} ${identifierExamples}`;
+}
+
+function verifyFailureMessage(message: string) {
+  if (/invalid|expired|already used/i.test(message)) {
+    return 'That code did not match, expired, or was already used. Request a new code, then enter the latest 6-digit code.';
+  }
+
+  if (/fetch failed|failed to fetch|backend request failed|internal server error|econnrefused|service is unavailable/i.test(message)) {
+    return 'The client login service is unavailable right now. Check that the API server is running, then retry verification.';
+  }
+
+  return message;
+}
+
 export default function ClientLoginPage() {
   const [challenge, setChallenge] = useState<ChallengeResponse['challenge'] | null>(null);
   const [client, setClient] = useState<ClientProfile | null>(null);
@@ -78,20 +122,25 @@ export default function ClientLoginPage() {
             : 'Could not send your code. Check the email or phone is right, or switch the delivery channel and try again.',
         );
       }
+      if (data.challenge.deliveryMode === 'dry-run' && data.challenge.devCode === undefined) {
+        throw new Error(deliveryIssueMessage(input));
+      }
       setLastRequest(input);
       setFailedRequest(null);
       setChallenge(data.challenge);
       setNotice(
         data.challenge.deliveryMode === 'skipped'
-          ? `Code created for ${data.challenge.destination}, but delivery is not fully configured. Try the other channel if you do not receive it.`
-          : `New code sent to ${data.challenge.destination}.`,
+          ? `Code created for ${data.challenge.destination}, but ${channelLabel(data.challenge.channel)} delivery is not fully configured. Try ${fallbackChannelLabelFor(data.challenge.channel)} if you do not receive it.`
+          : data.challenge.deliveryMode === 'dry-run'
+            ? `Code created for ${data.challenge.destination} in local/dev delivery mode. Use the dev code shown below.`
+            : `New code sent to ${data.challenge.destination}.`,
       );
       setNow(Date.now());
     } catch (requestError) {
       setFailedRequest(input);
       setError(
         requestError instanceof Error
-          ? requestError.message
+          ? requestFailureMessage(requestError.message, input)
           : 'Could not send your code. Check the email or phone is right, or switch the delivery channel and try again.',
       );
     } finally {
@@ -158,7 +207,7 @@ export default function ClientLoginPage() {
     } catch (verifyError) {
       setError(
         verifyError instanceof Error
-          ? verifyError.message
+          ? verifyFailureMessage(verifyError.message)
           : 'That code did not match, expired, or was already used. Request a new code to continue.',
       );
     } finally {
@@ -215,6 +264,7 @@ export default function ClientLoginPage() {
               <label>
                 Email, phone, or client ID
                 <input name="identifier" required placeholder="owner@example.com or client-id" />
+                <span className="auth-field-hint">{identifierExamples}</span>
               </label>
               <label>
                 Delivery channel

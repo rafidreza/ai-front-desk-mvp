@@ -2554,6 +2554,14 @@ button {
   text-underline-offset: 3px;
 }
 
+.auth-field-hint {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-transform: none;
+}
+
 .client-hero {
   min-height: 220px;
   display: grid;
