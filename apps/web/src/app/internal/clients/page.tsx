@@ -26,7 +26,9 @@ import {
 import { EmptyState } from '../_components/EmptyState';
 import { ListSkeleton } from '../_components/ListSkeleton';
 import { InternalShell } from '../_components/InternalShell';
+import { LoadErrorNotice } from '../_components/LoadErrorNotice';
 import { UiSelect } from '../_components/UiSelect';
+import { getErrorMessage, getSafeErrorDiagnostic } from '../_lib/helpers';
 
 const baseMonthlyFee = 1500;
 const conversationRate = 8;
@@ -221,6 +223,7 @@ export default function InternalClientsPage() {
   const [savedRetentionForm, setSavedRetentionForm] = useState<RetentionFormState>(emptyRetentionForm);
   const [retentionPreview, setRetentionPreview] = useState<{ cutoff: string; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadErrorDiagnostic, setLoadErrorDiagnostic] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -228,6 +231,7 @@ export default function InternalClientsPage() {
   async function loadClients() {
     setIsLoading(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     try {
       const clientData = await getClients();
       const dashboardData = await Promise.all(clientData.map((client) => getClientDashboard(client.id)));
@@ -235,7 +239,8 @@ export default function InternalClientsPage() {
       setDashboards(dashboardData);
       setSelectedClientId((current) => current ?? clientData[0]?.id ?? null);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load clients.');
+      setError(getErrorMessage(loadError, 'Client workspaces could not load. Check that the API server is running and database migrations are current, then retry.'));
+      setLoadErrorDiagnostic(getSafeErrorDiagnostic(loadError, 'Clients page /clients and dashboard summary requests'));
     } finally {
       setIsLoading(false);
     }
@@ -329,6 +334,7 @@ export default function InternalClientsPage() {
     setRetentionPreview(null);
     setNotice(null);
     setError(null);
+    setLoadErrorDiagnostic(null);
   }
 
   function startEdit(client: ClientProfile) {
@@ -347,11 +353,13 @@ export default function InternalClientsPage() {
     setRetentionPreview(null);
     setNotice(null);
     setError(null);
+    setLoadErrorDiagnostic(null);
   }
 
   function discardClientChanges() {
     setForm(savedForm);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
   }
 
@@ -359,6 +367,7 @@ export default function InternalClientsPage() {
     event.preventDefault();
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const payload = payloadFromForm(form);
@@ -389,6 +398,7 @@ export default function InternalClientsPage() {
     if (selectedClientId === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const updated = await updateClientStatus(selectedClientId, status);
@@ -431,6 +441,7 @@ export default function InternalClientsPage() {
 
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const saved = await updateClientChannel(selectedClientId, '', 'POST', {
@@ -455,6 +466,7 @@ export default function InternalClientsPage() {
     if (selectedClientId === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const saved = await updateClientChannel(selectedClientId, `/${channelId}`, 'PATCH', { isPrimary: true });
@@ -472,6 +484,7 @@ export default function InternalClientsPage() {
     if (selectedClientId === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const saved = await updateClientChannel(selectedClientId, `/${channelId}/delete`, 'POST');
@@ -490,6 +503,7 @@ export default function InternalClientsPage() {
     if (selectedClientId === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const saved = await updateClientDpaProfile(selectedClientId, dpaPayloadFromForm(dpaForm));
@@ -516,6 +530,7 @@ export default function InternalClientsPage() {
     }
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const saved = await updateClientRetentionPolicy(selectedClientId, payload);
@@ -537,6 +552,7 @@ export default function InternalClientsPage() {
     if (selectedClientId === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const preview = await previewClientRetentionCleanup(selectedClientId);
@@ -553,6 +569,7 @@ export default function InternalClientsPage() {
     if (selectedClientId === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const result = await runClientRetentionCleanup(selectedClientId);
@@ -588,7 +605,18 @@ export default function InternalClientsPage() {
         </div>
       }
     >
-      {error !== null && <div className="inline-alert">{error}</div>}
+      {error !== null && loadErrorDiagnostic !== null ? (
+        <LoadErrorNotice
+          title="Client records did not load"
+          message={error}
+          diagnostic={loadErrorDiagnostic}
+          retryLabel="Retry clients"
+          isRetrying={isLoading}
+          onRetry={() => void loadClients()}
+        />
+      ) : error !== null ? (
+        <div className="inline-alert">{error}</div>
+      ) : null}
       {notice !== null && <div className="inline-success">{notice}</div>}
 
       <section className="metrics">

@@ -3,7 +3,9 @@
 import { DatabaseZap, RefreshCw, Save } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { InternalShell } from '../_components/InternalShell';
+import { LoadErrorNotice } from '../_components/LoadErrorNotice';
 import { UiSelect } from '../_components/UiSelect';
+import { getErrorMessage, getSafeErrorDiagnostic } from '../_lib/helpers';
 import {
   getClients,
   getExternalDataSources,
@@ -45,6 +47,7 @@ export default function InternalDataSourcesPage() {
   const [lastSyncRun, setLastSyncRun] = useState<ExternalDataSyncRun | null>(null);
   const [form, setForm] = useState<SheetForm>(emptyForm);
   const [error, setError] = useState<string | null>(null);
+  const [loadErrorDiagnostic, setLoadErrorDiagnostic] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,17 +56,10 @@ export default function InternalDataSourcesPage() {
   const source = sources[0];
   const selectedClient = useMemo(() => clients.find((client) => client.id === clientId), [clientId, clients]);
 
-  async function loadClients() {
-    const loaded = await getClients();
-    setClients(loaded);
-    if (loaded.length > 0 && !loaded.some((client) => client.id === clientId)) {
-      setClientId(loaded[0].id);
-    }
-  }
-
   async function loadData(nextClientId = clientId) {
     setIsLoading(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     try {
       const loadedSources = await getExternalDataSources(nextClientId);
       const activeSource = loadedSources[0];
@@ -86,24 +82,34 @@ export default function InternalDataSourcesPage() {
         });
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load data sources.');
+      setError(getErrorMessage(loadError, 'Google Sheet data could not load. Check the selected client, API server, and external-data migration, then retry.'));
+      setLoadErrorDiagnostic(getSafeErrorDiagnostic(loadError, `Data Sources page /clients/${nextClientId}/external-data requests`));
     } finally {
       setIsLoading(false);
     }
   }
 
+  async function loadInitialData() {
+    setIsLoading(true);
+    setError(null);
+    setLoadErrorDiagnostic(null);
+    try {
+      const loadedClients = await getClients();
+      setClients(loadedClients);
+      const nextClientId = loadedClients.some((client) => client.id === clientId)
+        ? clientId
+        : loadedClients[0]?.id ?? clientId;
+      setClientId(nextClientId);
+      await loadData(nextClientId);
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, 'Data Sources could not load its client list and sheet data. Check the API server and database migrations, then retry.'));
+      setLoadErrorDiagnostic(getSafeErrorDiagnostic(loadError, 'Data Sources page initial /clients request'));
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
-    void (async () => {
-      setIsLoading(true);
-      try {
-        await loadClients();
-        await loadData(clientId);
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : 'Unable to load data sources.');
-      } finally {
-        setIsLoading(false);
-      }
-    })();
+    void loadInitialData();
   }, []);
 
   async function switchClient(nextClientId: string) {
@@ -116,6 +122,7 @@ export default function InternalDataSourcesPage() {
     event.preventDefault();
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const saved = await saveGoogleSheetDataSource(clientId, {
@@ -138,6 +145,7 @@ export default function InternalDataSourcesPage() {
     if (source === undefined) return;
     setIsSyncing(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const result = await syncExternalDataSource(clientId, source.id);
@@ -170,7 +178,18 @@ export default function InternalDataSourcesPage() {
         </div>
       }
     >
-      {error !== null && <div className="inline-alert">{error}</div>}
+      {error !== null && loadErrorDiagnostic !== null ? (
+        <LoadErrorNotice
+          title="Sheet data did not load"
+          message={error}
+          diagnostic={loadErrorDiagnostic}
+          retryLabel="Retry data"
+          isRetrying={isLoading}
+          onRetry={() => void loadInitialData()}
+        />
+      ) : error !== null ? (
+        <div className="inline-alert">{error}</div>
+      ) : null}
       {notice !== null && <div className="inline-success">{notice}</div>}
 
       <section className="client-data-grid">

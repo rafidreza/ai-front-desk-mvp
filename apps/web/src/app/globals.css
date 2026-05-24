@@ -918,6 +918,41 @@ button {
   color: var(--green);
 }
 
+.inline-alert--recovery {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  font-weight: 500;
+}
+
+.inline-alert--recovery > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.inline-alert__body {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.inline-alert__body strong {
+  color: #8c2f28;
+  font-size: 13px;
+}
+
+.inline-alert__body span {
+  color: #8c2f28;
+  line-height: 1.45;
+}
+
+.inline-alert__body small {
+  color: #6d3a36;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .case-heading {
   display: flex;
   align-items: flex-start;

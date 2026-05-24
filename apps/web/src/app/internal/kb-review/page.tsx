@@ -17,7 +17,8 @@ import {
   KnowledgeChangeRequestUrgency,
 } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
-import { getErrorMessage } from '../_lib/helpers';
+import { LoadErrorNotice } from '../_components/LoadErrorNotice';
+import { getErrorMessage, getSafeErrorDiagnostic } from '../_lib/helpers';
 
 const urgencies: Array<KnowledgeChangeRequestUrgency | 'all'> = ['all', 'urgent', 'normal'];
 type QueueTab = 'pending' | 'approved' | 'rejected' | 'needs_info';
@@ -63,6 +64,7 @@ export default function InternalKbReviewPage() {
   const [finalKeywords, setFinalKeywords] = useState('');
   const [finalCategory, setFinalCategory] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [loadErrorDiagnostic, setLoadErrorDiagnostic] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,6 +72,7 @@ export default function InternalKbReviewPage() {
   async function loadRequests(nextSelectedId = detail?.request.id) {
     setIsLoading(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     try {
       const [clientData, requestData] = await Promise.all([
         clients.length === 0 ? getClients() : Promise.resolve(clients),
@@ -90,7 +93,8 @@ export default function InternalKbReviewPage() {
         setDetail(null);
       }
     } catch (loadError) {
-      setError(getErrorMessage(loadError, 'KB review queue could not load. Fix: check the client filter and API server, then refresh.'));
+      setError(getErrorMessage(loadError, 'KB review queue could not load. Check the client filter, API server, and knowledge-request migration, then retry.'));
+      setLoadErrorDiagnostic(getSafeErrorDiagnostic(loadError, 'KB Review page /internal/knowledge-requests request'));
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +102,7 @@ export default function InternalKbReviewPage() {
 
   async function selectRequest(requestId: string) {
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const loaded = await getInternalKnowledgeRequestDetail(requestId);
@@ -148,6 +153,7 @@ export default function InternalKbReviewPage() {
     if (detail === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const updated = await updateInternalKnowledgeRequest(detail.request.id, action, {
@@ -170,6 +176,7 @@ export default function InternalKbReviewPage() {
     if (detail === null) return;
     setIsSaving(true);
     setError(null);
+    setLoadErrorDiagnostic(null);
     setNotice(null);
     try {
       const updated = await editThenPublishKnowledgeRequest(detail.request.id, {
@@ -216,7 +223,18 @@ export default function InternalKbReviewPage() {
         </button>
       }
     >
-      {error !== null && <div className="inline-alert">{error}</div>}
+      {error !== null && loadErrorDiagnostic !== null ? (
+        <LoadErrorNotice
+          title="KB review queue did not load"
+          message={error}
+          diagnostic={loadErrorDiagnostic}
+          retryLabel="Retry queue"
+          isRetrying={isLoading}
+          onRetry={() => void loadRequests()}
+        />
+      ) : error !== null ? (
+        <div className="inline-alert">{error}</div>
+      ) : null}
       {notice !== null && <div className="inline-success">{notice}</div>}
 
       <section className="kb-review-layout">

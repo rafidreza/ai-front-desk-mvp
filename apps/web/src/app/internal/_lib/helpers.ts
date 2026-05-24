@@ -72,3 +72,21 @@ export function getErrorMessage(error: unknown, fallback: string) {
 
   return `${fallback} Detail: ${detail}`;
 }
+
+export function getSafeErrorDiagnostic(error: unknown, context: string) {
+  if (!(error instanceof Error) || error.message.trim().length === 0) {
+    return `Diagnostic: ${context} did not return a browser-visible error detail.`;
+  }
+
+  const detail = error.message.trim();
+  const statusMatch = detail.match(/(?:API request failed|Backend request failed|Channel update failed):\s*(\d{3})/i);
+  if (statusMatch !== null) {
+    return `Diagnostic: ${context} returned HTTP ${statusMatch[1]}.`;
+  }
+
+  if (/failed to fetch|networkerror|load failed/i.test(detail)) {
+    return `Diagnostic: ${context} could not reach the API from the browser.`;
+  }
+
+  return `Diagnostic: ${context} returned an unexpected client-side error.`;
+}
