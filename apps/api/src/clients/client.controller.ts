@@ -70,6 +70,25 @@ const OnboardingPatchSchema = z.object({
   onboardingProfile: OnboardingProfilePatchSchema.optional(),
 });
 
+const LifecycleStageSchema = z.object({
+  stage: z.enum(['lead', 'onboarding', 'kb_building', 'shadow', 'live', 'paid', 'churned']),
+});
+
+const ConversionChecklistSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(80),
+        label: z.string().trim().min(1).max(200),
+        done: z.boolean(),
+        source: z.enum(['auto', 'manual']),
+        detail: z.string().trim().max(400).optional(),
+        updatedAt: z.string().datetime().optional(),
+      }),
+    )
+    .max(40),
+});
+
 const CsatSchema = z.object({
   score: z.number().int().min(1).max(5),
   comment: z.string().trim().max(500).optional(),
@@ -160,6 +179,18 @@ export class ClientController {
   async updateOnboarding(@Param('clientId') clientId: string, @Body() body: unknown) {
     const parsed = OnboardingPatchSchema.parse(body);
     return { client: await this.clients.updateOnboarding(clientId, parsed) };
+  }
+
+  @Patch(':clientId/lifecycle-stage')
+  async updateLifecycleStage(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = LifecycleStageSchema.parse(body);
+    return { client: await this.clients.updateLifecycleStage(clientId, parsed.stage) };
+  }
+
+  @Patch(':clientId/conversion-checklist')
+  async updateConversionChecklist(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = ConversionChecklistSchema.parse(body);
+    return { client: await this.clients.updateConversionChecklist(clientId, parsed.items) };
   }
 
   @Get(':clientId/dashboard')

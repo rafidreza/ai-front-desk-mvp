@@ -85,6 +85,34 @@ export type CalibrationQueueFilter =
   | 'ungraded'
   | 'all';
 
+export type ClientLifecycleStage =
+  | 'lead'
+  | 'onboarding'
+  | 'kb_building'
+  | 'shadow'
+  | 'live'
+  | 'paid'
+  | 'churned';
+
+export const CLIENT_LIFECYCLE_STAGES: ClientLifecycleStage[] = [
+  'lead',
+  'onboarding',
+  'kb_building',
+  'shadow',
+  'live',
+  'paid',
+  'churned',
+];
+
+export type ConversionChecklistItem = {
+  id: string;
+  label: string;
+  done: boolean;
+  source: 'auto' | 'manual';
+  detail?: string;
+  updatedAt?: string;
+};
+
 export interface ClientProfile {
   id: string;
   businessName: string;
@@ -95,6 +123,8 @@ export interface ClientProfile {
   businessCategory?: string;
   status: ClientStatus;
   onboardingStatus: string;
+  lifecycleStage: ClientLifecycleStage;
+  conversionChecklist?: ConversionChecklistItem[];
   defaultLanguage: 'bangla' | 'english' | 'mixed';
   tone: string;
   escalationKeywords: string[];

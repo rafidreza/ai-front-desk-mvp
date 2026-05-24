@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
-import { Channel, ClientChannel, ClientIntegrationStatus, ClientOnboardingProfile, ClientProfile, ClientStatus } from '../types/domain';
+import { Channel, ClientChannel, ClientIntegrationStatus, ClientOnboardingProfile, ClientProfile, ClientStatus, ConversionChecklistItem } from '../types/domain';
 
 type ClientLanguage = ClientProfile['defaultLanguage'];
 type ClientChannelInput = {
@@ -53,6 +53,8 @@ function toClientProfile(client: {
   status?: string;
   onboardingStatus: string;
   onboardingProfile: unknown;
+  lifecycleStage?: string;
+  conversionChecklist?: unknown;
   defaultLanguage: string;
   tone: string;
   escalationKeywords: string[];
@@ -76,6 +78,8 @@ function toClientProfile(client: {
     businessCategory: client.businessCategory ?? undefined,
     status,
     onboardingStatus: client.onboardingStatus,
+    lifecycleStage: toLifecycleStage(client.lifecycleStage),
+    conversionChecklist: toConversionChecklist(client.conversionChecklist),
     onboardingProfile: toOnboardingProfile(client.onboardingProfile),
     defaultLanguage,
     tone: client.tone,
@@ -84,6 +88,36 @@ function toClientProfile(client: {
     digestEmail: client.digestEmail ?? undefined,
     channels: normalizeClientChannels(client),
   };
+}
+
+function toLifecycleStage(value: unknown): ClientProfile['lifecycleStage'] {
+  if (
+    value === 'lead' ||
+    value === 'onboarding' ||
+    value === 'kb_building' ||
+    value === 'shadow' ||
+    value === 'live' ||
+    value === 'paid' ||
+    value === 'churned'
+  ) {
+    return value;
+  }
+  return 'lead';
+}
+
+function toConversionChecklist(value: unknown): ClientProfile['conversionChecklist'] {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+    .map((item) => ({
+      id: String(item.id ?? ''),
+      label: String(item.label ?? ''),
+      done: item.done === true,
+      source: item.source === 'auto' ? 'auto' : 'manual',
+      detail: typeof item.detail === 'string' ? item.detail : undefined,
+      updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
+    }))
+    .filter((item) => item.id.length > 0 && item.label.length > 0);
 }
 
 function normalizeClientChannels(client: {
@@ -372,6 +406,37 @@ export class PilotClientService {
         onboardingStatus: input.onboardingStatus,
         onboardingProfile: onboardingProfile as Prisma.InputJsonValue | undefined,
       },
+      include: { channels: true },
+    });
+    return toClientProfile(client);
+  }
+
+  async updateLifecycleStage(clientId: string, stage: string): Promise<ClientProfile> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: { lifecycleStage: stage },
+      include: { channels: true },
+    });
+    return toClientProfile(client);
+  }
+
+  async updateConversionChecklist(
+    clientId: string,
+    items: ConversionChecklistItem[],
+  ): Promise<ClientProfile> {
+    const prisma = this.requirePrisma();
+    const existing = await prisma.client.findUnique({ where: { id: clientId } });
+    if (existing === null) {
+      throw new NotFoundException(`Client not found: ${clientId}`);
+    }
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: { conversionChecklist: items as unknown as Prisma.InputJsonValue },
       include: { channels: true },
     });
     return toClientProfile(client);

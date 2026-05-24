@@ -159,6 +159,28 @@ export async function updateClientStatus(clientId: string, status: ClientStatus)
   return data.client;
 }
 
+export async function updateClientLifecycleStage(
+  clientId: string,
+  stage: import('@/types/domain').ClientLifecycleStage,
+): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/lifecycle-stage`, {
+    method: 'PATCH',
+    body: JSON.stringify({ stage }),
+  });
+  return data.client;
+}
+
+export async function updateClientConversionChecklist(
+  clientId: string,
+  items: import('@/types/domain').ConversionChecklistItem[],
+): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/conversion-checklist`, {
+    method: 'PATCH',
+    body: JSON.stringify({ items }),
+  });
+  return data.client;
+}
+
 export async function signupClient(input: {
   businessName: string;
   ownerName: string;

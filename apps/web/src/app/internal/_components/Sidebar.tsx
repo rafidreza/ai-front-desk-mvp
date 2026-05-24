@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessagesSquare,
+  Kanban,
   Settings2,
   ShieldCheck,
   TicketCheck,
@@ -19,6 +20,7 @@ type ActiveView =
   | 'operations'
   | 'qa'
   | 'clients'
+  | 'pipeline'
   | 'channels'
   | 'team'
   | 'tickets'
@@ -42,6 +44,7 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
   const topLinks = [
     { view: 'operations' as const, label: 'Operations', icon: <LayoutDashboard size={17} />, href: '/internal' },
     { view: 'clients' as const, label: 'Clients', icon: <Building2 size={17} />, href: '/internal/clients' },
+    { view: 'pipeline' as const, label: 'Pipeline', icon: <Kanban size={17} />, href: '/internal/pipeline' },
     { view: 'channels' as const, label: 'Channels', icon: <Settings2 size={17} />, href: '/internal/channels' },
     { view: 'team' as const, label: 'Team', icon: <Users size={17} />, href: '/internal/team' },
     { view: 'tickets' as const, label: 'Tickets', icon: <TicketCheck size={17} />, href: '/internal/tickets' },

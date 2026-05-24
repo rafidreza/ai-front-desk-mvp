@@ -19,6 +19,7 @@ interface InternalShellProps {
     | 'operations'
     | 'qa'
     | 'clients'
+    | 'pipeline'
     | 'channels'
     | 'team'
     | 'tickets'

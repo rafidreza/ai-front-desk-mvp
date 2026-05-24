@@ -18,11 +18,13 @@ export type {
   CustomerHistoryEvent,
   CustomerHistoryIdentityConfidence,
   ClientKnowledgeEntry,
+  ClientLifecycleStage,
   ClientOnboardingProfile,
   ClientProfile,
   ClientStatus,
   ClientWhatsAppSetupPreference,
   ClientDashboardSummary,
+  ConversionChecklistItem,
   ConversationLog,
   ConversationAutoQaGrade,
   ConversationMessage,
@@ -68,4 +70,4 @@ export type {
   WhatsAppTemplate,
   WhatsAppTemplateStatus,
 } from '@ai-front-desk/shared';
-export { TAG_COLORS } from '@ai-front-desk/shared';
+export { CLIENT_LIFECYCLE_STAGES, TAG_COLORS } from '@ai-front-desk/shared';
