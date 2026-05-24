@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 4 | 34 | 38 |
-| **TOTAL** | **93** | **54** | **147** |
+| 12 — Use case backlog | 14 | 24 | 38 |
+| **TOTAL** | **103** | **44** | **147** |
 
 ---
 
@@ -247,16 +247,16 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 
 ### Ticket operations
 
-- [ ] **T96 — USECASE** Bulk ticket actions (multi-select rows → close / assign / tag in one click).
-- [ ] **T97 — USECASE** SLA timer + overdue flag on ticket list ("waiting 4h 12m" badge with color escalation).
-- [ ] **T98 — USECASE** AI confidence + reason chips on tickets (why AI escalated: low confidence / sensitive intent / unknown product).
-- [ ] **T99 — USECASE** Re-open closed ticket flow when customer messages back.
-- [ ] **T100 — USECASE** Internal private-note panel on ticket for operator-to-operator handoff.
-- [ ] **T101 — USECASE** Search across all conversations (text + filter by date / customer / intent).
-- [ ] **T102 — USECASE** Customer block / spam button with block list per client.
-- [ ] **T103 — USECASE** "Mark as test customer" toggle to exclude from QA scores + daily digests.
-- [ ] **T104 — USECASE** Tag / label system for tickets (`VIP`, `complaint`, `high-value`).
-- [ ] **T105 — USECASE** In-app P1 alert (toast + sound) in addition to WhatsApp ping.
+- [x] **T96 — USECASE** Bulk ticket actions (multi-select rows → close / assign / tag in one click). — **DONE (2026-05-24, commit `55211f1`): selection checkboxes + select-all on TicketsPanel; brand-green `BulkActionBar` with Mark resolved, Assign to…, Apply tag (gated to single-client selection); shared `TagPicker` (with inline create) reused here and ready for per-ticket detail use. Backend `POST /clients/:id/tags/bulk-apply` does the multi-insert with skipDuplicates. Followup T96b: per-ticket tag picker on detail panel.**
+- [x] **T97 — USECASE** SLA timer + overdue flag on ticket list ("waiting 4h 12m" badge with color escalation). — **DONE (2026-05-24, commit `6889e2d`): `computeSla()` derives an SLA window from priority (P1 60m / P2 240m / P3 1440m) and yields on_track / due_soon / overdue / paused state; `SlaBadge` renders coloured pill on row + detail header with a sla-pulse keyframe on overdue.**
+- [x] **T98 — USECASE** AI confidence + reason chips on tickets (why AI escalated: low confidence / sensitive intent / unknown product). — **DONE (2026-05-24, commit `7e10059`): `Ticket.confidence` populated from `Conversation.lastConfidence`; `summarizeEscalation()` classifies `ticket.reason` into low_confidence / sensitive_intent / unknown_product / escalation_keyword / manual_takeover / other (Bangla + English pattern set); `EscalationChips` renders reason + confidence pill, six colour variants reusing existing tokens.**
+- [x] **T99 — USECASE** Re-open closed ticket flow when customer messages back. — **DONE (2026-05-24, commit `5cb5bd1`): new `reopened` value on `TicketStatus` enum + migration; `TicketService.reopenIfResolved()` transitions a resolved ticket back via a `ticket.reopened` event; `ConversationService.handleIncomingMessage` calls it for every inbound on a conversation with a linked ticket; "Reopen" button surfaces in the detail panel when the ticket is currently resolved.**
+- [x] **T100 — USECASE** Internal private-note panel on ticket for operator-to-operator handoff. — **DONE (2026-05-24, commit `fd69555`): hardened the existing TicketComment panel — slate "PRIVATE" lock badge in the header, helper line ("These notes stay between operators. Customers never see them."), inline `@mention` dropdown of internal users that inserts `@Name` into the textarea, `.btn-primary` Add note CTA with Saving… state, comment list resolves `authorId` to a readable label via new `operatorLabel()` helper.**
+- [x] **T101 — USECASE** Search across all conversations (text + filter by date / customer / intent). — **DONE (2026-05-24, commit `176bc84`): Postgres generated `tsvector` column on `Message.text` + GIN index (`Message_tsv_idx`), 'simple' config so Bangla / Banglish / English all tokenize; `ConversationService.searchConversations()` runs `plainto_tsquery` with limit clamp; `GET /conversations/search?q=&limit=` returns `ConversationSearchResult[]`; search bar above conversations grid with 300ms debounce, scrollable result list, click jumps to thread. Followup T101b: filter by date / customer / intent.**
+- [x] **T102 — USECASE** Customer block / spam button with block list per client. — **DONE (2026-05-24, commit `f2de81b`): new `BlockedSender` table with unique(clientId, channel, externalSenderId); `BlockedSenderService` + `GET/POST/DELETE /clients/:id/blocked-senders`; `ConversationService.handleIncomingMessage` short-circuits when `isBlocked()` returns true (logs `conversation.inbound.blocked`, no AI call, no escalation); conversation detail header gets Block sender / Unblock sender toggle + coral "BLOCKED" pill on the customer line. Followup T102b: per-client admin page + bulk unblock.**
+- [x] **T103 — USECASE** "Mark as test customer" toggle to exclude from QA scores + daily digests. — **DONE (2026-05-24, commit `e3c0c68`): new `TestCustomer` table (same shape as BlockedSender); `TestCustomerService` + `GET/POST/DELETE /clients/:id/test-customers`; `ConversationService.handleIncomingMessage` skips the AutoQa scoring path when `isTestCustomer()` is true and logs `conversation.auto_qa_skipped_test_customer`; conversation detail gets a Mark as test / Unmark test button + violet "TEST" pill on the customer line. Followup T103b: filter test customers out of digest + dashboard aggregates.**
+- [x] **T104 — USECASE** Tag / label system for tickets (`VIP`, `complaint`, `high-value`). — **DONE (2026-05-24, commit `822efa3` for backend + `55211f1` for UI): `Tag` and `TicketTag` tables with per-client unique-name + 6-colour palette (coral / amber / green / blue / violet / slate); CRUD + add/remove/bulk-apply endpoints; `TagChip` + `TagPicker` (with inline create) components; ticket rows render tag chips; backend list/detail include the joined tags.**
+- [x] **T105 — USECASE** In-app P1 alert (toast + sound) in addition to WhatsApp ping. — **DONE (2026-05-24, commit `fb17915`): `P1AlertCenter` polls `GET /tickets` every 30s, filters open/assigned P1s the tab has not seen (localStorage `afd:p1-seen-ticket-ids`, first-run suppressed so the initial load does not blast); stacks up to 5 fixed-top-right coral toasts with 220ms slide-in keyframe + "Open ticket →" deep-link; uses browser `Notification` API when permission is granted, with a bottom-right Enable nudge when permission is default. Sound deferred (no asset pipeline yet). Followup T105b: replace polling with SSE when API adds a stream.
 
 ### Knowledge Base
 
