@@ -281,7 +281,14 @@ export default function InternalKbReviewPage() {
                 onClick={() => void selectRequest(request.id)}
               >
                 <div>
-                  <strong>{request.proposedTitle}</strong>
+                  <strong>
+                    {request.proposedTitle}
+                    {request.submittedBy === 'ai-suggestion' && (
+                      <span className="ai-suggestion-badge" title="Auto-suggested by AI from an escalated ticket">
+                        AI suggestion
+                      </span>
+                    )}
+                  </strong>
                   <small>
                     {request.clientId} | {request.requestType} | {request.urgency}
                   </small>

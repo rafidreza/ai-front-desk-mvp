@@ -91,6 +91,29 @@ function assertIncludes<T extends string>(allowed: readonly T[], value: string, 
   return value as T;
 }
 
+const suggestionStopwords = new Set([
+  'the', 'and', 'for', 'with', 'this', 'that', 'have', 'has', 'are', 'was', 'were',
+  'how', 'what', 'when', 'where', 'why', 'who', 'will', 'can', 'could', 'would',
+  'please', 'thanks', 'thank', 'you', 'your', 'apu', 'bhai', 'apa', 'dada',
+]);
+
+function buildSuggestionTitle(customerMessage: string): string {
+  const trimmed = customerMessage.trim().replace(/\s+/g, ' ');
+  if (trimmed.length === 0) return 'Customer question';
+  const firstSentence = trimmed.split(/[.!?\n।]+/)[0]?.trim() ?? trimmed;
+  const truncated = firstSentence.length > 80 ? `${firstSentence.slice(0, 78)}…` : firstSentence;
+  return truncated;
+}
+
+function extractSuggestionKeywords(customerMessage: string): string[] {
+  const tokens = customerMessage
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length >= 3 && !suggestionStopwords.has(token));
+  return Array.from(new Set(tokens)).slice(0, 6);
+}
+
 function mapJsonObject(value: Prisma.JsonValue | null): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
 }
@@ -230,6 +253,63 @@ export class KnowledgeChangeRequestService {
         category: request.proposedCategory,
       },
     };
+  }
+
+  async suggestFromTicket(input: {
+    clientId: string;
+    ticketId: string;
+    customerMessage: string;
+    suggestedReply: string;
+    reason: string;
+  }): Promise<KnowledgeChangeRequest | null> {
+    if (this.prisma === undefined) return null;
+
+    const existing = await this.prisma.knowledgeChangeRequest.findFirst({
+      where: { clientId: input.clientId, sourceTicketId: input.ticketId },
+    });
+    if (existing !== null) return mapRequest(existing);
+
+    const proposedTitle = buildSuggestionTitle(input.customerMessage);
+    const proposedKeywords = extractSuggestionKeywords(input.customerMessage);
+
+    try {
+      const created = await this.prisma.knowledgeChangeRequest.create({
+        data: {
+          id: randomUUID(),
+          clientId: input.clientId,
+          sourceTicketId: input.ticketId,
+          requestType: 'create',
+          urgency: 'normal',
+          proposedTitle,
+          proposedAnswer: input.suggestedReply,
+          proposedKeywords,
+          proposedCategory: 'general',
+          requesterNote: `Auto-suggested from escalated ticket: ${input.reason}`,
+          submittedBy: 'ai-suggestion',
+        },
+      });
+      await this.recordEvent({
+        requestId: created.id,
+        eventType: 'submitted',
+        actorId: created.submittedBy,
+        note: created.requesterNote ?? undefined,
+        payload: {
+          source: 'ticket-escalation',
+          ticketId: input.ticketId,
+          reason: input.reason,
+        },
+      });
+      return mapRequest(created);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        // Another race created the same suggestion — fetch + return.
+        const racy = await this.prisma.knowledgeChangeRequest.findFirst({
+          where: { clientId: input.clientId, sourceTicketId: input.ticketId },
+        });
+        return racy === null ? null : mapRequest(racy);
+      }
+      throw error;
+    }
   }
 
   async create(input: {

@@ -283,6 +283,7 @@ model KnowledgeChangeRequest {
   id                   String          @id
   clientId             String
   targetEntryId        String?
+  sourceTicketId       String?
   requestType          String
   status               String          @default("submitted")
   urgency              String          @default("normal")
@@ -311,6 +312,8 @@ model KnowledgeChangeRequest {
   @@index([clientId])
   @@index([clientId, status])
   @@index([targetEntryId])
+  @@index([sourceTicketId])
+  @@unique([clientId, sourceTicketId], map: "KnowledgeChangeRequest_clientId_sourceTicketId_key")
   @@index([status, urgency])
   @@index([createdAt])
 }

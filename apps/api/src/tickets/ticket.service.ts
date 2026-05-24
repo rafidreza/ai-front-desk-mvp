@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ConversationRepository } from '../conversations/conversation.repository';
+import { KnowledgeChangeRequestService } from '../knowledge/knowledge-change-request.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { StructuredLoggerService } from '../observability/structured-logger.service';
 import { AgentReply, IncomingMessage, Ticket, TicketComment, TicketDetail, TicketPriority, TicketStatus } from '../types/domain';
@@ -11,6 +12,7 @@ export class TicketService {
     private readonly repository: ConversationRepository,
     private readonly knowledge?: KnowledgeService,
     private readonly logger?: StructuredLoggerService,
+    private readonly kbSuggestions?: KnowledgeChangeRequestService,
   ) {}
 
   async createFromEscalation(input: {
@@ -21,7 +23,7 @@ export class TicketService {
     const now = new Date().toISOString();
     const priority = this.getPriority(input.reply.escalationReason ?? '');
 
-    return this.repository.saveTicket({
+    const ticket = await this.repository.saveTicket({
       id: randomUUID(),
       clientId: input.message.clientId,
       conversationId: input.conversationId,
@@ -35,6 +37,36 @@ export class TicketService {
       createdAt: now,
       updatedAt: now,
     });
+
+    await this.suggestKnowledgeFromEscalation(ticket);
+
+    return ticket;
+  }
+
+  private async suggestKnowledgeFromEscalation(ticket: Ticket): Promise<void> {
+    if (this.kbSuggestions === undefined) return;
+    try {
+      const suggestion = await this.kbSuggestions.suggestFromTicket({
+        clientId: ticket.clientId,
+        ticketId: ticket.id,
+        customerMessage: ticket.customerMessage,
+        suggestedReply: ticket.suggestedReply,
+        reason: ticket.reason,
+      });
+      if (suggestion !== null) {
+        this.logger?.event('knowledge.suggestion.created', {
+          requestId: suggestion.id,
+          ticketId: ticket.id,
+          clientId: ticket.clientId,
+        });
+      }
+    } catch (error) {
+      this.logger?.event('knowledge.suggestion.failed', {
+        ticketId: ticket.id,
+        clientId: ticket.clientId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   async createFromManualTakeover(input: {
