@@ -32,8 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| 13 — UX Audit follow-up | 3 | 4 | 7 |
-| **TOTAL** | **127** | **27** | **154** |
+| 13 — UX Audit follow-up | 4 | 3 | 7 |
+| **TOTAL** | **128** | **26** | **154** |
 
 ---
 
@@ -296,7 +296,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T126 — UXAUDIT** Fix public landing accessibility: resolve P1 badge contrast, repair heading hierarchy (`h1` → `h2` → `h3`), and replace vague "Get started" CTAs with action-specific labels. — **DONE (2026-05-24): landing CTA labels now identify the signup action, pillar headings follow the `h1` → `h2` hierarchy, and low-contrast mock ticket metadata now meets axe contrast checks. Verified with web lint/build and focused uxaudit accessibility/usability checks on desktop and mobile.**
 - [x] **T127 — UXAUDIT** Improve internal API failure recovery: replace generic `API request failed: 500` banners on Clients, Data Sources, and KB Review with route-specific guidance, retry actions, and safe diagnostic context. — **DONE (2026-05-24): added a reusable internal load-error notice with retry actions and safe HTTP diagnostics, then wired it to Clients, Data Sources, and KB Review so generic backend failures now explain the affected route group and next step. Verified with web lint/build.**
 - [x] **T128 — UXAUDIT** Clean up internal ticket row density: reduce overlapping/crowded chips, prioritize customer issue text, and move secondary SLA/confidence/reason details into a scannable metadata row. — **DONE (2026-05-24): internal ticket rows now keep the customer message as the primary line, group priority/status in compact headline pills, and move SLA/escalation/confidence details into a wrapping metadata row below the owner. Verified with web lint/build.**
-- [ ] **T129 — UXAUDIT** Refine widget PDPA consent UX: hide or de-emphasize the disabled input before consent and reposition the "Live demo" tag so it does not overlap the widget header on mobile/desktop.
+- [x] **T129 — UXAUDIT** Refine widget PDPA consent UX: hide or de-emphasize the disabled input before consent and reposition the "Live demo" tag so it does not overlap the widget header on mobile/desktop. — **DONE (2026-05-24): the widget now hides the message input until PDPA consent is accepted, the live demo label sits above the iframe instead of over the widget header, and the demo iframe loads eagerly so accessibility checks inspect the real widget document. Verified with web lint/build and focused uxaudit accessibility/usability checks on desktop and mobile.**
 - [ ] **T130 — UXAUDIT** Clarify deferred billing/payment surfaces: keep payment work deferred per user direction, and rename/hide billing-adjacent internal labels like pricing/MRR so they read as non-billing estimates only.
 - [ ] **T131 — UXAUDIT** Improve client login failure recovery: distinguish unknown identifier, unconfigured delivery, and backend failure; include examples for client ID, email, and WhatsApp fallback.
 - [ ] **T132 — UXAUDIT** Finish client portal localization coverage: apply the client portal copy/localized formatting system to Data Sources, Knowledge, and Onboarding pages, not just dashboard/tickets.

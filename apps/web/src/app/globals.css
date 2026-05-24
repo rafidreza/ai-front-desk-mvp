@@ -4521,7 +4521,9 @@ button {
 .landing-hero-visual {
   position: relative;
   display: grid;
-  place-items: center;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
   min-height: 460px;
 }
 
@@ -4543,9 +4545,7 @@ button {
 }
 
 .landing-widget-tag {
-  position: absolute;
-  top: 16px;
-  left: 18px;
+  justify-self: center;
   padding: 4px 10px;
   background: var(--surface);
   color: var(--brand);

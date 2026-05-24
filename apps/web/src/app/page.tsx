@@ -59,7 +59,6 @@ export default function LandingPage() {
           <span className="landing-widget-tag">Live demo</span>
           <div className="landing-widget-frame">
             <iframe
-              loading="lazy"
               src="/widget?clientId=pilot-client"
               title="AI Front Desk customer chat widget — live demo"
             />

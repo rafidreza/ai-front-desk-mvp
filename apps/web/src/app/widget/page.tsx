@@ -138,12 +138,14 @@ export default function WebChatWidgetPage() {
           </div>
         )}
 
-        <form className="widget-input" onSubmit={sendMessage}>
-          <input disabled={!hasConsent} name="message" placeholder={hasConsent ? 'Type your message' : 'Agree to start chat'} autoComplete="off" />
-          <button aria-label="Send message" disabled={visitorId === null || isSending || !hasConsent} type="submit">
-            <Send size={16} />
-          </button>
-        </form>
+        {hasConsent && (
+          <form className="widget-input" onSubmit={sendMessage}>
+            <input name="message" placeholder="Type your message" autoComplete="off" />
+            <button aria-label="Send message" disabled={visitorId === null || isSending} type="submit">
+              <Send size={16} />
+            </button>
+          </form>
+        )}
       </section>
     </main>
   );
