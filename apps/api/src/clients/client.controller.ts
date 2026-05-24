@@ -90,6 +90,13 @@ const GoogleSheetSourceSchema = z.object({
   orderFreshnessMinutes: z.number().int().min(1).max(1440).optional(),
 });
 
+const CustomerHistoryQuerySchema = z.object({
+  channel: z.enum(['messenger', 'whatsapp', 'web']).optional(),
+  externalSenderId: z.string().trim().min(1).optional(),
+  phone: z.string().trim().min(5).optional(),
+  email: z.string().trim().email().optional(),
+});
+
 @Controller('clients')
 export class ClientController {
   constructor(
@@ -240,5 +247,11 @@ export class ClientController {
   @Get(':clientId/external-data/orders')
   async listExternalOrders(@Param('clientId') clientId: string, @Query('sourceId') sourceId?: string) {
     return { orders: await this.externalData.listOrders(clientId, sourceId) };
+  }
+
+  @Get(':clientId/customer-history')
+  async getCustomerHistory(@Param('clientId') clientId: string, @Query() query: unknown) {
+    const parsed = CustomerHistoryQuerySchema.parse(query);
+    return { history: await this.dashboard.getCustomerHistory({ clientId, ...parsed }) };
   }
 }

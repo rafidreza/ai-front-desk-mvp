@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 17 | 21 | 38 |
-| **TOTAL** | **106** | **41** | **147** |
+| 12 — Use case backlog | 21 | 17 | 38 |
+| **TOTAL** | **110** | **37** | **147** |
 
 ---
 
@@ -243,7 +243,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T92 — USECASE** Holiday / off-hours auto-reply calendar (Eid, Puja, custom dates) with per-client override. — **DONE (2026-05-24): added per-client auto-reply rules with disabled editable Bangladesh holiday suggestions and daily after-hours template, internal Channels UI to edit/enable/delete rules, and inbound conversation short-circuiting so active holiday/off-hours windows send the configured reply before the AI path.**
 - [x] **T93 — USECASE** Voice note ingest UI in chat (operator can play customer voice + see transcribed text inline). — **DONE (2026-05-24): added voice attachment metadata and transcript storage on messages, Messenger/WhatsApp voice-note ingestion fallbacks, an internal transcript edit endpoint, conversation playback/transcript editing UI, and read-only voice context inside ticket details.**
 - [x] **T94 — USECASE** Image OCR ingest UI in chat (customer photos product → operator sees extracted text + matched product candidates). — **DONE (2026-05-24): added image attachment metadata, OCR text/status storage, Google Vision OCR attempt for reachable image URLs, matched Google Sheet product candidate snapshots, Messenger/WhatsApp image ingestion, and internal conversation/ticket UI for product photos, OCR status, and candidate products.**
-- [ ] **T95 — USECASE** Unified customer history view across pages (same phone number → one timeline).
+- [x] **T95 — USECASE** Unified customer history view across pages (same phone number → one timeline). — **DONE (2026-05-24): added a conservative customer-history endpoint that merges WhatsApp/order records by normalized verified phone or email, keeps unverified sender IDs isolated, and renders the shared customer timeline on internal Conversations and Tickets detail views.**
 
 ### Ticket operations
 
@@ -260,9 +260,9 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 
 ### Knowledge Base
 
-- [ ] **T106 — USECASE** KB version diff + 1-click rollback UI (highlight what changed between versions).
-- [ ] **T107 — USECASE** KB freshness alerts: surface entries not updated in 90 days, prompt operator to re-verify.
-- [ ] **T108 — USECASE** Seller-facing read-only KB view (client portal) so seller sees what AI knows. Trust signal.
+- [x] **T106 — USECASE** KB version diff + 1-click rollback UI (highlight what changed between versions). — **DONE (2026-05-24, commit `63a3955`): new `KbDiffModal` opens from a "Compare" button on every version row; side-by-side current vs selected version across Title / Answer / Keywords / Category / Confidence boost with coral data-changed highlighting; modal "Restore as new draft" reuses the existing `rollbackKnowledgeEntry` API (T21's draft-then-publish contract preserved). Backlog T106b: word-level inline diff, restore-and-publish atomic action.**
+- [x] **T107 — USECASE** KB freshness alerts: surface entries not updated in 90 days, prompt operator to re-verify. — **DONE (2026-05-24, commit `b0f52da`): new `markReviewed` API + `POST /clients/:id/knowledge/:entryId/review` endpoint that bumps `updatedAt` without a version snapshot; `KnowledgeEntry.updatedAt` now in shared types; UI `isStale()` flags active entries older than 90 days; amber page banner with count + "Show stale only" toggle, inline `STALE Nd` badge + amber left border per row, "Mark reviewed" CTA on the detail editor for active entries. Backlog T107b: per-client stale-summary email + configurable threshold.**
+- [x] **T108 — USECASE** Seller-facing read-only KB view (client portal) so seller sees what AI knows. Trust signal. — **DONE (2026-05-19, covered by T55): `/client/knowledge` already lists every published KB entry with title + answer + keywords + category, plus a search bar + category filter; client-safe endpoints (T54) prevent any mutation from a client session. No additional work needed for the read-only trust path; backlog T108b: per-entry "preview AI sample reply" affordance + dashboard tile showing "AI knows N entries about your business".**
 - [ ] **T109 — USECASE** Suggest new KB entries from unresolved tickets (auto-draft from ticket text → operator approves).
 
 ### Billing + auth + RBAC

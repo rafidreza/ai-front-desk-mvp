@@ -1,8 +1,29 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Channel, ClientChannelSummary, ClientDashboardSummary, ClientProfile, ConversationLog, Ticket, TicketDetail, TicketStatus } from '../types/domain';
+import {
+  Channel,
+  ClientChannelSummary,
+  ClientDashboardSummary,
+  ClientProfile,
+  ConversationLog,
+  CustomerHistory,
+  CustomerHistoryEvent,
+  Ticket,
+  TicketDetail,
+  TicketStatus,
+} from '../types/domain';
 import { buildChannelCopy, buildDigestNarrative, buildDigestSubject } from './client-language-copy';
 import { PilotClientService } from './pilot-client.service';
+
+function normalizePhone(value?: string) {
+  const normalized = value?.replace(/\D+/g, '') ?? '';
+  return normalized.length >= 7 ? normalized : undefined;
+}
+
+function normalizeEmail(value?: string) {
+  const normalized = value?.trim().toLowerCase() ?? '';
+  return normalized.includes('@') ? normalized : undefined;
+}
 
 @Injectable()
 export class ClientDashboardService {
@@ -192,6 +213,119 @@ export class ClientDashboardService {
           createdAt: message.createdAt.toISOString(),
         })),
       },
+    };
+  }
+
+  async getCustomerHistory(input: {
+    clientId: string;
+    channel?: Channel;
+    externalSenderId?: string;
+    phone?: string;
+    email?: string;
+  }): Promise<CustomerHistory> {
+    const phone = normalizePhone(input.phone) ?? (input.channel === 'whatsapp' ? normalizePhone(input.externalSenderId) : undefined);
+    const email = normalizeEmail(input.email);
+    const externalSenderId = input.externalSenderId?.trim();
+    const confidence: CustomerHistory['identity']['confidence'] =
+      phone !== undefined ? 'verified_phone' : email !== undefined ? 'verified_email' : externalSenderId !== undefined ? 'sender_only' : 'insufficient';
+
+    const [conversationCandidates, orderCandidates] = await Promise.all([
+      this.prisma.conversation.findMany({
+        where: {
+          clientId: input.clientId,
+          ...(phone !== undefined
+            ? { channel: 'whatsapp' }
+            : externalSenderId !== undefined
+              ? { channel: input.channel, externalSenderId }
+              : {}),
+        },
+        include: {
+          messages: { orderBy: { createdAt: 'asc' }, take: 2 },
+          tickets: { orderBy: { createdAt: 'desc' } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: phone !== undefined || email !== undefined ? 100 : 20,
+      }),
+      this.prisma.orderRecord.findMany({
+        where: { clientId: input.clientId },
+        orderBy: { lastSyncedAt: 'desc' },
+        take: 500,
+      }),
+    ]);
+
+    const conversations = conversationCandidates.filter((conversation) => {
+      if (phone !== undefined) return normalizePhone(conversation.externalSenderId) === phone;
+      if (externalSenderId !== undefined) {
+        return conversation.externalSenderId === externalSenderId && (input.channel === undefined || conversation.channel === input.channel);
+      }
+      return false;
+    });
+    const orders = orderCandidates.filter((order) => {
+      const phoneMatches = phone !== undefined && normalizePhone(order.customerPhone ?? undefined) === phone;
+      const emailMatches = email !== undefined && normalizeEmail(order.customerEmail ?? undefined) === email;
+      return phoneMatches || emailMatches;
+    });
+
+    const events: CustomerHistoryEvent[] = [
+      ...conversations.map((conversation) => {
+        const firstMessage = conversation.messages[0]?.text;
+        return {
+          id: `conversation:${conversation.id}`,
+          type: 'conversation' as const,
+          title: `${conversation.channel} conversation`,
+          description:
+            firstMessage === undefined
+              ? `${conversation.externalSenderId} opened a conversation.`
+              : `${conversation.externalSenderId}: ${firstMessage}`,
+          occurredAt: conversation.createdAt.toISOString(),
+          channel: conversation.channel as Channel,
+          conversationId: conversation.id,
+          status: conversation.ticketId === null ? 'contained' : 'ticket raised',
+        };
+      }),
+      ...conversations.flatMap((conversation) =>
+        conversation.tickets.map((ticket) => ({
+          id: `ticket:${ticket.id}`,
+          type: 'ticket' as const,
+          title: `Ticket ${ticket.status}`,
+          description: ticket.reason,
+          occurredAt: ticket.createdAt.toISOString(),
+          channel: conversation.channel as Channel,
+          conversationId: conversation.id,
+          ticketId: ticket.id,
+          status: ticket.status,
+        })),
+      ),
+      ...orders.map((order) => ({
+        id: `order:${order.id}`,
+        type: 'order' as const,
+        title: `Order ${order.orderId}`,
+        description: [
+          order.customerName,
+          order.orderStatus.replace(/_/g, ' '),
+          order.paymentStatus === null ? undefined : `payment ${order.paymentStatus.replace(/_/g, ' ')}`,
+          order.orderNote,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        occurredAt: (order.sourceUpdatedAt ?? order.lastSyncedAt).toISOString(),
+        orderId: order.orderId,
+        status: order.orderStatus,
+      })),
+    ].sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime());
+
+    return {
+      clientId: input.clientId,
+      identity: {
+        phone,
+        email,
+        externalSenderId,
+        channel: input.channel,
+        confidence,
+      },
+      events: events.slice(0, 40),
+      relatedConversationIds: conversations.map((conversation) => conversation.id),
+      relatedOrderIds: orders.map((order) => order.id),
     };
   }
 

@@ -243,6 +243,41 @@ export interface OrderRecord {
   rawRow: Record<string, unknown>;
 }
 
+export type CustomerHistoryIdentityConfidence =
+  | 'verified_phone'
+  | 'verified_email'
+  | 'sender_only'
+  | 'insufficient';
+
+export type CustomerHistoryEventType = 'conversation' | 'ticket' | 'order';
+
+export interface CustomerHistoryEvent {
+  id: string;
+  type: CustomerHistoryEventType;
+  title: string;
+  description?: string;
+  occurredAt: string;
+  channel?: Channel;
+  conversationId?: string;
+  ticketId?: string;
+  orderId?: string;
+  status?: string;
+}
+
+export interface CustomerHistory {
+  clientId: string;
+  identity: {
+    phone?: string;
+    email?: string;
+    externalSenderId?: string;
+    channel?: Channel;
+    confidence: CustomerHistoryIdentityConfidence;
+  };
+  events: CustomerHistoryEvent[];
+  relatedConversationIds: string[];
+  relatedOrderIds: string[];
+}
+
 export interface KnowledgeEntry {
   id: string;
   clientId: string;

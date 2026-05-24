@@ -3,6 +3,7 @@
 import { Ban, FlaskConical, Handshake, Image as ImageIcon, MessageSquareText, RefreshCw, Save, Search, TicketCheck, Volume2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { getCustomerHistory } from '@/lib/customer-history-api';
 import {
   blockSender,
   getConversations,
@@ -15,7 +16,8 @@ import {
   unmarkTestCustomer,
   updateConversationMessageTranscript,
 } from '@/lib/api';
-import { BlockedSender, ConversationLog, ConversationSearchResult, TestCustomer, Ticket } from '@/types/domain';
+import { BlockedSender, ConversationLog, ConversationSearchResult, CustomerHistory, TestCustomer, Ticket } from '@/types/domain';
+import { CustomerHistoryPanel } from '../_components/CustomerHistoryPanel';
 import { ConversationsPanel } from '../_components/ConversationsPanel';
 import { InternalShell } from '../_components/InternalShell';
 import { formatTime, getErrorMessage } from '../_lib/helpers';
@@ -44,6 +46,9 @@ export default function ConversationsPage() {
   const [isTogglingTest, setIsTogglingTest] = useState(false);
   const [transcriptsByMessage, setTranscriptsByMessage] = useState<Record<string, string>>({});
   const [savingTranscriptId, setSavingTranscriptId] = useState<string | null>(null);
+  const [customerHistory, setCustomerHistory] = useState<CustomerHistory | null>(null);
+  const [isCustomerHistoryLoading, setIsCustomerHistoryLoading] = useState(false);
+  const [customerHistoryError, setCustomerHistoryError] = useState<string | null>(null);
 
   async function loadConversations() {
     setIsLoading(true);
@@ -127,6 +132,40 @@ export default function ConversationsPage() {
       }
       return next;
     });
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    if (selectedConversation === undefined) {
+      setCustomerHistory(null);
+      setCustomerHistoryError(null);
+      setIsCustomerHistoryLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsCustomerHistoryLoading(true);
+    setCustomerHistoryError(null);
+    getCustomerHistory({
+      clientId: selectedConversation.clientId,
+      channel: selectedConversation.channel,
+      externalSenderId: selectedConversation.externalSenderId,
+    })
+      .then((history) => {
+        if (!cancelled) setCustomerHistory(history);
+      })
+      .catch((historyError) => {
+        if (!cancelled) {
+          setCustomerHistory(null);
+          setCustomerHistoryError(getErrorMessage(historyError, 'Customer history could not load.'));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsCustomerHistoryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedConversation]);
 
   useEffect(() => {
@@ -515,6 +554,12 @@ export default function ConversationsPage() {
                   <strong>{selectedConversation.qaGrade ?? selectedConversation.autoQaGrade ?? 'Pending'}</strong>
                 </div>
               </section>
+
+              <CustomerHistoryPanel
+                history={customerHistory}
+                isLoading={isCustomerHistoryLoading}
+                error={customerHistoryError}
+              />
 
               <section className="conversation-thread">
                 {selectedConversation.messages.map((message) => (

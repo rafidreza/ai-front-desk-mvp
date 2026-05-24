@@ -14,7 +14,8 @@ import {
   updateTicketAssignee,
   updateTicketStatus,
 } from '@/lib/api';
-import { ConversationLog, InternalUser, Tag, TagColor, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
+import { getCustomerHistory } from '@/lib/customer-history-api';
+import { ConversationLog, CustomerHistory, InternalUser, Tag, TagColor, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 import { InternalShell } from '../_components/InternalShell';
 import { BulkActionBar } from '../_components/BulkActionBar';
 import { TicketDetailPanel } from '../_components/TicketDetailPanel';
@@ -83,6 +84,9 @@ export default function TicketsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [tagsByClient, setTagsByClient] = useState<Record<string, Tag[]>>({});
   const [isBulkBusy, setIsBulkBusy] = useState(false);
+  const [customerHistory, setCustomerHistory] = useState<CustomerHistory | null>(null);
+  const [isCustomerHistoryLoading, setIsCustomerHistoryLoading] = useState(false);
+  const [customerHistoryError, setCustomerHistoryError] = useState<string | null>(null);
 
   async function loadTicketsData(nextRequestedTicketId = requestedTicketId) {
     setIsTicketsLoading(true);
@@ -259,6 +263,40 @@ export default function TicketsPage() {
     [activeTicket, conversations],
   );
 
+  useEffect(() => {
+    if (selectedConversation === undefined) {
+      setCustomerHistory(null);
+      setCustomerHistoryError(null);
+      setIsCustomerHistoryLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsCustomerHistoryLoading(true);
+    setCustomerHistoryError(null);
+    getCustomerHistory({
+      clientId: selectedConversation.clientId,
+      channel: selectedConversation.channel,
+      externalSenderId: selectedConversation.externalSenderId,
+    })
+      .then((history) => {
+        if (!cancelled) setCustomerHistory(history);
+      })
+      .catch((historyError) => {
+        if (!cancelled) {
+          setCustomerHistory(null);
+          setCustomerHistoryError(getErrorMessage(historyError, 'Customer history could not load.'));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsCustomerHistoryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedConversation]);
+
   async function handleStatusChange(status: TicketStatus) {
     if (activeTicket === undefined) return;
     setIsUpdating(true);
@@ -365,6 +403,9 @@ export default function TicketsPage() {
         <TicketDetailPanel
           activeTicket={activeTicket}
           selectedConversation={selectedConversation}
+          customerHistory={customerHistory}
+          isCustomerHistoryLoading={isCustomerHistoryLoading}
+          customerHistoryError={customerHistoryError}
           selectedTicketDetail={selectedTicketDetail}
           assigneeOptions={assigneeOptions}
           isDetailLoading={isDetailLoading}

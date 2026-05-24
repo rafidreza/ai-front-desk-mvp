@@ -14,8 +14,9 @@ import {
   Volume2,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { ConversationLog, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
+import { ConversationLog, CustomerHistory, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 import { assigneeLabel, eventTitle, formatTime, operatorLabel, priorityTone, statusLabels, statuses } from '../_lib/helpers';
+import { CustomerHistoryPanel } from './CustomerHistoryPanel';
 import { EscalationChips } from './EscalationChips';
 import { SlaBadge } from './SlaBadge';
 
@@ -27,6 +28,9 @@ function formatProductPrice(product: NonNullable<ConversationLog['messages'][num
 interface TicketDetailPanelProps {
   activeTicket?: Ticket;
   selectedConversation?: ConversationLog;
+  customerHistory?: CustomerHistory | null;
+  isCustomerHistoryLoading?: boolean;
+  customerHistoryError?: string | null;
   selectedTicketDetail: TicketDetail | null;
   assigneeOptions: InternalUser[];
   isDetailLoading: boolean;
@@ -45,6 +49,9 @@ interface TicketDetailPanelProps {
 export function TicketDetailPanel({
   activeTicket,
   selectedConversation,
+  customerHistory = null,
+  isCustomerHistoryLoading = false,
+  customerHistoryError = null,
   selectedTicketDetail,
   assigneeOptions,
   isDetailLoading,
@@ -201,6 +208,12 @@ export function TicketDetailPanel({
               <p>{activeTicket.suggestedReply}</p>
             </section>
           )}
+
+          <CustomerHistoryPanel
+            history={customerHistory}
+            isLoading={isCustomerHistoryLoading}
+            error={customerHistoryError}
+          />
 
           {activeTicket !== undefined && (
             <section className="timeline-panel">
