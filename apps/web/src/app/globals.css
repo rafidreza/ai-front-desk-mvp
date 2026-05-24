@@ -3798,6 +3798,31 @@ button {
   font-size: 12px;
 }
 
+.widget-consent {
+  display: grid;
+  gap: 9px;
+  padding: 11px 12px;
+  border-top: 1px solid #b8d7c9;
+  background: var(--green-soft);
+  color: #174a3a;
+}
+
+.widget-consent p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.widget-consent button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  background: var(--green);
+  color: #ffffff;
+  font-weight: 800;
+}
+
 .widget-input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 42px;

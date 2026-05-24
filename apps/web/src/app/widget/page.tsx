@@ -9,6 +9,8 @@ type ChatMessage = {
   text: string;
 };
 
+const consentVersion = 'pdpa-widget-v1';
+
 function createVisitorId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
@@ -25,6 +27,7 @@ export default function WebChatWidgetPage() {
     },
   ]);
   const [visitorId, setVisitorId] = useState<string | null>(null);
+  const [hasConsent, setHasConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
 
@@ -35,6 +38,8 @@ export default function WebChatWidgetPage() {
 
   useEffect(() => {
     const storageKey = `afd_widget_visitor_${clientId}`;
+    const consentKey = `afd_widget_pdpa_consent_${clientId}`;
+    setHasConsent(window.localStorage.getItem(consentKey) === consentVersion);
     const existing = window.localStorage.getItem(storageKey);
     if (existing !== null) {
       setVisitorId(existing);
@@ -45,9 +50,19 @@ export default function WebChatWidgetPage() {
     setVisitorId(created);
   }, [clientId]);
 
+  function acceptConsent() {
+    window.localStorage.setItem(`afd_widget_pdpa_consent_${clientId}`, consentVersion);
+    setHasConsent(true);
+    setError(null);
+  }
+
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (visitorId === null || isSending) return;
+    if (!hasConsent) {
+      setError('Please agree to share your message and contact details before starting the chat.');
+      return;
+    }
     const form = new FormData(event.currentTarget);
     const text = String(form.get('message') ?? '').trim();
     if (text === '') return;
@@ -62,7 +77,7 @@ export default function WebChatWidgetPage() {
       const response = await fetch('/api/web-chat/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId, visitorId, text, messageId }),
+        body: JSON.stringify({ clientId, visitorId, text, messageId, pdpaConsent: true, consentVersion }),
       });
       const data = (await response.json()) as { reply?: { text: string }; error?: string };
       if (!response.ok || data.reply === undefined) {
@@ -112,9 +127,20 @@ export default function WebChatWidgetPage() {
 
         {error !== null && <div className="widget-error">{error}</div>}
 
+        {!hasConsent && (
+          <div className="widget-consent" role="region" aria-label="Privacy consent">
+            <p>
+              By starting this chat, you agree to share your message and any contact details with this business so they can respond.
+            </p>
+            <button type="button" onClick={acceptConsent}>
+              Agree and start chat
+            </button>
+          </div>
+        )}
+
         <form className="widget-input" onSubmit={sendMessage}>
-          <input name="message" placeholder="Type your message" autoComplete="off" />
-          <button aria-label="Send message" disabled={visitorId === null || isSending} type="submit">
+          <input disabled={!hasConsent} name="message" placeholder={hasConsent ? 'Type your message' : 'Agree to start chat'} autoComplete="off" />
+          <button aria-label="Send message" disabled={visitorId === null || isSending || !hasConsent} type="submit">
             <Send size={16} />
           </button>
         </form>

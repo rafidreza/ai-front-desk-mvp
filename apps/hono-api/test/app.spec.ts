@@ -57,6 +57,25 @@ describe('Hono API mirror', () => {
     expect(response.status).toBe(400);
   });
 
+  it('requires PDPA consent for public web chat messages', async () => {
+    const response = await app.request(
+      '/web-chat/messages',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: 'pilot-client',
+          visitorId: 'visitor-1',
+          text: 'hello',
+          messageId: 'web-message-1',
+        }),
+      },
+      env,
+    );
+
+    expect(response.status).toBe(400);
+  });
+
   it('returns Meta webhook verification challenges as text', async () => {
     const messenger = await app.request(
       '/webhooks/messenger?hub.mode=subscribe&hub.verify_token=messenger-verify-token&hub.challenge=m-123',

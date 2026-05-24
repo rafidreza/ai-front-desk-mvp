@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppBindings } from '../db/client';
 import { envString, isProduction } from '../env';
-import { UnauthorizedError } from '../errors';
+import { BadRequestError, UnauthorizedError } from '../errors';
 import { createServices } from '../services';
 import { sha256HmacMatches } from '../utils/crypto';
 import { jsonBody } from './helpers';
@@ -12,6 +12,8 @@ const WebChatMessageSchema = z.object({
   visitorId: z.string().trim().min(2).max(160),
   text: z.string().trim().min(1).max(1000),
   messageId: z.string().trim().min(2).max(180).optional(),
+  pdpaConsent: z.boolean().optional(),
+  consentVersion: z.string().trim().min(2).max(80).optional(),
 });
 
 const MessengerWebhookSchema = z.object({
@@ -109,6 +111,9 @@ export function channelRoutes() {
 
   app.post('/web-chat/messages', async (c) => {
     const parsed = WebChatMessageSchema.parse(await jsonBody(c));
+    if (parsed.pdpaConsent !== true) {
+      throw new BadRequestError('PDPA consent is required before sending a web chat message.');
+    }
     const result = await createServices(c).conversations.handleIncomingMessage({
       id: parsed.messageId ?? `web:${parsed.visitorId}:${crypto.randomUUID()}`,
       clientId: parsed.clientId,

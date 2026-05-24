@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { ConversationService } from '../conversations/conversation.service';
@@ -9,6 +9,8 @@ const WebChatMessageSchema = z.object({
   visitorId: z.string().trim().min(2).max(160),
   text: z.string().trim().min(1).max(1000),
   messageId: z.string().trim().min(2).max(180).optional(),
+  pdpaConsent: z.boolean().optional(),
+  consentVersion: z.string().trim().min(2).max(80).optional(),
 });
 
 @Controller('web-chat')
@@ -18,6 +20,9 @@ export class WebChatController {
   @Post('messages')
   async receiveMessage(@Body() body: unknown) {
     const parsed = WebChatMessageSchema.parse(body);
+    if (parsed.pdpaConsent !== true) {
+      throw new BadRequestException('PDPA consent is required before sending a web chat message.');
+    }
     const message: IncomingMessage = {
       id: parsed.messageId ?? `web:${parsed.visitorId}:${randomUUID()}`,
       clientId: parsed.clientId,

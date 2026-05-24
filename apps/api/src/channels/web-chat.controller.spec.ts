@@ -22,6 +22,8 @@ describe('WebChatController', () => {
       visitorId: 'visitor-1',
       text: 'delivery charge koto?',
       messageId: 'web-message-1',
+      pdpaConsent: true,
+      consentVersion: 'pdpa-widget-v1',
     });
 
     expect(result.conversationId).toBe('conversation-1');
@@ -35,5 +37,22 @@ describe('WebChatController', () => {
         text: 'delivery charge koto?',
       }),
     );
+  });
+
+  it('rejects web chat messages without PDPA consent', async () => {
+    const conversations = {
+      handleIncomingMessage: vi.fn(),
+    } as unknown as ConversationService;
+    const controller = new WebChatController(conversations);
+
+    await expect(
+      controller.receiveMessage({
+        clientId: 'pilot-client',
+        visitorId: 'visitor-1',
+        text: 'amar phone number dite pari?',
+        messageId: 'web-message-2',
+      }),
+    ).rejects.toThrow('PDPA consent is required');
+    expect(conversations.handleIncomingMessage).not.toHaveBeenCalled();
   });
 });
