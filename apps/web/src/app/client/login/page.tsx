@@ -1,7 +1,7 @@
 'use client';
 
 import { BadgeCheck, Info, KeyRound, LogIn, Store } from 'lucide-react';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { ClientProfile } from '@/types/domain';
 
 interface ChallengeResponse {
@@ -16,11 +16,19 @@ interface ChallengeResponse {
   };
 }
 
+type CodeRequest = {
+  identifier: string;
+  channel: 'email' | 'whatsapp';
+};
+
 export default function ClientLoginPage() {
   const [challenge, setChallenge] = useState<ChallengeResponse['challenge'] | null>(null);
   const [client, setClient] = useState<ClientProfile | null>(null);
+  const [lastRequest, setLastRequest] = useState<CodeRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const nextPath = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -37,19 +45,26 @@ export default function ClientLoginPage() {
     return null;
   }, [nextPath]);
 
-  async function requestCode(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const challengeExpired = challenge !== null && new Date(challenge.expiresAt).getTime() <= now;
+  const resendLabel = challenge === null
+    ? 'Send code'
+    : `Send a new code to ${challenge.destination}`;
+
+  useEffect(() => {
+    if (challenge === null) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [challenge]);
+
+  async function requestCodeFor(input: CodeRequest) {
     setIsSubmitting(true);
     setError(null);
+    setNotice(null);
     try {
       const response = await fetch('/api/client-auth/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier: String(form.get('identifier') ?? ''),
-          channel: form.get('channel'),
-        }),
+        body: JSON.stringify(input),
       });
       const data = (await response.json()) as ChallengeResponse | { error?: string };
       if (!response.ok || !('challenge' in data)) {
@@ -59,7 +74,10 @@ export default function ClientLoginPage() {
             : 'Could not send your code. Check the email or phone is right, or switch the delivery channel and try again.',
         );
       }
+      setLastRequest(input);
       setChallenge(data.challenge);
+      setNotice(`New code sent to ${data.challenge.destination}.`);
+      setNow(Date.now());
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -71,13 +89,37 @@ export default function ClientLoginPage() {
     }
   }
 
+  async function requestCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const channel = form.get('channel') === 'whatsapp' ? 'whatsapp' : 'email';
+    await requestCodeFor({
+      identifier: String(form.get('identifier') ?? '').trim(),
+      channel,
+    });
+  }
+
+  async function requestNewCode() {
+    if (lastRequest === null) {
+      setChallenge(null);
+      setError(null);
+      setNotice(null);
+      return;
+    }
+    await requestCodeFor(lastRequest);
+  }
+
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (challenge === null) return;
     const form = new FormData(event.currentTarget);
     setIsSubmitting(true);
     setError(null);
+    setNotice(null);
     try {
+      if (challengeExpired) {
+        throw new Error('This code expired. Request a new code to continue.');
+      }
       const response = await fetch('/api/client-auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -90,7 +132,7 @@ export default function ClientLoginPage() {
       if (!response.ok || data.client === undefined) {
         throw new Error(
           data.error ??
-            'That code did not match. Request a new code or check for typos — codes expire after a few minutes.',
+            'That code did not match, expired, or was already used. Request a new code to continue.',
         );
       }
       setClient(data.client);
@@ -99,7 +141,7 @@ export default function ClientLoginPage() {
       setError(
         verifyError instanceof Error
           ? verifyError.message
-          : 'That code did not match. Request a new code or check for typos — codes expire after a few minutes.',
+          : 'That code did not match, expired, or was already used. Request a new code to continue.',
       );
     } finally {
       setIsSubmitting(false);
@@ -164,6 +206,7 @@ export default function ClientLoginPage() {
                 </select>
               </label>
               {error !== null && <div className="inline-alert">{error}</div>}
+              {notice !== null && <div className="inline-success">{notice}</div>}
               <button className="icon-button" disabled={isSubmitting} type="submit">
                 {isSubmitting ? 'Sending...' : 'Send code'}
               </button>
@@ -180,15 +223,26 @@ export default function ClientLoginPage() {
               <div className="inline-success">
                 Code requested for {challenge.destination}. Expires at {new Date(challenge.expiresAt).toLocaleTimeString()}.
               </div>
+              {challengeExpired && (
+                <div className="inline-alert">
+                  This code expired. Request a new code to continue.
+                </div>
+              )}
+              {notice !== null && <div className="inline-success">{notice}</div>}
               {challenge.devCode !== undefined && <div className="inline-alert">Dev code: {challenge.devCode}</div>}
               <label>
                 6-digit code
-                <input name="code" inputMode="numeric" maxLength={6} minLength={6} required />
+                <input name="code" inputMode="numeric" maxLength={6} minLength={6} required disabled={challengeExpired} />
               </label>
               {error !== null && <div className="inline-alert">{error}</div>}
-              <button className="icon-button" disabled={isSubmitting || client !== null} type="submit">
+              <button className="icon-button" disabled={isSubmitting || client !== null || challengeExpired} type="submit">
                 {isSubmitting ? 'Verifying...' : 'Open dashboard'}
               </button>
+              {(error !== null || challengeExpired) && (
+                <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestNewCode()}>
+                  {isSubmitting ? 'Sending...' : resendLabel}
+                </button>
+              )}
               <p className="auth-switch-copy">
                 Starting fresh? <a href="/signup">Create client account</a>
               </p>

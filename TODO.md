@@ -31,8 +31,8 @@
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
-| 12 — Use case backlog | 24 | 14 | 38 |
-| **TOTAL** | **113** | **34** | **147** |
+| 12 — Use case backlog | 25 | 13 | 38 |
+| **TOTAL** | **114** | **33** | **147** |
 
 ---
 
@@ -272,7 +272,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [ ] **T112 — USECASE** Internal per-client LLM cost dashboard (USD spend per client per day, alert > threshold). — **DEFERRED (2026-05-24): user requested skipping billing/payment/cost-related work for now.**
 - [x] **T113 — USECASE** RBAC: admin / operator / read-only roles (replace single shared `INTERNAL_CONSOLE_PASSWORD`). — **DONE (2026-05-24): replaced passcode-only internal login with email/id + password authentication backed by internal user password hashes, seeded local admin/operator/read-only users, role-bearing internal sessions, proxy-side mutation enforcement, and updated team/login UI for the three-role model.**
 - [x] **T114 — USECASE** Audit log: who deleted KB entry, who changed prompt profile, who closed ticket (compliance + DPA). — **DONE (2026-05-24): added `AuditLog` persistence, filtered internal audit API, proxy-level successful mutation capture for internal and client-portal actors, summaries for ticket/KB/prompt/channel/template/tag/client/data-source changes, and an internal Audit Log screen with client/actor/entity/action filters.**
-- [ ] **T115 — USECASE** Magic-link expiry + clear re-request CTA on failure page.
+- [x] **T115 — USECASE** Magic-link expiry + clear re-request CTA on failure page. — **DONE (2026-05-24): client login now preserves the last identifier/channel, detects expired codes from `expiresAt`, disables expired-code submission, shows clear expired/used/invalid guidance, and offers a one-click "Send a new code" CTA from the verify step.**
 - [ ] **T116 — USECASE** WhatsApp OTP fallback when SMS fails (voice call / alt-channel option).
 - [ ] **T117 — USECASE** Session idle-timeout + warning modal on internal console (security on shared laptops).
 
