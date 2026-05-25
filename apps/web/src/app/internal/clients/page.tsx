@@ -1208,7 +1208,7 @@ export default function InternalClientsPage() {
               </form>
 
               {formMode === 'edit' && selectedDashboard !== undefined && (
-                <section className="client-info-grid">
+                <section className="client-info-grid client-health-grid">
                   <div>
                     <span>Average Confidence</span>
                     <strong>{selectedDashboard.totals.averageConfidence}%</strong>

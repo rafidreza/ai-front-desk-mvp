@@ -32,8 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| 13 — UX Audit follow-up | 12 | 5 | 17 |
-| **TOTAL** | **136** | **28** | **164** |
+| 13 — UX Audit follow-up | 13 | 4 | 17 |
+| **TOTAL** | **137** | **27** | **164** |
 
 ---
 
@@ -309,7 +309,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T136 — UXAUDIT** Add a compact ticket "current state" summary to the detail panel: status, assignee, SLA, confidence, and raised/escalation reason in one predictable block. — **DONE (2026-05-25): the ticket detail panel now groups status, assignee, SLA, AI confidence, raised reason, and updated time into one compact responsive state summary.**
 - [x] **T137 — UXAUDIT** Fix the P1 browser-alert nudge so it never overlaps ticket/client content on desktop or mobile; make the placement feel intentional and recoverable. — **DONE (2026-05-25): moved the browser-alert permission nudge into the workspace flow below the page header, added a dismiss action, and kept urgent P1 alerts as toasts only when real P1 events arrive.**
 - [x] **T138 — UXAUDIT** Normalize the new internal Clients DPA, data-retention, and Facebook Page controls to match the existing styled form inputs/selects instead of raw browser controls. — **DONE (2026-05-25): added shared Clients-section form styling for labels, inputs, selects, textareas, focus states, and textarea sizing across DPA, retention, and Facebook Page controls.**
-- [ ] **T139 — UXAUDIT** Reorder the internal Clients detail page so core client information/editing appears before operational add-ons like DPA, retention, and channel management.
+- [x] **T139 — UXAUDIT** Reorder the internal Clients detail page so core client information/editing appears before operational add-ons like DPA, retention, and channel management. — **DONE (2026-05-25): moved the editable client information form ahead of DPA, retention, and Facebook Page management in the visual flow without changing the deferred billing/pricing content.**
 - [ ] **T140 — UXAUDIT** Improve mobile layout for Clients DPA/retention/Facebook fields: every label/control should stack cleanly, fill the available width, and avoid inline squeezing.
 - [ ] **T141 — UXAUDIT** Defer or relabel billing-adjacent Clients pricing/MRR surfaces so they are clearly non-billing estimates only. — **DEFERRED (2026-05-25): user instructed us to skip billing/payment-related work for now; do not implement until billing/payment work is explicitly reopened.**
 - [ ] **T142 — UXAUDIT** Reuse shared form primitives (`UiSelect`, styled inputs, form actions, section spacing) across the new Clients sections so the page reads as one coherent internal tool.
