@@ -16,6 +16,7 @@ import {
 import { useMemo, useRef, useState } from 'react';
 import { ConversationLog, CustomerHistory, InternalUser, Ticket, TicketDetail, TicketStatus } from '@/types/domain';
 import { assigneeLabel, eventTitle, formatTime, operatorLabel, priorityTone, statusLabels, statuses } from '../_lib/helpers';
+import { formatConfidence, summarizeEscalation } from '../_lib/escalation';
 import { CustomerHistoryPanel } from './CustomerHistoryPanel';
 import { EscalationChips } from './EscalationChips';
 import { SlaBadge } from './SlaBadge';
@@ -80,6 +81,8 @@ export function TicketDetailPanel({
   }, [commentDraft, assigneeOptions]);
 
   const showMentionMenu = mentionOpen && mentionableUsers !== null && mentionableUsers.length > 0;
+  const escalationSummary = activeTicket === undefined ? null : summarizeEscalation(activeTicket);
+  const confidenceLabel = activeTicket === undefined ? 'Not scored' : (formatConfidence(activeTicket.confidence) ?? 'Not scored');
 
   function insertMention(user: InternalUser) {
     const replaced = commentDraft.replace(/@(\w*)$/, `@${user.label.replace(/\s+/g, '_')} `);
@@ -144,16 +147,12 @@ export function TicketDetailPanel({
                 </div>
               )}
 
-              <div className="detail-grid">
-                <div className="field">
+              <div className="ticket-state-summary" aria-label="Ticket current state">
+                <div className="ticket-state-card">
                   <span>Status</span>
                   <strong>{statusLabels[activeTicket.status]}</strong>
                 </div>
-                <div className="field">
-                  <span>Updated</span>
-                  <strong>{formatTime(activeTicket.updatedAt)}</strong>
-                </div>
-                <label className="field owner-field">
+                <label className="ticket-state-card ticket-state-card--control">
                   <span>Assignee</span>
                   <select
                     value={activeTicket.assigneeId ?? 'unassigned'}
@@ -168,9 +167,23 @@ export function TicketDetailPanel({
                     ))}
                   </select>
                 </label>
-                <div className="field field-wide">
-                  <span>Escalation reason</span>
-                  <strong>{activeTicket.reason}</strong>
+                <div className="ticket-state-card">
+                  <span>SLA</span>
+                  <strong>
+                    <SlaBadge ticket={activeTicket} size="md" />
+                  </strong>
+                </div>
+                <div className="ticket-state-card">
+                  <span>AI confidence</span>
+                  <strong>{confidenceLabel}</strong>
+                </div>
+                <div className="ticket-state-card">
+                  <span>Raised because</span>
+                  <strong title={activeTicket.reason}>{escalationSummary?.label ?? activeTicket.reason}</strong>
+                </div>
+                <div className="ticket-state-card">
+                  <span>Updated</span>
+                  <strong>{formatTime(activeTicket.updatedAt)}</strong>
                 </div>
               </div>
 
