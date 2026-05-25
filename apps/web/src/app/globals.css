@@ -4980,14 +4980,12 @@ button {
 }
 
 .ticket-row__checkbox {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 1;
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  align-self: start;
+  width: 24px;
+  height: 28px;
+  margin-top: 1px;
 }
 
 .ticket-row__checkbox input[type="checkbox"] {
@@ -5000,7 +4998,8 @@ button {
 
 .ticket-row:has(.ticket-row__checkbox) {
   grid-template-columns: 30px minmax(0, 1fr);
-  padding-left: 6px;
+  align-items: start;
+  padding-left: 10px;
 }
 
 .ticket-row__main {
