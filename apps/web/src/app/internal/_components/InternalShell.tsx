@@ -153,9 +153,9 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
             <a href="/internal">Internal status</a>
           </div>
         )}
+        <P1AlertCenter />
         {children}
       </section>
-      <P1AlertCenter />
       {idleWarningVisible && (
         <div className="idle-timeout-overlay" role="presentation">
           <section

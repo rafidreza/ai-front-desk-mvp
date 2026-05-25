@@ -55,11 +55,13 @@ export function P1AlertCenter() {
   const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>(
     'default',
   );
+  const [isPermissionNudgeHidden, setIsPermissionNudgeHidden] = useState(false);
   const seenRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     seenRef.current = readSeenIds();
+    setIsPermissionNudgeHidden(window.localStorage.getItem(PERMISSION_PROMPT_KEY) === '1');
     if (!('Notification' in window)) {
       setPermissionState('unsupported');
       return;
@@ -127,14 +129,29 @@ export function P1AlertCenter() {
     }
   }
 
+  function dismissPermissionNudge() {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(PERMISSION_PROMPT_KEY, '1');
+    }
+    setIsPermissionNudgeHidden(true);
+  }
+
   return (
     <>
-      {permissionState === 'default' && pendingAlerts.length === 0 && (
+      {permissionState === 'default' && pendingAlerts.length === 0 && !isPermissionNudgeHidden && (
         <div className="p1-permission-nudge">
           <Bell size={14} />
           <span>Turn on browser alerts so you never miss a P1.</span>
           <button onClick={() => void requestPermission()} type="button">
             Enable
+          </button>
+          <button
+            aria-label="Dismiss browser alert suggestion"
+            className="p1-permission-nudge__dismiss"
+            onClick={dismissPermissionNudge}
+            type="button"
+          >
+            <X size={13} />
           </button>
         </div>
       )}

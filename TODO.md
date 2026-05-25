@@ -32,8 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| 13 — UX Audit follow-up | 10 | 7 | 17 |
-| **TOTAL** | **134** | **30** | **164** |
+| 13 — UX Audit follow-up | 11 | 6 | 17 |
+| **TOTAL** | **135** | **29** | **164** |
 
 ---
 
@@ -307,7 +307,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T134 — UXAUDIT** Simplify ticket row metadata: keep priority/status/SLA visible in the row and move lower-priority confidence/escalation details to the detail panel so the queue stays scannable. — **DONE (2026-05-25): removed escalation reason and confidence chips from the ticket queue rows while preserving priority/status pills and SLA visibility; the detail panel continues to show escalation/confidence context.**
 - [x] **T135 — UXAUDIT** Replace absolute-positioned ticket selection checkboxes with a stable grid/flex layout that works with keyboard focus, hover, selected, and checked states. — **DONE (2026-05-25): ticket selection checkboxes now participate in the row grid as their own stable column instead of floating over the row, with aligned spacing for hover/selected/checked states.**
 - [x] **T136 — UXAUDIT** Add a compact ticket "current state" summary to the detail panel: status, assignee, SLA, confidence, and raised/escalation reason in one predictable block. — **DONE (2026-05-25): the ticket detail panel now groups status, assignee, SLA, AI confidence, raised reason, and updated time into one compact responsive state summary.**
-- [ ] **T137 — UXAUDIT** Fix the P1 browser-alert nudge so it never overlaps ticket/client content on desktop or mobile; make the placement feel intentional and recoverable.
+- [x] **T137 — UXAUDIT** Fix the P1 browser-alert nudge so it never overlaps ticket/client content on desktop or mobile; make the placement feel intentional and recoverable. — **DONE (2026-05-25): moved the browser-alert permission nudge into the workspace flow below the page header, added a dismiss action, and kept urgent P1 alerts as toasts only when real P1 events arrive.**
 - [ ] **T138 — UXAUDIT** Normalize the new internal Clients DPA, data-retention, and Facebook Page controls to match the existing styled form inputs/selects instead of raw browser controls.
 - [ ] **T139 — UXAUDIT** Reorder the internal Clients detail page so core client information/editing appears before operational add-ons like DPA, retention, and channel management.
 - [ ] **T140 — UXAUDIT** Improve mobile layout for Clients DPA/retention/Facebook fields: every label/control should stack cleanly, fill the available width, and avoid inline squeezing.
