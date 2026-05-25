@@ -2,7 +2,6 @@ import { RefreshCw, TicketCheck } from 'lucide-react';
 import { InternalUser, Ticket } from '@/types/domain';
 import { assigneeLabel, priorityTone, statusLabels, statusTone } from '../_lib/helpers';
 import { EmptyState } from './EmptyState';
-import { EscalationChips } from './EscalationChips';
 import { ListSkeleton } from './ListSkeleton';
 import { PanelError } from './PanelError';
 import { SlaBadge } from './SlaBadge';
@@ -144,7 +143,6 @@ export function TicketsPanel({
                       <small>{assigneeLabel(assigneeOptions, ticket.assigneeId)}</small>
                       <span className="ticket-row__metadata" aria-label="Ticket SLA and escalation context">
                         <SlaBadge ticket={ticket} />
-                        <EscalationChips ticket={ticket} />
                       </span>
                       {ticket.tags !== undefined && ticket.tags.length > 0 && (
                         <span className="ticket-tags">

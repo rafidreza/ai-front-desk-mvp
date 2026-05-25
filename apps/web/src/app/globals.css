@@ -829,10 +829,6 @@ button {
   min-width: 0;
 }
 
-.ticket-row__metadata .escalation-chips {
-  margin-top: 0;
-}
-
 .badge {
   min-height: 24px;
   display: inline-flex;
