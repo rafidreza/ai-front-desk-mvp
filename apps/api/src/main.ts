@@ -22,7 +22,7 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 4000);
   await app.listen(port);
-  console.log(`AI Front Desk API listening on http://localhost:${port}`);
+  console.log(`Daemon API listening on http://localhost:${port}`);
 }
 
 void bootstrap();

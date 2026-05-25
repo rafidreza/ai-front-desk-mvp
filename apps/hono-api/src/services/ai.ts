@@ -51,7 +51,7 @@ export class AiService {
       max_tokens: 220,
       temperature: 0.2,
       system: [
-        input.promptProfile?.systemInstructions ?? `You are the AI front desk agent for ${input.client.businessName}.`,
+        input.promptProfile?.systemInstructions ?? `You are the Daemon support agent for ${input.client.businessName}.`,
         `Tone rules: ${input.promptProfile?.toneRules ?? input.client.tone}.`,
         `Escalation rules: ${input.promptProfile?.escalationRules ?? 'Escalate when confidence is low or the customer needs a human.'}.`,
         `Forbidden claims: ${input.promptProfile?.forbiddenClaims ?? 'Do not invent prices, stock, delivery promises, discounts, or policy details.'}.`,

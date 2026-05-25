@@ -29,8 +29,8 @@ export class AuthCodeDeliveryService {
       const result = await this.email.sendEmail({
         to: input.destination,
         subject: `${input.businessName} login code`,
-        textBody: `Your AI Front Desk login code is ${input.code}. It expires in ${input.expiresInMinutes} minutes.`,
-        htmlBody: `<p>Your AI Front Desk login code is <strong>${input.code}</strong>.</p><p>It expires in ${input.expiresInMinutes} minutes.</p>`,
+        textBody: `Your Daemon login code is ${input.code}. It expires in ${input.expiresInMinutes} minutes.`,
+        htmlBody: `<p>Your Daemon login code is <strong>${input.code}</strong>.</p><p>It expires in ${input.expiresInMinutes} minutes.</p>`,
         tag: 'client-auth-code',
       });
       return { mode: result.mode, channel: 'email', destination: input.destination };
@@ -39,7 +39,7 @@ export class AuthCodeDeliveryService {
     const result = await this.channelSend?.sendText({
       channel: 'whatsapp',
       recipientId: input.destination,
-      text: `Your AI Front Desk login code is ${input.code}. It expires in ${input.expiresInMinutes} minutes.`,
+      text: `Your Daemon login code is ${input.code}. It expires in ${input.expiresInMinutes} minutes.`,
       purpose: 'client-auth-code',
     });
 

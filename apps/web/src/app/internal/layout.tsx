@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Internal',
-  description: 'Internal operations console for AI Front Desk.',
+  description: 'Internal operations console for Daemon.',
 };
 
 export default function InternalLayout({

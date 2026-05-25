@@ -4,8 +4,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'AI Front Desk',
-    template: '%s · AI Front Desk',
+    default: 'Daemon',
+    template: '%s · Daemon',
   },
   description:
     'We answer your Facebook and WhatsApp customer messages with AI, and only send you the tickets that need your decision.',

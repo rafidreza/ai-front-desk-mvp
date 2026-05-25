@@ -17,7 +17,7 @@ export interface AutoReplyRuleInput {
 }
 
 const defaultReply =
-  'Thanks for your message. Our team is offline right now, but AI Front Desk has logged your request and we will follow up when support resumes.';
+  'Thanks for your message. Our team is offline right now, but Daemon has logged your request and we will follow up when support resumes.';
 
 const seedRules = [
   {

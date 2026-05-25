@@ -27,7 +27,7 @@ export function getClientLanguageCopy(language?: ClientLanguage) {
         averageCsat: 'গড় CSAT',
         noCsat: 'এখনও যথেষ্ট রেটিং নেই',
         salesProtected: 'আনুমানিক সুরক্ষিত সেলস',
-        cta: 'পেন্ডিং হ্যান্ডঅফ রিভিউ করতে আপনার AI Front Desk ড্যাশবোর্ড খুলুন।',
+        cta: 'পেন্ডিং হ্যান্ডঅফ রিভিউ করতে আপনার Daemon ড্যাশবোর্ড খুলুন।',
       },
       channels: {
         messengerLinked: 'পেজ লিংক করা',
@@ -65,7 +65,7 @@ export function getClientLanguageCopy(language?: ClientLanguage) {
         averageCsat: 'Average CSAT',
         noCsat: 'Not enough ratings yet',
         salesProtected: 'Estimated sales protected',
-        cta: 'Open your AI Front Desk dashboard to review pending handoffs.',
+        cta: 'Open your Daemon dashboard to review pending handoffs.',
       },
       channels: {
         messengerLinked: 'Page linked',
@@ -102,7 +102,7 @@ export function getClientLanguageCopy(language?: ClientLanguage) {
       averageCsat: 'Average CSAT',
       noCsat: 'Ekhono enough ratings nei',
       salesProtected: 'Estimated sales protected',
-      cta: 'Pending handoff review korte AI Front Desk dashboard open korun.',
+      cta: 'Pending handoff review korte Daemon dashboard open korun.',
     },
     channels: {
       messengerLinked: 'Page linked',

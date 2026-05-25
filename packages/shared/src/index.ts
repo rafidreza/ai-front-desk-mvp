@@ -1,4 +1,4 @@
-export const PRODUCT_NAME = 'AI Front Desk';
+export const PRODUCT_NAME = 'Daemon';
 
 export type Channel = 'messenger' | 'whatsapp' | 'web';
 

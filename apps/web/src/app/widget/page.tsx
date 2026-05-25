@@ -101,13 +101,13 @@ export default function WebChatWidgetPage() {
 
   return (
     <main className="widget-shell">
-      <section className="widget-frame" aria-label="AI Front Desk web chat">
+      <section className="widget-frame" aria-label="Daemon web chat">
         <header className="widget-header">
           <div className="widget-mark">
             <MessageCircle size={18} />
           </div>
           <div>
-            <strong>AI Front Desk</strong>
+            <strong>Daemon</strong>
             <span>Usually replies instantly</span>
           </div>
         </header>

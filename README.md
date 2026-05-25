@@ -1,4 +1,4 @@
-# AI Front Desk MVP
+# Daemon MVP
 
 This folder contains the new MVP implementation for the managed F-Commerce support product.
 
@@ -63,7 +63,7 @@ Web chat widget:
 ```html
 <iframe
   src="https://your-web-domain.example/widget?clientId=pilot-client"
-  title="AI Front Desk chat"
+  title="Daemon chat"
   style="width: 360px; height: 560px; border: 0;"
 ></iframe>
 ```

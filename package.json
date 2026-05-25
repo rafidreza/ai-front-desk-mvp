@@ -2,7 +2,7 @@
   "name": "ai-front-desk-mvp",
   "version": "0.1.0",
   "private": true,
-  "description": "MVP implementation for AI Front Desk managed F-Commerce support service.",
+  "description": "MVP implementation for Daemon managed F-Commerce support service.",
   "workspaces": [
     "apps/*",
     "packages/*"

@@ -128,7 +128,7 @@ export class AuthCodeDeliveryService {
     return this.email.sendEmail({
       to: input.destination,
       subject: `${input.businessName} login code`,
-      textBody: `Your AI Front Desk login code is ${input.code}. It expires in ${input.expiresInMinutes} minutes.`,
+      textBody: `Your Daemon login code is ${input.code}. It expires in ${input.expiresInMinutes} minutes.`,
       tag: 'client-auth-code',
     });
   }

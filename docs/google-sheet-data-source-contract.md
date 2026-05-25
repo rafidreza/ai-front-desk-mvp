@@ -85,7 +85,7 @@ Client portal setup should ask for:
 1. Share the Google Sheet with "Anyone with the link can view".
 2. Keep a `Products` tab with the required columns.
 3. Add an `Orders` tab only if they want order-status replies.
-4. Paste the Google Sheet link into AI Front Desk.
+4. Paste the Google Sheet link into Daemon.
 5. Click "Sync now" and fix any validation errors shown.
 
 Suggested helper text:

@@ -113,8 +113,8 @@ export default function SignupPage() {
     <main className="client-auth-shell">
       <section className="client-auth-intro">
         <a className="client-auth-brand" href="/client/login">
-          <span>AI</span>
-          <strong>AI Front Desk</strong>
+          <span>D</span>
+          <strong>Daemon</strong>
         </a>
         <div className="client-auth-copy">
           <p className="eyebrow">Client signup</p>

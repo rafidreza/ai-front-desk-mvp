@@ -1,4 +1,4 @@
-# Quality Assurance Report — AI Front Desk MVP
+# Quality Assurance Report — Daemon MVP
 
 **Date:** 2026-05-16 (round 5 — channel tier verified after WhatsApp + web chat)
 **Reviewer:** Code-review pass (read every source file, ran build + lint + tests + audit)
