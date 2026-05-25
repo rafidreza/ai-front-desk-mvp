@@ -32,8 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| 13 — UX Audit follow-up | 6 | 11 | 17 |
-| **TOTAL** | **130** | **34** | **164** |
+| 13 — UX Audit follow-up | 7 | 10 | 17 |
+| **TOTAL** | **131** | **33** | **164** |
 
 ---
 
@@ -303,7 +303,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 
 ### Internal ticket + client-management UX fixes (2026-05-25 review)
 
-- [ ] **T133 — UXAUDIT** Repair internal ticket row layout: prevent checkbox/priority/status/SLA chips from crowding or clipping the customer message, especially in the narrow left pane.
+- [x] **T133 — UXAUDIT** Repair internal ticket row layout: prevent checkbox/priority/status/SLA chips from crowding or clipping the customer message, especially in the narrow left pane. — **DONE (2026-05-25): fixed the ticket row grid so the clickable row body spans the full row when no bulk-selection checkbox is present, and occupies the content column when bulk selection is enabled instead of collapsing into the checkbox column.**
 - [ ] **T134 — UXAUDIT** Simplify ticket row metadata: keep priority/status/SLA visible in the row and move lower-priority confidence/escalation details to the detail panel so the queue stays scannable.
 - [ ] **T135 — UXAUDIT** Replace absolute-positioned ticket selection checkboxes with a stable grid/flex layout that works with keyboard focus, hover, selected, and checked states.
 - [ ] **T136 — UXAUDIT** Add a compact ticket "current state" summary to the detail panel: status, assignee, SLA, confidence, and raised/escalation reason in one predictable block.
