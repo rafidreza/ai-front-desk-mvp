@@ -32,8 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| 13 — UX Audit follow-up | 6 | 1 | 7 |
-| **TOTAL** | **130** | **24** | **154** |
+| 13 — UX Audit follow-up | 6 | 11 | 17 |
+| **TOTAL** | **130** | **34** | **164** |
 
 ---
 
@@ -300,6 +300,19 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [ ] **T130 — UXAUDIT** Clarify deferred billing/payment surfaces: keep payment work deferred per user direction, and rename/hide billing-adjacent internal labels like pricing/MRR so they read as non-billing estimates only. — **DEFERRED (2026-05-24): user instructed us to skip anything billing/payment related for now. No billing/payment UI or copy changes have been implemented.**
 - [x] **T131 — UXAUDIT** Improve client login failure recovery: distinguish unknown identifier, unconfigured delivery, and backend failure; include examples for client ID, email, and WhatsApp fallback. — **DONE (2026-05-24): client login now gives clearer recovery copy for unmatched/unusable identifiers, unconfigured email/WhatsApp delivery, inactive clients, backend/service outages, and invalid/expired codes, with examples for client ID, owner email, and WhatsApp number. Verified with web lint/build and focused uxaudit checks on `/client/login` with no failures.**
 - [x] **T132 — UXAUDIT** Finish client portal localization coverage: apply the client portal copy/localized formatting system to Data Sources, Knowledge, and Onboarding pages, not just dashboard/tickets. — **DONE (2026-05-24): extended the shared client portal copy system with Data Sources, Knowledge, and Onboarding sections for Bangla, English, and mixed language clients, then wired those pages to localized nav/action labels, headings, empty states, form labels, notices, and number/date formatting. Verified with web lint/build.**
+
+### Internal ticket + client-management UX fixes (2026-05-25 review)
+
+- [ ] **T133 — UXAUDIT** Repair internal ticket row layout: prevent checkbox/priority/status/SLA chips from crowding or clipping the customer message, especially in the narrow left pane.
+- [ ] **T134 — UXAUDIT** Simplify ticket row metadata: keep priority/status/SLA visible in the row and move lower-priority confidence/escalation details to the detail panel so the queue stays scannable.
+- [ ] **T135 — UXAUDIT** Replace absolute-positioned ticket selection checkboxes with a stable grid/flex layout that works with keyboard focus, hover, selected, and checked states.
+- [ ] **T136 — UXAUDIT** Add a compact ticket "current state" summary to the detail panel: status, assignee, SLA, confidence, and raised/escalation reason in one predictable block.
+- [ ] **T137 — UXAUDIT** Fix the P1 browser-alert nudge so it never overlaps ticket/client content on desktop or mobile; make the placement feel intentional and recoverable.
+- [ ] **T138 — UXAUDIT** Normalize the new internal Clients DPA, data-retention, and Facebook Page controls to match the existing styled form inputs/selects instead of raw browser controls.
+- [ ] **T139 — UXAUDIT** Reorder the internal Clients detail page so core client information/editing appears before operational add-ons like DPA, retention, and channel management.
+- [ ] **T140 — UXAUDIT** Improve mobile layout for Clients DPA/retention/Facebook fields: every label/control should stack cleanly, fill the available width, and avoid inline squeezing.
+- [ ] **T141 — UXAUDIT** Defer or relabel billing-adjacent Clients pricing/MRR surfaces so they are clearly non-billing estimates only. — **DEFERRED (2026-05-25): user instructed us to skip billing/payment-related work for now; do not implement until billing/payment work is explicitly reopened.**
+- [ ] **T142 — UXAUDIT** Reuse shared form primitives (`UiSelect`, styled inputs, form actions, section spacing) across the new Clients sections so the page reads as one coherent internal tool.
 
 ---
 
