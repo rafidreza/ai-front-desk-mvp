@@ -1958,6 +1958,47 @@ button {
   border-radius: 8px;
 }
 
+.client-channel-panel label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.client-channel-panel input,
+.client-channel-panel select,
+.client-channel-panel textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  outline: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.client-channel-panel textarea {
+  min-height: 86px;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+.client-channel-panel input:focus,
+.client-channel-panel select:focus,
+.client-channel-panel textarea:focus {
+  border-color: #8bb9aa;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(31, 110, 84, 0.12);
+}
+
 .client-channel-list {
   display: grid;
   gap: 8px;
