@@ -2008,6 +2008,16 @@ button {
   box-shadow: 0 0 0 3px rgba(31, 110, 84, 0.12);
 }
 
+.client-channel-panel .ui-select {
+  width: 100%;
+}
+
+.client-channel-panel .ui-select select {
+  appearance: none;
+  padding-right: 34px;
+  font-weight: 650;
+}
+
 .client-channel-list {
   display: grid;
   gap: 8px;

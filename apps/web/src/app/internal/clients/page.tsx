@@ -786,7 +786,7 @@ export default function InternalClientsPage() {
                     <div className="client-management-grid">
                       <label>
                         Status
-                        <select
+                        <UiSelect
                           value={dpaForm.status}
                           onChange={(event) =>
                             setDpaForm((current) => ({ ...current, status: event.target.value as DpaSigningStatus }))
@@ -796,7 +796,7 @@ export default function InternalClientsPage() {
                           <option value="sent">Sent to seller</option>
                           <option value="signed">Seller signed</option>
                           <option value="countersigned">Countersigned PDF stored</option>
-                        </select>
+                        </UiSelect>
                       </label>
                       <label>
                         Template URL
@@ -891,7 +891,7 @@ export default function InternalClientsPage() {
                     <div className="client-management-grid">
                       <label>
                         Policy
-                        <select
+                        <UiSelect
                           value={retentionForm.mode}
                           onChange={(event) =>
                             setRetentionForm((current) => ({
@@ -902,7 +902,7 @@ export default function InternalClientsPage() {
                         >
                           <option value="disabled">Disabled</option>
                           <option value="redact">Redact old chat messages</option>
-                        </select>
+                        </UiSelect>
                       </label>
                       <label>
                         Retain chats for

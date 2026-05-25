@@ -32,8 +32,8 @@
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
-| 13 — UX Audit follow-up | 14 | 3 | 17 |
-| **TOTAL** | **138** | **26** | **164** |
+| 13 — UX Audit follow-up | 15 | 2 | 17 |
+| **TOTAL** | **139** | **25** | **164** |
 
 ---
 
@@ -312,7 +312,7 @@ Grouped by domain. Pick into Tier 1 / 4 as priorities shift.
 - [x] **T139 — UXAUDIT** Reorder the internal Clients detail page so core client information/editing appears before operational add-ons like DPA, retention, and channel management. — **DONE (2026-05-25): moved the editable client information form ahead of DPA, retention, and Facebook Page management in the visual flow without changing the deferred billing/pricing content.**
 - [x] **T140 — UXAUDIT** Improve mobile layout for Clients DPA/retention/Facebook fields: every label/control should stack cleanly, fill the available width, and avoid inline squeezing. — **DONE (2026-05-25): tightened mobile rules for Clients add-on panels so labels/controls/buttons fill the available width, controls cannot overflow, and empty channel states use less vertical space.**
 - [ ] **T141 — UXAUDIT** Defer or relabel billing-adjacent Clients pricing/MRR surfaces so they are clearly non-billing estimates only. — **DEFERRED (2026-05-25): user instructed us to skip billing/payment-related work for now; do not implement until billing/payment work is explicitly reopened.**
-- [ ] **T142 — UXAUDIT** Reuse shared form primitives (`UiSelect`, styled inputs, form actions, section spacing) across the new Clients sections so the page reads as one coherent internal tool.
+- [x] **T142 — UXAUDIT** Reuse shared form primitives (`UiSelect`, styled inputs, form actions, section spacing) across the new Clients sections so the page reads as one coherent internal tool. — **DONE (2026-05-25): DPA and retention policy selects now use the shared `UiSelect` primitive, with Clients-section CSS keeping width, focus, and padding aligned with the styled inputs.**
 
 ---
 
