@@ -59,7 +59,7 @@ function downloadTicketsCsv(tickets: Ticket[], assigneeOptions: InternalUser[]) 
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `daemon-tickets-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `daemion-tickets-${new Date().toISOString().slice(0, 10)}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }

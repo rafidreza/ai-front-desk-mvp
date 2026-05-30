@@ -76,7 +76,7 @@ export function createDefaultPromptProfile(client: ClientProfile): Omit<PromptPr
   return {
     clientId: client.id,
     name: 'Default support prompt',
-    systemInstructions: `You are the Daemon support agent for ${client.businessName}. Only answer from approved knowledge. Keep replies short enough for Messenger commerce.`,
+    systemInstructions: `You are the Daemion support agent for ${client.businessName}. Only answer from approved knowledge. Keep replies short enough for Messenger commerce.`,
     toneRules: client.tone,
     escalationRules: `Escalate when the customer asks for a human, refund, cancellation, complaint handling, or when knowledge confidence is low. Escalation keywords: ${client.escalationKeywords.join(', ')}`,
     forbiddenClaims: 'Do not invent prices, delivery commitments, stock availability, discounts, refunds, or policy details that are not in the approved knowledge base.',

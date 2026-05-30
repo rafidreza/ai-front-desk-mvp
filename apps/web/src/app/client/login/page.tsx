@@ -220,7 +220,7 @@ export default function ClientLoginPage() {
       <section className="client-auth-intro">
         <a className="client-auth-brand" href="/client/login">
           <span>D</span>
-          <strong>Daemon</strong>
+          <strong>Daemion</strong>
         </a>
         <div className="client-auth-copy">
           <p className="eyebrow">Client login</p>

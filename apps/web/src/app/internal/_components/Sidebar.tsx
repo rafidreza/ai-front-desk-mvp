@@ -59,7 +59,7 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
           <BotMessageSquare size={19} />
         </div>
         <div>
-          <h1>Daemon</h1>
+          <h1>Daemion</h1>
           <span>Ops console</span>
         </div>
       </div>

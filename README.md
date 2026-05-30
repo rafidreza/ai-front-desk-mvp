@@ -1,4 +1,4 @@
-# Daemon MVP
+# Daemion MVP
 
 This folder contains the new MVP implementation for the managed F-Commerce support product.
 
@@ -63,7 +63,7 @@ Web chat widget:
 ```html
 <iframe
   src="https://your-web-domain.example/widget?clientId=pilot-client"
-  title="Daemon chat"
+  title="Daemion chat"
   style="width: 360px; height: 560px; border: 0;"
 ></iframe>
 ```

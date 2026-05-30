@@ -9,7 +9,7 @@ type FeedbackTone = 'idle' | 'info' | 'error' | 'success';
 export function InternalLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [identifier, setIdentifier] = useState('admin@daemon.local');
+  const [identifier, setIdentifier] = useState('admin@daemion.local');
   const [password, setPassword] = useState('');
   const [feedback, setFeedback] = useState<{ tone: FeedbackTone; message: string }>({
     tone: 'idle',
@@ -51,7 +51,7 @@ export function InternalLoginForm() {
           <BotMessageSquare size={19} />
         </div>
         <div>
-          <h1>Daemon</h1>
+          <h1>Daemion</h1>
           <span>Internal access</span>
         </div>
       </div>
@@ -72,7 +72,7 @@ export function InternalLoginForm() {
           disabled={isSubmitting}
           id="identifier"
           onChange={(event) => setIdentifier(event.target.value)}
-          placeholder="admin@daemon.local"
+          placeholder="admin@daemion.local"
           type="text"
           value={identifier}
         />

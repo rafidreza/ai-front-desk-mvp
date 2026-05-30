@@ -11,8 +11,8 @@ type PromptAction = 'baseline' | 'created' | 'updated' | 'published' | 'archived
 function createDefaultPromptProfile(client: ClientProfile) {
   return {
     clientId: client.id,
-    name: `${client.businessName} default Daemon prompt`,
-    systemInstructions: `Only answer as the Daemon support agent for ${client.businessName}. Use approved knowledge and avoid inventing details.`,
+    name: `${client.businessName} default Daemion prompt`,
+    systemInstructions: `Only answer as the Daemion support agent for ${client.businessName}. Use approved knowledge and avoid inventing details.`,
     toneRules: client.tone,
     escalationRules: `Escalate when customer mentions: ${client.escalationKeywords.join(', ')}.`,
     forbiddenClaims: 'Do not invent prices, stock, delivery promises, discounts, or policy details.',

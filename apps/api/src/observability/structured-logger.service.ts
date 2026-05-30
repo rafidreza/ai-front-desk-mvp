@@ -4,7 +4,7 @@ type LogLevel = 'log' | 'warn' | 'error';
 
 @Injectable()
 export class StructuredLoggerService {
-  private readonly logger = new Logger('Daemon');
+  private readonly logger = new Logger('Daemion');
 
   event(event: string, payload: Record<string, unknown> = {}, level: LogLevel = 'log'): void {
     this.logger[level](

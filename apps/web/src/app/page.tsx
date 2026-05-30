@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { BotMessageSquare, Inbox, MessageSquare, ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Daemon — AI customer support for Bangladeshi F-Commerce sellers',
+  title: 'Daemion — AI customer support for Bangladeshi F-Commerce sellers',
   description:
     'We answer your Facebook and WhatsApp customer messages with AI, and only send you the tickets that need your decision.',
 };
@@ -16,7 +16,7 @@ export default function LandingPage() {
           <span className="brand-mark">
             <BotMessageSquare size={19} />
           </span>
-          Daemon
+          Daemion
         </Link>
         <div className="landing-nav-links">
           <Link className="landing-nav-link" href="/internal/login">
@@ -60,7 +60,7 @@ export default function LandingPage() {
           <div className="landing-widget-frame">
             <iframe
               src="/widget?clientId=pilot-client"
-              title="Daemon customer chat widget — live demo"
+              title="Daemion customer chat widget — live demo"
             />
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function LandingPage() {
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
-            <span className="landing-mock-url">daemon.com.bd/tickets</span>
+            <span className="landing-mock-url">daemion.io/tickets</span>
           </div>
           <div className="landing-mock-body">
             <aside className="landing-mock-sidebar">
@@ -160,7 +160,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="landing-footer">
-        <span>© 2026 Daemon · seeed.ing</span>
+        <span>© 2026 Daemion · seeed.ing</span>
         <span>
           <Link href="/internal/login">Internal access</Link>
           {' · '}

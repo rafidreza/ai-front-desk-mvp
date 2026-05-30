@@ -4,8 +4,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Daemon',
-    template: '%s · Daemon',
+    default: 'Daemion',
+    template: '%s · Daemion',
   },
   description:
     'We answer your Facebook and WhatsApp customer messages with AI, and only send you the tickets that need your decision.',

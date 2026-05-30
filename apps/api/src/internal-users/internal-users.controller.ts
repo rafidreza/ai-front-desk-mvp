@@ -14,9 +14,9 @@ type InternalUserRecord = {
 };
 
 export const internalUsers: InternalUserRecord[] = [
-  { id: 'ops-admin', label: 'Admin', email: 'admin@daemon.local', role: 'admin', status: 'active' },
-  { id: 'ops-operator', label: 'Operator', email: 'operator@daemon.local', role: 'operator', status: 'active' },
-  { id: 'ops-viewer', label: 'Read Only', email: 'viewer@daemon.local', role: 'read-only', status: 'active' },
+  { id: 'ops-admin', label: 'Admin', email: 'admin@daemion.local', role: 'admin', status: 'active' },
+  { id: 'ops-operator', label: 'Operator', email: 'operator@daemion.local', role: 'operator', status: 'active' },
+  { id: 'ops-viewer', label: 'Read Only', email: 'viewer@daemion.local', role: 'read-only', status: 'active' },
 ];
 
 const CreateInternalUserSchema = z.object({

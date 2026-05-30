@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Internal',
-  description: 'Internal operations console for Daemon.',
+  description: 'Internal operations console for Daemion.',
 };
 
 export default function InternalLayout({

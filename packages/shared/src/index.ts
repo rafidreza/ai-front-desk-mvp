@@ -1,4 +1,4 @@
-export const PRODUCT_NAME = 'Daemon';
+export const PRODUCT_NAME = 'Daemion';
 
 export type Channel = 'messenger' | 'whatsapp' | 'web';
 

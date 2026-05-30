@@ -73,7 +73,7 @@ export default function ClientDashboardPage() {
           <span className="client-mark">AF</span>
           <div>
             <p className="eyebrow">{copy.dashboard.eyebrow}</p>
-            <h1>{dashboard?.client.businessName ?? 'Daemon'}</h1>
+            <h1>{dashboard?.client.businessName ?? 'Daemion'}</h1>
           </div>
         </div>
         <ClientPortalNav active="dashboard" clientId={clientId} language={dashboard?.client.defaultLanguage} />
