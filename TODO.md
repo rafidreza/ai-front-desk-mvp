@@ -1,6 +1,6 @@
 # Daemion — TODO
 
-**Last updated:** 2026-05-24
+**Last updated:** 2026-05-31
 **Source of truth for scope:** [`/MVP_GUIDELINE.md`](../MVP_GUIDELINE.md) + [`/PRD/`](../PRD/)
 **Companion doc:** [`DEVELOPMENT_STATUS.md`](DEVELOPMENT_STATUS.md) (verified build artifacts)
 
@@ -26,14 +26,14 @@
 | 4 — Client-facing features | 7 | 0 | 7 |
 | 5 — Channels | 3 | 0 | 3 |
 | 6 — KB build pipeline | 3 | 3 | 6 |
-| 7 — QA & improvement loop | 3 | 2 | 5 |
-| 8 — Ops / launch readiness | 0 | 6 | 6 |
+| 7 — QA & improvement loop | 4 | 1 | 5 |
+| 8 — Ops / launch readiness | 1 | 5 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
 | 13 — UX Audit follow-up | 15 | 2 | 17 |
-| **TOTAL** | **139** | **25** | **164** |
+| **TOTAL** | **141** | **23** | **164** |
 
 ---
 
@@ -156,7 +156,7 @@
 - [x] **T40** Auto QA scoring on every conversation close (within 60 sec) — **DONE (2026-05-16): deterministic `AutoQaService` scores each processed AI reply, stores score/grade/reason/version on the conversation, and logs scoring events**
 - [x] **T41** Defect tagging (hallucination, tone, escalation miss, etc.) — **DONE (2026-05-16): auto QA now stores defect tags including low confidence, no knowledge match, hallucination risk, escalation needed/miss, incomplete answer, and tone risk; internal QA view shows auto grade and tags**
 - [x] **T42** Calibration sample queue for human review — **DONE (2026-05-16): backend calibration queue endpoint ranks unreviewed risky conversations by auto-QA grade/tags/confidence/escalation, internal QA view now filters needs review, failed, hallucination risk, escalation issues, ungraded, or all**
-- [ ] **T43** Improvement-loop kanban board (Mon-Fri cadence per MVP §5.3)
+- [x] **T43** Improvement-loop kanban board (Mon-Fri cadence per MVP §5.3) — **DONE (2026-05-31): added `/internal/improvement`, a weekly Mon-Fri improvement board that composes existing tickets, QA calibration queue, client list, and KB-review requests into operator lanes for risky replies, knowledge fixes, reply retests, urgent handoffs, and Friday reporting.**
 - [ ] **T44** A/B framework for prompt versions
 
 ---
@@ -166,7 +166,7 @@
 - [ ] **T45** Meta App Review submission (privacy policy URL, demo video, business verification)
 - [ ] **T46** WhatsApp BSP onboarding (per PRD 08 Q1 decision)
 - [ ] **T47** Domain + DKIM / SPF / DMARC for digest deliverability
-- [ ] **T48** Sentry / observability beyond structured logs
+- [x] **T48** Sentry / observability beyond structured logs — **DONE (2026-05-31): added optional Sentry-compatible backend error reporting for Nest and Hono 500-level failures, with environment/release tags, private stack capture, generic public 500 responses, env documentation, and regression tests.**
 - [ ] **T49** Billing integration (Stripe BD or local processor, per pricing tiers)
 - [ ] **T50** Legal: DPA template + Bangladesh PDPA consent flow (PRD 08 Q4)
 

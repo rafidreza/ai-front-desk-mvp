@@ -4106,6 +4106,7 @@ button {
   }
 
   .metrics,
+  .improvement-summary,
   .triage-grid,
   .ticket-portal-grid,
   .conversation-portal-grid,
@@ -6424,6 +6425,194 @@ button {
   font-size: var(--text-tiny);
   min-height: 28px;
   padding: 0 10px;
+}
+
+/* ============================================
+   Improvement loop kanban (T43)
+   ============================================ */
+
+.improvement-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.improvement-summary div {
+  min-height: 88px;
+  display: grid;
+  align-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.improvement-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.improvement-summary strong {
+  color: var(--ink);
+  font-size: var(--text-h2);
+  line-height: 1;
+}
+
+.improvement-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(230px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.improvement-lane {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.improvement-lane[data-lane="review"] { border-color: rgba(39, 99, 235, 0.3); }
+.improvement-lane[data-lane="kb_fix"] { border-color: rgba(217, 119, 6, 0.3); }
+.improvement-lane[data-lane="shadow_watch"] { border-color: rgba(221, 72, 66, 0.32); }
+
+.improvement-lane > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.improvement-lane > header div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.improvement-lane > header span {
+  color: var(--brand);
+  font-size: var(--text-tiny);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.improvement-lane > header strong {
+  color: var(--ink);
+  font-size: var(--text-small);
+}
+
+.improvement-lane > header small {
+  color: var(--muted);
+  font-size: var(--text-tiny);
+  line-height: 1.35;
+}
+
+.improvement-lane > header b {
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: var(--text-tiny);
+}
+
+.improvement-cards {
+  flex: 1 1 auto;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 10px;
+}
+
+.improvement-cards .empty-state {
+  min-height: 160px;
+  padding: 18px 12px;
+  background: transparent;
+  border-style: dashed;
+}
+
+.improvement-card {
+  display: grid;
+  gap: 8px;
+  padding: 11px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(28, 39, 52, 0.06);
+}
+
+.improvement-card[data-priority="P1"] { border-left-color: var(--coral); }
+.improvement-card[data-priority="P2"] { border-left-color: var(--amber); }
+.improvement-card[data-priority="P3"] { border-left-color: var(--green); }
+
+.improvement-card__topline,
+.improvement-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.improvement-card__topline span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.improvement-card__topline b {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: var(--text-tiny);
+}
+
+.improvement-card > strong {
+  color: var(--ink);
+  font-size: var(--text-small);
+  line-height: 1.25;
+}
+
+.improvement-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.improvement-card__meta {
+  flex-wrap: wrap;
+  color: var(--faint);
+  font-size: var(--text-tiny);
+}
+
+.improvement-card .mini-button {
+  justify-self: start;
 }
 
 /* ============================================
