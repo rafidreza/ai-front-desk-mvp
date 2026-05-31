@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { transcribeVoiceAttachment } from '@ai-front-desk/shared';
 import { AiService } from '../ai/ai.service';
 import { AutoReplyService } from '../clients/auto-reply.service';
 import { PilotClientService } from '../clients/pilot-client.service';
@@ -126,7 +127,7 @@ export class ConversationService {
       };
     }
 
-    const enrichedMessage = await this.enrichImageMessage(message);
+    const enrichedMessage = await this.enrichIncomingMessage(message);
     await this.repository.addMessage(conversationId, {
       id: enrichedMessage.id,
       direction: 'inbound',
@@ -188,6 +189,39 @@ export class ConversationService {
     });
   }
 
+  private async enrichIncomingMessage(message: IncomingMessage): Promise<IncomingMessage> {
+    const voiceMessage = await this.enrichVoiceMessage(message);
+    return this.enrichImageMessage(voiceMessage);
+  }
+
+  private async enrichVoiceMessage(message: IncomingMessage): Promise<IncomingMessage> {
+    if (message.attachmentType !== 'voice') return message;
+
+    const result = await transcribeVoiceAttachment({
+      attachmentUrl: message.attachmentUrl,
+      openAiApiKey: process.env.OPENAI_API_KEY ?? process.env.ASR_OPENAI_API_KEY,
+      model: process.env.ASR_TRANSCRIPTION_MODEL,
+      prompt: process.env.ASR_TRANSCRIPTION_PROMPT ?? 'Bangla, Banglish, and English ecommerce customer support.',
+      whatsAppAccessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+      graphVersion: process.env.WHATSAPP_GRAPH_VERSION ?? process.env.MESSENGER_GRAPH_VERSION,
+    });
+
+    this.logger?.event('conversation.voice_transcription', {
+      clientId: message.clientId,
+      channel: message.channel,
+      status: result.status,
+      reason: result.status === 'transcribed' ? undefined : result.reason,
+    }, result.status === 'failed' ? 'warn' : 'log');
+
+    if (result.status !== 'transcribed') return message;
+
+    return {
+      ...message,
+      transcript: result.transcript,
+      text: message.text.includes('Transcript pending') ? `Customer voice note transcript: ${result.transcript}` : message.text,
+    };
+  }
+
   private async enrichImageMessage(message: IncomingMessage): Promise<IncomingMessage> {
     if (message.attachmentType !== 'image') return message;
 
@@ -204,7 +238,7 @@ export class ConversationService {
   }
 
   private buildCustomerLookupText(message: IncomingMessage) {
-    return [message.text, message.extractedText]
+    return [message.text, message.transcript, message.extractedText]
       .filter((part): part is string => part !== undefined && part.trim().length > 0 && part !== 'OCR not configured.')
       .join('\n')
       .trim();

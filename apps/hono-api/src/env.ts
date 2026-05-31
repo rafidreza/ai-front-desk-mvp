@@ -22,6 +22,10 @@ export interface Env {
   POSTMARK_SERVER_TOKEN?: string;
   POSTMARK_MESSAGE_STREAM?: string;
   GOOGLE_CLOUD_VISION_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  ASR_OPENAI_API_KEY?: string;
+  ASR_TRANSCRIPTION_MODEL?: string;
+  ASR_TRANSCRIPTION_PROMPT?: string;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_MODEL?: string;
   INTERNAL_CONSOLE_PASSWORD?: string;

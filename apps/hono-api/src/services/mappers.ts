@@ -237,6 +237,11 @@ export function toConversation(
     id: string;
     direction: string;
     text: string;
+    attachmentType?: string | null;
+    attachmentUrl?: string | null;
+    transcript?: string | null;
+    extractedText?: string | null;
+    matchedProducts?: unknown;
     createdAt: Date;
   }[] = [],
 ): ConversationLog {
@@ -265,6 +270,13 @@ export function toConversation(
       id: message.id,
       direction: message.direction as ConversationMessage['direction'],
       text: message.text,
+      attachmentType: message.attachmentType as ConversationMessage['attachmentType'],
+      attachmentUrl: message.attachmentUrl ?? undefined,
+      transcript: message.transcript ?? undefined,
+      extractedText: message.extractedText ?? undefined,
+      matchedProducts: Array.isArray(message.matchedProducts)
+        ? message.matchedProducts as ConversationMessage['matchedProducts']
+        : undefined,
       createdAt: message.createdAt.toISOString(),
     })),
   };

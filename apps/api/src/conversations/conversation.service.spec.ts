@@ -148,6 +148,54 @@ describe('ConversationService', () => {
     expect(conversation?.messages.filter((item) => item.direction === 'outbound')).toHaveLength(1);
   });
 
+  it('transcribes voice notes before AI reply generation when ASR is configured', async () => {
+    const originalEnv = process.env;
+    const originalFetch = globalThis.fetch;
+    process.env = { ...originalEnv, OPENAI_API_KEY: 'test-openai-key' };
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url === 'https://cdn.example.com/voice.webm') {
+        return new Response(new Uint8Array([1, 2, 3]), {
+          status: 200,
+          headers: { 'content-type': 'audio/webm' },
+        });
+      }
+      if (url === 'https://api.openai.com/v1/audio/transcriptions') {
+        return new Response(JSON.stringify({ text: 'delivery charge koto?' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response('missing', { status: 404 });
+    }) as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
+
+    try {
+      const { service, repository } = createService();
+      const result = await service.handleIncomingMessage({
+        id: 'message-voice',
+        clientId: 'pilot-client',
+        channel: 'messenger',
+        externalConversationId: 'customer-voice',
+        externalSenderId: 'customer-voice',
+        text: 'Customer sent a voice note. Transcript pending.',
+        receivedAt: new Date().toISOString(),
+        attachmentType: 'voice',
+        attachmentUrl: 'https://cdn.example.com/voice.webm',
+      });
+      const conversation = (await repository.listConversations()).find((item) => item.id === result.conversation.id);
+
+      expect(result.reply.text).toContain('BDT 80');
+      expect(conversation?.messages[0]?.transcript).toBe('delivery charge koto?');
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://api.openai.com/v1/audio/transcriptions',
+        expect.objectContaining({ method: 'POST' }),
+      );
+    } finally {
+      process.env = originalEnv;
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('captures CSAT against an existing Messenger conversation', async () => {
     const { service } = createService();
     await service.handleIncomingMessage({

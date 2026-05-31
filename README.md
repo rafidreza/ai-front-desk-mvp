@@ -100,6 +100,7 @@ Copy `.env.example` to `.env` when credentials are available.
 - `WHATSAPP_VERIFY_TOKEN` and `WHATSAPP_APP_SECRET` secure the `/webhooks/whatsapp` adapter. During migration-free alpha setup, set a client's `pageId` to the WhatsApp `phone_number_id` so inbound webhook events route to the right workspace.
 - `EMAIL_FROM_ADDRESS`, `POSTMARK_SERVER_TOKEN`, and `POSTMARK_MESSAGE_STREAM` enable Postmark delivery for client auth codes and daily/weekly digests. Without Postmark credentials, delivery endpoints return dry-run mode.
 - `GOOGLE_CLOUD_VISION_API_KEY` enables OCR for image uploads in the KB importer. Text, CSV, Markdown, JSON, PDF, and Excel extraction work without it.
+- `OPENAI_API_KEY`, `ASR_TRANSCRIPTION_MODEL`, and `ASR_TRANSCRIPTION_PROMPT` enable optional voice-note transcription before AI reply generation. When unset, voice notes remain visible to operators as "transcript pending".
 - `ANTHROPIC_API_KEY` enables Claude responses.
 - `INTERNAL_CONSOLE_PASSWORD` and `INTERNAL_CONSOLE_SESSION_SECRET` gate `/internal` and the backend proxy. In production the password must be at least 12 characters.
 - `WEB_APP_URL` is the allowlisted origin for API CORS.
@@ -172,7 +173,9 @@ and authenticated route checks. Add `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` before multi-instance or public traffic so rate-limit
 counters are shared. Add Meta, Postmark, Vision, and Anthropic keys when those
 integrations should run in staging.
-Add `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, and `APP_VERSION` when backend errors
+Add `OPENAI_API_KEY` and optional `ASR_TRANSCRIPTION_MODEL` /
+`ASR_TRANSCRIPTION_PROMPT` when voice notes should be automatically
+transcribed. Add `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, and `APP_VERSION` when backend errors
 should be reported to Sentry.
 
 The web Worker needs `API_BASE_URL`, the same `INTERNAL_API_TOKEN`, and the web
@@ -191,6 +194,9 @@ npx wrangler secret put CLIENT_AUTH_CODE_SECRET --env staging
 npx wrangler secret put WEB_APP_URL --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_URL --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_TOKEN --env staging
+npx wrangler secret put OPENAI_API_KEY --env staging
+npx wrangler secret put ASR_TRANSCRIPTION_MODEL --env staging
+npx wrangler secret put ASR_TRANSCRIPTION_PROMPT --env staging
 npx wrangler secret put SENTRY_DSN --env staging
 npx wrangler secret put SENTRY_ENVIRONMENT --env staging
 npx wrangler secret put APP_VERSION --env staging

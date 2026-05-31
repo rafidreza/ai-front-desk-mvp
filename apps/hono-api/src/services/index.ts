@@ -36,6 +36,7 @@ export function createServices(c: Context<AppBindings>) {
     channelSend,
     logger,
     c.env.ENABLE_P1_WHATSAPP_PINGS === 'false' ? undefined : urgent,
+    c.env,
   );
   const imports = new KnowledgeImportService(knowledge, c.env);
   const knowledgeRequests = new KnowledgeChangeRequestService(db, knowledge);

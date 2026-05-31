@@ -394,6 +394,11 @@ export const messages = pgTable(
     conversationId: text('conversationId').notNull().references(() => conversations.id, { onDelete: 'cascade' }),
     direction: text('direction').notNull(),
     text: text('text').notNull(),
+    attachmentType: text('attachmentType'),
+    attachmentUrl: text('attachmentUrl'),
+    transcript: text('transcript'),
+    extractedText: text('extractedText'),
+    matchedProducts: jsonb('matchedProducts').notNull().default(sql`'[]'::jsonb`),
     createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
   },
   (table) => ({

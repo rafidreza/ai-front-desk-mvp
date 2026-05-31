@@ -26,7 +26,15 @@ const MessengerWebhookSchema = z.object({
           sender: z.object({ id: z.string() }),
           recipient: z.object({ id: z.string() }),
           timestamp: z.number().optional(),
-          message: z.object({ mid: z.string().optional(), text: z.string().optional(), quick_reply: z.object({ payload: z.string().optional() }).optional() }).optional(),
+          message: z.object({
+            mid: z.string().optional(),
+            text: z.string().optional(),
+            quick_reply: z.object({ payload: z.string().optional() }).optional(),
+            attachments: z.array(z.object({
+              type: z.string(),
+              payload: z.object({ url: z.string().optional() }).optional(),
+            })).optional(),
+          }).optional(),
           postback: z.object({ payload: z.string().optional(), title: z.string().optional() }).optional(),
         }),
       ),
@@ -43,7 +51,15 @@ const WhatsAppWebhookSchema = z.object({
         z.object({
           value: z.object({
             metadata: z.object({ phone_number_id: z.string(), display_phone_number: z.string().optional() }),
-            messages: z.array(z.object({ from: z.string(), id: z.string(), timestamp: z.string().optional(), type: z.string().optional(), text: z.object({ body: z.string().optional() }).optional() })).optional(),
+            messages: z.array(z.object({
+              from: z.string(),
+              id: z.string(),
+              timestamp: z.string().optional(),
+              type: z.string().optional(),
+              text: z.object({ body: z.string().optional() }).optional(),
+              audio: z.object({ id: z.string(), mime_type: z.string().optional() }).optional(),
+              image: z.object({ id: z.string(), mime_type: z.string().optional(), caption: z.string().optional() }).optional(),
+            })).optional(),
           }),
         }),
       ),
@@ -163,15 +179,23 @@ export function channelRoutes() {
           processed.push({ type: 'csat', externalConversationId: event.sender.id, score: csatScore, conversationId: conversation?.id });
           continue;
         }
-        if (event.message?.text === undefined) continue;
+        const voiceAttachment = event.message?.attachments?.find((attachment) => attachment.type === 'audio');
+        const imageAttachment = event.message?.attachments?.find((attachment) => attachment.type === 'image');
+        if (event.message === undefined || (event.message.text === undefined && voiceAttachment === undefined && imageAttachment === undefined)) continue;
+        const attachmentType = voiceAttachment !== undefined ? 'voice' : imageAttachment !== undefined ? 'image' : undefined;
         const result = await createServices(c).conversations.handleIncomingMessage({
           id: event.message.mid ?? `${event.sender.id}:${event.timestamp ?? Date.now()}`,
           clientId: client.id,
           channel: 'messenger',
           externalConversationId: event.sender.id,
           externalSenderId: event.sender.id,
-          text: event.message.text,
+          text: event.message.text ??
+            (attachmentType === 'image'
+              ? 'Customer sent a product photo. OCR not configured.'
+              : 'Customer sent a voice note. Transcript pending.'),
           receivedAt: new Date(event.timestamp ?? Date.now()).toISOString(),
+          attachmentType,
+          attachmentUrl: voiceAttachment?.payload?.url ?? imageAttachment?.payload?.url,
         });
         const sendResult = result.alreadyProcessed
           ? { mode: 'skipped' as const, recipientId: event.sender.id, text: result.reply.text }
@@ -203,8 +227,9 @@ export function channelRoutes() {
       for (const change of entry.changes) {
         const client = await createServices(c).clients.findByWhatsAppIdentifier(change.value.metadata.phone_number_id);
         for (const message of change.value.messages ?? []) {
-          const text = message.text?.body;
-          if (text === undefined || text.trim() === '') continue;
+          const text = message.text?.body ?? message.image?.caption;
+          if ((text === undefined || text.trim() === '') && message.audio === undefined && message.image === undefined) continue;
+          const attachmentType = message.audio !== undefined ? 'voice' : message.image !== undefined ? 'image' : undefined;
           const csatScore = parseWhatsAppCsat(text);
           if (csatScore !== null) {
             const conversation = await createServices(c).conversations.captureCsatFromChannel({
@@ -223,8 +248,19 @@ export function channelRoutes() {
             channel: 'whatsapp',
             externalConversationId: message.from,
             externalSenderId: message.from,
-            text,
+            text: text?.trim() === '' || text === undefined
+              ? attachmentType === 'image'
+                ? 'Customer sent a product photo. OCR not configured.'
+                : 'Customer sent a voice note. Transcript pending.'
+              : text,
             receivedAt: getReceivedAt(message.timestamp),
+            attachmentType,
+            attachmentUrl:
+              message.audio !== undefined
+                ? `whatsapp-media:${message.audio.id}`
+                : message.image !== undefined
+                  ? `whatsapp-media:${message.image.id}`
+                  : undefined,
           });
           const sendResult = result.alreadyProcessed
             ? { mode: 'skipped' as const, channel: 'whatsapp' as const, recipientId: message.from, text: result.reply.text }

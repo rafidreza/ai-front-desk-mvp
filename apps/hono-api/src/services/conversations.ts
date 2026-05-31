@@ -14,7 +14,9 @@ import type {
   TicketPriority,
   TicketStatus,
 } from '@ai-front-desk/shared';
+import { transcribeVoiceAttachment } from '@ai-front-desk/shared';
 import type { AppDb } from '../db/client';
+import type { Env } from '../env';
 import { conversations, messages, ticketComments, ticketEvents, tickets } from '../db/schema';
 import { ConflictError, NotFoundError } from '../errors';
 import { randomId } from '../utils/crypto';
@@ -65,11 +67,31 @@ export class ConversationRepository {
     return toConversation(created!, []);
   }
 
-  async addMessage(conversationId: string, message: { id: string; direction: 'inbound' | 'outbound'; text: string; createdAt: string }) {
+  async addMessage(conversationId: string, message: {
+    id: string;
+    direction: 'inbound' | 'outbound';
+    text: string;
+    attachmentType?: string;
+    attachmentUrl?: string;
+    transcript?: string;
+    extractedText?: string;
+    matchedProducts?: unknown;
+    createdAt: string;
+  }) {
     await this.db
       .insert(messages)
       .values({ ...message, conversationId, createdAt: new Date(message.createdAt) })
-      .onConflictDoUpdate({ target: messages.id, set: { text: message.text } });
+      .onConflictDoUpdate({
+        target: messages.id,
+        set: {
+          text: message.text,
+          attachmentType: message.attachmentType,
+          attachmentUrl: message.attachmentUrl,
+          transcript: message.transcript,
+          extractedText: message.extractedText,
+          matchedProducts: message.matchedProducts,
+        },
+      });
   }
 
   async messageExists(messageId: string) {
@@ -480,6 +502,7 @@ export class ConversationService {
     private readonly channelSend: ChannelSendService,
     private readonly logger = new LoggerService(),
     private readonly urgentNotifications?: UrgentTicketNotificationService,
+    private readonly env?: Env,
     private readonly autoQa = new AutoQaService(),
   ) {}
 
@@ -499,19 +522,56 @@ export class ConversationService {
       };
     }
 
-    await this.repository.addMessage(conversation.id, { id: message.id, direction: 'inbound', text: message.text, createdAt: message.receivedAt });
+    const enrichedMessage = await this.enrichVoiceMessage(message);
+    await this.repository.addMessage(conversation.id, {
+      id: enrichedMessage.id,
+      direction: 'inbound',
+      text: enrichedMessage.text,
+      attachmentType: enrichedMessage.attachmentType,
+      attachmentUrl: enrichedMessage.attachmentUrl,
+      transcript: enrichedMessage.transcript,
+      createdAt: enrichedMessage.receivedAt,
+    });
     const client = await this.clients.findById(message.clientId);
-    const match = await this.knowledge.findRelevant(client.id, message.text);
+    const customerText = [enrichedMessage.text, enrichedMessage.transcript]
+      .filter((part): part is string => part !== undefined && part.trim().length > 0)
+      .join('\n')
+      .trim();
+    const match = await this.knowledge.findRelevant(client.id, customerText);
     const promptProfile = await this.prompts.getActiveForClient(client);
-    const reply = await this.ai.generateReply({ client, customerText: message.text, knowledgeEntries: match.entries, promptProfile, retrievalConfidence: match.confidence });
+    const reply = await this.ai.generateReply({ client, customerText, knowledgeEntries: match.entries, promptProfile, retrievalConfidence: match.confidence });
     await this.repository.addMessage(conversation.id, { id: outboundMessageId, direction: 'outbound', text: reply.text, createdAt: new Date().toISOString() });
-    const ticket = reply.shouldEscalate ? await this.tickets.createFromEscalation({ message, conversationId: conversation.id, reply }) : undefined;
+    const ticket = reply.shouldEscalate ? await this.tickets.createFromEscalation({ message: enrichedMessage, conversationId: conversation.id, reply }) : undefined;
     if (ticket !== undefined) {
       await this.notifyPocForUrgentTicket(client, ticket);
     }
     await this.repository.setConversationResult(conversation.id, { lastConfidence: reply.confidence, ticketId: ticket?.id });
-    await this.scoreConversation({ conversationId: conversation.id, customerText: message.text, reply, ticket });
+    await this.scoreConversation({ conversationId: conversation.id, customerText, reply, ticket });
     return { conversation, reply, ticket };
+  }
+
+  private async enrichVoiceMessage(message: IncomingMessage): Promise<IncomingMessage> {
+    if (message.attachmentType !== 'voice') return message;
+    const result = await transcribeVoiceAttachment({
+      attachmentUrl: message.attachmentUrl,
+      openAiApiKey: this.env?.OPENAI_API_KEY ?? this.env?.ASR_OPENAI_API_KEY,
+      model: this.env?.ASR_TRANSCRIPTION_MODEL,
+      prompt: this.env?.ASR_TRANSCRIPTION_PROMPT ?? 'Bangla, Banglish, and English ecommerce customer support.',
+      whatsAppAccessToken: this.env?.WHATSAPP_ACCESS_TOKEN,
+      graphVersion: this.env?.WHATSAPP_GRAPH_VERSION ?? this.env?.MESSENGER_GRAPH_VERSION,
+    });
+    this.logger.event('conversation.voice_transcription', {
+      clientId: message.clientId,
+      channel: message.channel,
+      status: result.status,
+      reason: result.status === 'transcribed' ? undefined : result.reason,
+    }, result.status === 'failed' ? 'warn' : 'log');
+    if (result.status !== 'transcribed') return message;
+    return {
+      ...message,
+      transcript: result.transcript,
+      text: message.text.includes('Transcript pending') ? `Customer voice note transcript: ${result.transcript}` : message.text,
+    };
   }
 
   listConversations() {
