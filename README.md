@@ -188,6 +188,9 @@ Before enabling real Postmark email, complete the domain authentication steps in
 [`docs/email-deliverability-launch-checklist.md`](docs/email-deliverability-launch-checklist.md)
 so SPF, DKIM, and DMARC are ready for `support@daemion.io`.
 
+For a non-technical view of what still blocks public launch, see
+[`docs/public-launch-checklist.md`](docs/public-launch-checklist.md).
+
 Set each secret per Worker environment from its app directory:
 
 ```bash
