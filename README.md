@@ -103,6 +103,9 @@ Copy `.env.example` to `.env` when credentials are available.
 - `ANTHROPIC_API_KEY` enables Claude responses.
 - `INTERNAL_CONSOLE_PASSWORD` and `INTERNAL_CONSOLE_SESSION_SECRET` gate `/internal` and the backend proxy. In production the password must be at least 12 characters.
 - `WEB_APP_URL` is the allowlisted origin for API CORS.
+- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` enable shared rate
+  limits across Cloudflare Workers / server instances. When unset, local
+  in-memory rate limits are used.
 
 ## Database Migrations
 
@@ -155,18 +158,23 @@ Build and dry-run the Worker bundles locally:
 ```bash
 npm run build:hono
 npm run build:web:vinext
+npm run test:hono
 npm run deploy:dry-run:staging -w @ai-front-desk/hono-api
 npm run deploy:vinext:dry-run:staging -w @ai-front-desk/web
 ```
 
 Set staging secrets before the first real deploy. The API Worker needs at least
 `DATABASE_URL`, `INTERNAL_API_TOKEN`, and `CLIENT_AUTH_CODE_SECRET` for database
-and authenticated route checks. Add Meta, Postmark, Vision, and Anthropic keys
-when those integrations should run in staging.
+and authenticated route checks. Add `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` before multi-instance or public traffic so rate-limit
+counters are shared. Add Meta, Postmark, Vision, and Anthropic keys when those
+integrations should run in staging.
 
 The web Worker needs `API_BASE_URL`, the same `INTERNAL_API_TOKEN`, and the web
 session secrets: `INTERNAL_CONSOLE_PASSWORD`,
-`INTERNAL_CONSOLE_SESSION_SECRET`, and `CLIENT_SESSION_SECRET`.
+`INTERNAL_CONSOLE_SESSION_SECRET`, and `CLIENT_SESSION_SECRET`. Set the same
+Upstash rate-limit secrets on the web Worker so internal login attempts use the
+shared counter too.
 
 Set each secret per Worker environment from its app directory:
 
@@ -176,6 +184,8 @@ npx wrangler secret put DATABASE_URL --env staging
 npx wrangler secret put INTERNAL_API_TOKEN --env staging
 npx wrangler secret put CLIENT_AUTH_CODE_SECRET --env staging
 npx wrangler secret put WEB_APP_URL --env staging
+npx wrangler secret put UPSTASH_REDIS_REST_URL --env staging
+npx wrangler secret put UPSTASH_REDIS_REST_TOKEN --env staging
 
 cd ../web
 npx wrangler secret put API_BASE_URL --env staging
@@ -183,6 +193,8 @@ npx wrangler secret put INTERNAL_API_TOKEN --env staging
 npx wrangler secret put INTERNAL_CONSOLE_PASSWORD --env staging
 npx wrangler secret put INTERNAL_CONSOLE_SESSION_SECRET --env staging
 npx wrangler secret put CLIENT_SESSION_SECRET --env staging
+npx wrangler secret put UPSTASH_REDIS_REST_URL --env staging
+npx wrangler secret put UPSTASH_REDIS_REST_TOKEN --env staging
 ```
 
 After the staging web URL is known, set the API Worker's `WEB_APP_URL` to that

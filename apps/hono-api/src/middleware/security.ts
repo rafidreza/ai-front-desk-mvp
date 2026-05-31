@@ -1,4 +1,5 @@
 import { cors } from 'hono/cors';
+import { checkFixedWindowRateLimit, type RateLimitBuckets } from '@ai-front-desk/shared';
 import type { MiddlewareHandler } from 'hono';
 import { allowedOrigins, internalApiToken } from '../env';
 import { RateLimitError, UnauthorizedError } from '../errors';
@@ -6,7 +7,7 @@ import { timingSafeStringEqual } from '../utils/crypto';
 import type { AppBindings } from '../db/client';
 
 const publicPrefixes = ['/health', '/webhooks/messenger', '/webhooks/whatsapp', '/web-chat'];
-const buckets = new Map<string, { count: number; resetAt: number }>();
+const buckets: RateLimitBuckets = new Map();
 
 export function corsMiddleware() {
   return cors({
@@ -97,17 +98,19 @@ export const rateLimitMiddleware: MiddlewareHandler<AppBindings> = async (c, nex
   const isWebhook = path.startsWith('/webhooks/messenger') || path.startsWith('/webhooks/whatsapp');
   const limit = isWebhook ? 300 : 120;
   const key = tenantScope === undefined ? `${ip}:${path}` : `${ip}:${path}:${tenantScope}`;
-  const now = Date.now();
-  const bucket = buckets.get(key);
+  const result = await checkFixedWindowRateLimit(
+    {
+      key,
+      limit,
+      windowMs: 60_000,
+      prefix: 'afd:hono-api',
+      upstashUrl: c.env.UPSTASH_REDIS_REST_URL,
+      upstashToken: c.env.UPSTASH_REDIS_REST_TOKEN,
+    },
+    buckets,
+  );
 
-  if (bucket === undefined || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + 60_000 });
-    await next();
-    return;
-  }
-
-  bucket.count += 1;
-  if (bucket.count > limit) {
+  if (!result.allowed) {
     throw new RateLimitError();
   }
   await next();

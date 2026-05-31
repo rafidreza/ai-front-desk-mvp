@@ -28,31 +28,31 @@ describe('RateLimitGuard', () => {
     vi.useRealTimers();
   });
 
-  it('resets a bucket after the window expires', () => {
+  it('resets a bucket after the window expires', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-16T00:00:00Z'));
     const guard = new RateLimitGuard();
     const context = contextFor({ path: '/client-auth/request', ip: '1.1.1.1' });
 
     for (let index = 0; index < 120; index += 1) {
-      expect(guard.canActivate(context)).toBe(true);
+      await expect(guard.canActivate(context)).resolves.toBe(true);
     }
-    expect(() => guard.canActivate(context)).toThrow(HttpException);
+    await expect(guard.canActivate(context)).rejects.toThrow(HttpException);
 
     vi.setSystemTime(new Date('2026-05-16T00:01:01Z'));
-    expect(guard.canActivate(context)).toBe(true);
+    await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 
-  it('uses tenant scope so clients behind the same IP do not share one bucket', () => {
+  it('uses tenant scope so clients behind the same IP do not share one bucket', async () => {
     const guard = new RateLimitGuard();
     const clientA = contextFor({ path: '/clients/client-a/knowledge', ip: '2.2.2.2', params: { clientId: 'client-a' } });
     const clientB = contextFor({ path: '/clients/client-a/knowledge', ip: '2.2.2.2', params: { clientId: 'client-b' } });
 
     for (let index = 0; index < 120; index += 1) {
-      expect(guard.canActivate(clientA)).toBe(true);
+      await expect(guard.canActivate(clientA)).resolves.toBe(true);
     }
 
-    expect(() => guard.canActivate(clientA)).toThrow(HttpException);
-    expect(guard.canActivate(clientB)).toBe(true);
+    await expect(guard.canActivate(clientA)).rejects.toThrow(HttpException);
+    await expect(guard.canActivate(clientB)).resolves.toBe(true);
   });
 });

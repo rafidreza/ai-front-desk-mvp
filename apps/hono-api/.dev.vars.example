@@ -34,3 +34,8 @@ CLIENT_AUTH_CODE_SECRET=change-this-long-random-client-auth-secret
 DEV_RETURN_AUTH_CODE=false
 DEV_CLIENT_AUTH_CODE=
 CLIENT_SESSION_SECRET=change-this-long-random-client-session-secret
+
+# Optional: shared production rate limits across Workers / server instances.
+# Leave empty for local in-memory rate limits.
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=

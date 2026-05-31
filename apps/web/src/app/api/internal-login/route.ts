@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkFixedWindowRateLimit, type RateLimitBuckets } from '@ai-front-desk/shared';
 import { shouldUseSecureCookie } from '@/lib/cookies';
 import { createInternalSessionCookie, internalSessionCookieName } from '@/lib/internal-auth';
 import { backendFetch } from '@/lib/server-backend';
 
-const attempts = new Map<string, { count: number; resetAt: number }>();
+const attempts: RateLimitBuckets = new Map();
 const maxAttempts = 5;
 const windowMs = 5 * 60 * 1000;
 
@@ -11,15 +12,19 @@ function getClientKey(request: NextRequest) {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
 }
 
-function isRateLimited(key: string) {
-  const now = Date.now();
-  const current = attempts.get(key);
-  if (current === undefined || current.resetAt <= now) {
-    attempts.set(key, { count: 1, resetAt: now + windowMs });
-    return false;
-  }
-  current.count += 1;
-  return current.count > maxAttempts;
+async function isRateLimited(key: string) {
+  const result = await checkFixedWindowRateLimit(
+    {
+      key,
+      limit: maxAttempts,
+      windowMs,
+      prefix: 'afd:internal-login',
+      upstashUrl: process.env.UPSTASH_REDIS_REST_URL,
+      upstashToken: process.env.UPSTASH_REDIS_REST_TOKEN,
+    },
+    attempts,
+  );
+  return !result.allowed;
 }
 
 function isSameOrigin(request: NextRequest) {
@@ -52,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   const clientKey = getClientKey(request);
-  if (isRateLimited(clientKey)) {
+  if (await isRateLimited(clientKey)) {
     return NextResponse.json({ error: 'Too many login attempts.' }, { status: 429 });
   }
 

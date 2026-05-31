@@ -30,6 +30,8 @@ export interface Env {
   DEV_RETURN_AUTH_CODE?: string;
   DEV_CLIENT_AUTH_CODE?: string;
   CLIENT_SESSION_SECRET?: string;
+  UPSTASH_REDIS_REST_URL?: string;
+  UPSTASH_REDIS_REST_TOKEN?: string;
 }
 
 export function envString(env: Env, key: keyof Env, fallback?: string) {

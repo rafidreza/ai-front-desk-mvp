@@ -1,10 +1,6 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { checkFixedWindowRateLimit, type RateLimitBuckets } from '@ai-front-desk/shared';
 import { Request } from 'express';
-
-interface Bucket {
-  count: number;
-  resetAt: number;
-}
 
 function getStringField(input: unknown, key: string): string | undefined {
   if (typeof input !== 'object' || input === null || !(key in input)) return undefined;
@@ -47,9 +43,9 @@ function getTenantScope(request: Request) {
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
-  private readonly buckets = new Map<string, Bucket>();
+  private readonly buckets: RateLimitBuckets = new Map();
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const path = request.path;
     const ip = request.ip ?? request.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
@@ -58,16 +54,19 @@ export class RateLimitGuard implements CanActivate {
     const windowMs = 60_000;
     const tenantScope = getTenantScope(request);
     const key = tenantScope === undefined ? `${ip}:${path}` : `${ip}:${path}:${tenantScope}`;
-    const now = Date.now();
-    const bucket = this.buckets.get(key);
+    const result = await checkFixedWindowRateLimit(
+      {
+        key,
+        limit,
+        windowMs,
+        prefix: 'afd:api',
+        upstashUrl: process.env.UPSTASH_REDIS_REST_URL,
+        upstashToken: process.env.UPSTASH_REDIS_REST_TOKEN,
+      },
+      this.buckets,
+    );
 
-    if (bucket === undefined || bucket.resetAt <= now) {
-      this.buckets.set(key, { count: 1, resetAt: now + windowMs });
-      return true;
-    }
-
-    bucket.count += 1;
-    if (bucket.count > limit) {
+    if (!result.allowed) {
       throw new HttpException('Rate limit exceeded.', HttpStatus.TOO_MANY_REQUESTS);
     }
 

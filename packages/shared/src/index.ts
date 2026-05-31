@@ -1,4 +1,5 @@
 export const PRODUCT_NAME = 'Daemion';
+export { checkFixedWindowRateLimit, type RateLimitBuckets } from './rate-limit';
 
 export type Channel = 'messenger' | 'whatsapp' | 'web';
 
