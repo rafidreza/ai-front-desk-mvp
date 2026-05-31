@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
+import { extractMessengerHistoryCandidates } from '@ai-front-desk/shared';
 import type {
   KnowledgeChangeRequest,
   KnowledgeChangeRequestReviewDetail,
@@ -562,7 +563,12 @@ export class KnowledgeImportService {
     const extension = fileName.split('.').pop()?.toLowerCase() ?? '';
 
     if (this.isTextLike(contentType, extension)) {
-      return { fileName, sourceType: 'text', text: this.cleanText(decodeBase64Text(file.base64)) };
+      const text = this.cleanText(decodeBase64Text(file.base64));
+      return {
+        fileName,
+        sourceType: this.isMessengerHistoryJson(text, extension) ? 'messenger_history' : 'text',
+        text,
+      };
     }
     if (this.isExcelLike(contentType, extension)) {
       return { fileName, sourceType: 'excel', text: this.cleanText(await this.extractWorkbook(bytes)) };
@@ -635,6 +641,9 @@ export class KnowledgeImportService {
   }
 
   private extractDraftCandidates(text: string) {
+    const messengerCandidates = extractMessengerHistoryCandidates(text);
+    if (messengerCandidates.length > 0) return messengerCandidates;
+
     const blocks = text.split(/\n\s*\n/g).map((block) => block.trim()).filter((block) => block.length > 0);
     const candidates = blocks.flatMap((block) => {
       const qa = block.match(/(?:^|\n)\s*Q[:：]\s*(.+?)\s*\n\s*A[:：]\s*([\s\S]+)$/i);
@@ -655,5 +664,9 @@ export class KnowledgeImportService {
   private keywords(text: string) {
     const tokens = text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((token) => token.length > 2);
     return Array.from(new Set(tokens)).slice(0, 8);
+  }
+
+  private isMessengerHistoryJson(text: string, extension: string) {
+    return extension === 'json' && extractMessengerHistoryCandidates(text).length > 0;
   }
 }

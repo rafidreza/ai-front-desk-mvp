@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import ExcelJS from 'exceljs';
 import { PDFParse } from 'pdf-parse';
+import { extractMessengerHistoryCandidates } from '@ai-front-desk/shared';
 import {
   KnowledgeImportFileInput,
   KnowledgeImportResult,
@@ -108,7 +109,12 @@ export class KnowledgeImportService {
     const extension = fileName.split('.').pop()?.toLowerCase() ?? '';
 
     if (this.isTextLike(contentType, extension)) {
-      return { fileName, sourceType: 'text', text: this.cleanText(buffer.toString('utf8')) };
+      const text = this.cleanText(buffer.toString('utf8'));
+      return {
+        fileName,
+        sourceType: this.isMessengerHistoryJson(text, extension) ? 'messenger_history' : 'text',
+        text,
+      };
     }
     if (contentType.includes('pdf') || extension === 'pdf') {
       return { fileName, sourceType: 'pdf', text: this.cleanText(await this.extractPdf(buffer)) };
@@ -218,10 +224,17 @@ export class KnowledgeImportService {
   }
 
   private extractDraftCandidates(text: string): CandidateDraft[] {
+    const messengerCandidates = extractMessengerHistoryCandidates(text);
+    if (messengerCandidates.length > 0) return messengerCandidates;
+
     const qaCandidates = this.extractQuestionAnswerBlocks(text);
     if (qaCandidates.length > 0) return qaCandidates;
 
     return this.extractParagraphBlocks(text);
+  }
+
+  private isMessengerHistoryJson(text: string, extension: string) {
+    return extension === 'json' && extractMessengerHistoryCandidates(text).length > 0;
   }
 
   private extractQuestionAnswerBlocks(text: string): CandidateDraft[] {
