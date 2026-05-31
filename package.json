@@ -2,7 +2,7 @@
   "name": "ai-front-desk-mvp",
   "version": "0.1.0",
   "private": true,
-  "description": "MVP implementation for Daemon managed F-Commerce support service.",
+  "description": "MVP implementation for Daemion managed F-Commerce support service.",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -17,6 +17,7 @@
     "deploy:staging:hono": "npm run deploy:staging -w @ai-front-desk/hono-api",
     "deploy:staging:web": "npm run deploy:vinext:staging -w @ai-front-desk/web",
     "test": "npm run test -w @ai-front-desk/api",
+    "test:hono": "npm run test -w @ai-front-desk/hono-api",
     "lint": "npm run lint -w @ai-front-desk/api && npm run lint -w @ai-front-desk/web",
     "db:migrate": "npm run db:migrate -w @ai-front-desk/api"
   },

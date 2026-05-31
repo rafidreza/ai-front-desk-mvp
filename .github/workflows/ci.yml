@@ -23,6 +23,9 @@ jobs:
       - run: npm run db:generate -w @ai-front-desk/api
       - run: npm run lint
       - run: npm run build
+      - run: npm run build:hono
       - run: npm run build:web
+      - run: npm run build:web:vinext
       - run: npm test
+      - run: npm run test:hono
       - run: npm audit --omit=dev --audit-level=high
