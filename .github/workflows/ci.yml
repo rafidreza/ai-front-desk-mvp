@@ -20,6 +20,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run db:generate -w @ai-front-desk/api
       - run: npm run lint
       - run: npm run build
@@ -28,4 +29,5 @@ jobs:
       - run: npm run build:web:vinext
       - run: npm test
       - run: npm run test:hono
+      - run: npm run smoke:web
       - run: npm audit --omit=dev --audit-level=high

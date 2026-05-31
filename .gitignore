@@ -9,6 +9,8 @@ apps/web/.next
 !.dev.vars.example
 .DS_Store
 coverage
+test-results
+playwright-report
 *.log
 .run/
 .agents/
