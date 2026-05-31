@@ -165,7 +165,7 @@
 
 - [ ] **T45** Meta App Review submission (privacy policy URL, demo video, business verification) — **PARTIAL (2026-05-31): public `/privacy` policy page added for review URL readiness; still needs legal review, final contact details, demo video, and business verification.**
 - [ ] **T46** WhatsApp BSP onboarding (per PRD 08 Q1 decision)
-- [ ] **T47** Domain + DKIM / SPF / DMARC for digest deliverability
+- [ ] **T47** Domain + DKIM / SPF / DMARC for digest deliverability — **PARTIAL (2026-05-31): added `docs/email-deliverability-launch-checklist.md` with Cloudflare/Postmark SPF, DKIM, DMARC, secret, and test-email steps; still needs actual Postmark domain records added and verified in Cloudflare.**
 - [x] **T48** Sentry / observability beyond structured logs — **DONE (2026-05-31): added optional Sentry-compatible backend error reporting for Nest and Hono 500-level failures, with environment/release tags, private stack capture, generic public 500 responses, env documentation, and regression tests.**
 - [ ] **T49** Billing integration (Stripe BD or local processor, per pricing tiers)
 - [ ] **T50** Legal: DPA template + Bangladesh PDPA consent flow (PRD 08 Q4)

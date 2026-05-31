@@ -184,6 +184,10 @@ session secrets: `INTERNAL_CONSOLE_PASSWORD`,
 Upstash rate-limit secrets on the web Worker so internal login attempts use the
 shared counter too.
 
+Before enabling real Postmark email, complete the domain authentication steps in
+[`docs/email-deliverability-launch-checklist.md`](docs/email-deliverability-launch-checklist.md)
+so SPF, DKIM, and DMARC are ready for `support@daemion.io`.
+
 Set each secret per Worker environment from its app directory:
 
 ```bash
