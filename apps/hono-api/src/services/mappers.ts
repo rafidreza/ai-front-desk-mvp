@@ -358,6 +358,9 @@ export function toPromptProfile(profile: {
   forbiddenClaims: string;
   fallbackBehavior: string;
   status: string;
+  experimentEnabled?: boolean;
+  experimentKey?: string | null;
+  trafficWeight?: number;
   version: number;
   archivedAt?: Date | null;
   createdAt: Date;
@@ -373,6 +376,9 @@ export function toPromptProfile(profile: {
     forbiddenClaims: profile.forbiddenClaims,
     fallbackBehavior: profile.fallbackBehavior,
     status: profile.status as PromptProfile['status'],
+    experimentEnabled: profile.experimentEnabled ?? false,
+    experimentKey: profile.experimentKey ?? undefined,
+    trafficWeight: profile.trafficWeight ?? 100,
     version: profile.version,
     archivedAt: iso(profile.archivedAt),
     createdAt: profile.createdAt.toISOString(),
@@ -392,6 +398,9 @@ export function toPromptVersion(version: {
   forbiddenClaims: string;
   fallbackBehavior: string;
   status: string;
+  experimentEnabled?: boolean;
+  experimentKey?: string | null;
+  trafficWeight?: number;
   action: string;
   actorId: string;
   createdAt: Date;
@@ -408,6 +417,9 @@ export function toPromptVersion(version: {
     forbiddenClaims: version.forbiddenClaims,
     fallbackBehavior: version.fallbackBehavior,
     status: version.status as PromptProfileVersion['status'],
+    experimentEnabled: version.experimentEnabled ?? false,
+    experimentKey: version.experimentKey ?? undefined,
+    trafficWeight: version.trafficWeight ?? 100,
     action: version.action as PromptProfileVersion['action'],
     actorId: version.actorId,
     createdAt: version.createdAt.toISOString(),

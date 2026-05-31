@@ -26,14 +26,14 @@
 | 4 — Client-facing features | 7 | 0 | 7 |
 | 5 — Channels | 3 | 0 | 3 |
 | 6 — KB build pipeline | 6 | 0 | 6 |
-| 7 — QA & improvement loop | 4 | 1 | 5 |
+| 7 — QA & improvement loop | 5 | 0 | 5 |
 | 8 — Ops / launch readiness | 1 | 5 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
 | 10 — UX Audit P0 | 9 | 0 | 9 |
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
 | 13 — UX Audit follow-up | 15 | 2 | 17 |
-| **TOTAL** | **144** | **20** | **164** |
+| **TOTAL** | **145** | **19** | **164** |
 
 ---
 
@@ -157,7 +157,7 @@
 - [x] **T41** Defect tagging (hallucination, tone, escalation miss, etc.) — **DONE (2026-05-16): auto QA now stores defect tags including low confidence, no knowledge match, hallucination risk, escalation needed/miss, incomplete answer, and tone risk; internal QA view shows auto grade and tags**
 - [x] **T42** Calibration sample queue for human review — **DONE (2026-05-16): backend calibration queue endpoint ranks unreviewed risky conversations by auto-QA grade/tags/confidence/escalation, internal QA view now filters needs review, failed, hallucination risk, escalation issues, ungraded, or all**
 - [x] **T43** Improvement-loop kanban board (Mon-Fri cadence per MVP §5.3) — **DONE (2026-05-31): added `/internal/improvement`, a weekly Mon-Fri improvement board that composes existing tickets, QA calibration queue, client list, and KB-review requests into operator lanes for risky replies, knowledge fixes, reply retests, urgent handoffs, and Friday reporting.**
-- [ ] **T44** A/B framework for prompt versions
+- [x] **T44** A/B framework for prompt versions — **DONE (2026-05-31): added weighted prompt experiments with deterministic per-customer assignment, active experiment variants, internal A/B controls, prompt-version snapshots, Nest/Hono selection, and regression coverage.**
 
 ---
 

@@ -31,6 +31,11 @@ const CREATE_REQUIRED_RULES = Object.entries(CREATE_FIELD_LABELS).map(([name, la
 }));
 
 function profileFromForm(form: FormData) {
+  const parsedTrafficWeight = Number(form.get('trafficWeight') ?? 100);
+  const trafficWeight = Number.isFinite(parsedTrafficWeight)
+    ? Math.max(0, Math.min(100, parsedTrafficWeight))
+    : 100;
+
   return {
     name: String(form.get('name') ?? ''),
     systemInstructions: String(form.get('systemInstructions') ?? ''),
@@ -38,6 +43,9 @@ function profileFromForm(form: FormData) {
     escalationRules: String(form.get('escalationRules') ?? ''),
     forbiddenClaims: String(form.get('forbiddenClaims') ?? ''),
     fallbackBehavior: String(form.get('fallbackBehavior') ?? ''),
+    experimentEnabled: form.get('experimentEnabled') === 'on',
+    experimentKey: String(form.get('experimentKey') ?? '').trim() || undefined,
+    trafficWeight,
     actorId: 'internal-console',
   };
 }
@@ -277,7 +285,10 @@ export default function AgentConfigPage() {
                 onClick={() => void selectProfile(profile)}
               >
                 <strong>{profile.name}</strong>
-                <small>{profile.status} | v{profile.version}</small>
+                <small>
+                  {profile.status} | v{profile.version}
+                  {profile.experimentEnabled === true ? ` | A/B ${profile.trafficWeight ?? 100}%` : ''}
+                </small>
               </button>
             ))}
             {profiles.length === 0 && <div className="empty">No prompt profiles</div>}
@@ -323,6 +334,18 @@ export default function AgentConfigPage() {
                 Fallback and review request
                 <textarea name="fallbackBehavior" required rows={4} defaultValue={selectedProfile.fallbackBehavior} />
                 <span className="form-hint">Tell the agent what to do when unsure, and how it should ask for a short review after a resolved conversation.</span>
+              </label>
+              <label className="checkbox-row">
+                <input name="experimentEnabled" type="checkbox" defaultChecked={selectedProfile.experimentEnabled === true} />
+                Include in A/B traffic
+              </label>
+              <label>
+                Experiment key
+                <input name="experimentKey" defaultValue={selectedProfile.experimentKey ?? ''} placeholder="checkout-tone-test" />
+              </label>
+              <label>
+                Traffic weight
+                <input name="trafficWeight" inputMode="numeric" defaultValue={selectedProfile.trafficWeight ?? 100} />
               </label>
               <div className="filter-row">
                 <button className="icon-button" disabled={isSaving} type="submit">
@@ -483,6 +506,19 @@ export default function AgentConfigPage() {
               rows={3}
             />
           </FormField>
+
+          <label className="checkbox-row">
+            <input name="experimentEnabled" type="checkbox" defaultChecked={activeProfile?.experimentEnabled === true} />
+            Include in A/B traffic
+          </label>
+          <label>
+            Experiment key
+            <input name="experimentKey" defaultValue={activeProfile?.experimentKey ?? ''} placeholder="checkout-tone-test" />
+          </label>
+          <label>
+            Traffic weight
+            <input name="trafficWeight" inputMode="numeric" defaultValue={activeProfile?.trafficWeight ?? 100} />
+          </label>
 
           <FormErrorSummary
             errors={createErrors.errors}

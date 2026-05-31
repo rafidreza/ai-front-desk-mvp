@@ -491,6 +491,9 @@ export interface PromptProfile {
   forbiddenClaims: string;
   fallbackBehavior: string;
   status: 'draft' | 'active' | 'archived';
+  experimentEnabled?: boolean;
+  experimentKey?: string;
+  trafficWeight?: number;
   version: number;
   archivedAt?: string;
   createdAt: string;
@@ -509,6 +512,9 @@ export interface PromptProfileVersion {
   forbiddenClaims: string;
   fallbackBehavior: string;
   status: PromptProfile['status'];
+  experimentEnabled?: boolean;
+  experimentKey?: string;
+  trafficWeight?: number;
   action: 'baseline' | 'created' | 'updated' | 'published' | 'archived' | 'rollback';
   actorId: string;
   createdAt: string;

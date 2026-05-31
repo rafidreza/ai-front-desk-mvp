@@ -390,6 +390,9 @@ model PromptProfile {
   forbiddenClaims    String
   fallbackBehavior   String
   status             String                 @default("draft")
+  experimentEnabled  Boolean                @default(false)
+  experimentKey      String?
+  trafficWeight      Int                    @default(100)
   version            Int                    @default(1)
   archivedAt         DateTime?
   createdAt          DateTime               @default(now())
@@ -413,6 +416,9 @@ model PromptProfileVersion {
   forbiddenClaims    String
   fallbackBehavior   String
   status             String
+  experimentEnabled  Boolean       @default(false)
+  experimentKey      String?
+  trafficWeight      Int           @default(100)
   action             String
   actorId            String
   createdAt          DateTime      @default(now())

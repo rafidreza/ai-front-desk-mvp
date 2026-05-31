@@ -170,7 +170,9 @@ export class ConversationService {
     }
 
     const match = await this.knowledge.findRelevant(client.id, customerLookupText);
-    const promptProfile = await this.prompts?.getActiveForClient(client);
+    const promptProfile = await this.prompts?.getActiveForClient(client, {
+      experimentKey: enrichedMessage.externalSenderId,
+    });
     const reply = await this.aiService.generateReply({
       client,
       customerText: customerLookupText,

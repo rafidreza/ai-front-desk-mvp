@@ -16,6 +16,9 @@ function mapProfile(profile: {
   forbiddenClaims: string;
   fallbackBehavior: string;
   status: string;
+  experimentEnabled?: boolean;
+  experimentKey?: string | null;
+  trafficWeight?: number;
   version: number;
   archivedAt: Date | null;
   createdAt: Date;
@@ -31,6 +34,9 @@ function mapProfile(profile: {
     forbiddenClaims: profile.forbiddenClaims,
     fallbackBehavior: profile.fallbackBehavior,
     status: profile.status as PromptProfile['status'],
+    experimentEnabled: profile.experimentEnabled ?? false,
+    experimentKey: profile.experimentKey ?? undefined,
+    trafficWeight: profile.trafficWeight ?? 100,
     version: profile.version,
     archivedAt: profile.archivedAt?.toISOString(),
     createdAt: profile.createdAt.toISOString(),
@@ -50,6 +56,9 @@ function mapVersion(version: {
   forbiddenClaims: string;
   fallbackBehavior: string;
   status: string;
+  experimentEnabled?: boolean;
+  experimentKey?: string | null;
+  trafficWeight?: number;
   action: string;
   actorId: string;
   createdAt: Date;
@@ -66,6 +75,9 @@ function mapVersion(version: {
     forbiddenClaims: version.forbiddenClaims,
     fallbackBehavior: version.fallbackBehavior,
     status: version.status as PromptProfile['status'],
+    experimentEnabled: version.experimentEnabled ?? false,
+    experimentKey: version.experimentKey ?? undefined,
+    trafficWeight: version.trafficWeight ?? 100,
     action: version.action as PromptProfileVersion['action'],
     actorId: version.actorId,
     createdAt: version.createdAt.toISOString(),
@@ -81,7 +93,30 @@ export function createDefaultPromptProfile(client: ClientProfile): Omit<PromptPr
     escalationRules: `Escalate when the customer asks for a human, refund, cancellation, complaint handling, or when knowledge confidence is low. Escalation keywords: ${client.escalationKeywords.join(', ')}`,
     forbiddenClaims: 'Do not invent prices, delivery commitments, stock availability, discounts, refunds, or policy details that are not in the approved knowledge base.',
     fallbackBehavior: 'If the answer is missing, politely say a team member will check and get back shortly.',
+    experimentEnabled: false,
+    trafficWeight: 100,
   };
+}
+
+function stableBucket(value: string) {
+  let hash = 0;
+  for (const char of value) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+  return hash % 100;
+}
+
+function chooseExperimentProfile(profiles: PromptProfile[], key: string) {
+  const weighted = profiles.filter((profile) => profile.experimentEnabled === true && (profile.trafficWeight ?? 0) > 0);
+  if (weighted.length < 2) return profiles[0];
+  const totalWeight = weighted.reduce((total, profile) => total + (profile.trafficWeight ?? 0), 0);
+  const bucket = stableBucket(key) % totalWeight;
+  let cursor = 0;
+  for (const profile of weighted) {
+    cursor += profile.trafficWeight ?? 0;
+    if (bucket < cursor) return profile;
+  }
+  return weighted[0];
 }
 
 @Injectable()
@@ -95,7 +130,7 @@ export class PromptProfileService {
     return this.prisma;
   }
 
-  async getActiveForClient(client: ClientProfile): Promise<PromptProfile> {
+  async getActiveForClient(client: ClientProfile, context: { experimentKey?: string } = {}): Promise<PromptProfile> {
     if (this.prisma?.enabled !== true) {
       return {
         id: `${client.id}:prompt:fallback`,
@@ -107,12 +142,15 @@ export class PromptProfileService {
       };
     }
 
-    const profile = await this.prisma.promptProfile.findFirst({
+    const activeProfiles = await this.prisma.promptProfile.findMany({
       where: { clientId: client.id, status: 'active' },
       orderBy: { updatedAt: 'desc' },
     });
 
-    if (profile !== null) return mapProfile(profile);
+    if (activeProfiles.length > 0) {
+      const profiles = activeProfiles.map(mapProfile);
+      return chooseExperimentProfile(profiles, context.experimentKey ?? client.id) ?? profiles[0]!;
+    }
 
     return this.createDraft({
       ...createDefaultPromptProfile(client),
@@ -137,6 +175,9 @@ export class PromptProfileService {
     escalationRules: string;
     forbiddenClaims: string;
     fallbackBehavior: string;
+    experimentEnabled?: boolean;
+    experimentKey?: string;
+    trafficWeight?: number;
     status?: PromptProfile['status'];
     actorId?: string;
   }): Promise<PromptProfile> {
@@ -144,8 +185,9 @@ export class PromptProfileService {
     const status = input.status ?? 'draft';
     const profile = await prisma.$transaction(async (tx) => {
       if (status === 'active') {
+        const shouldArchiveOthers = input.experimentEnabled !== true;
         await tx.promptProfile.updateMany({
-          where: { clientId: input.clientId, status: 'active' },
+          where: { clientId: input.clientId, status: 'active', ...(shouldArchiveOthers ? {} : { experimentEnabled: false }) },
           data: { status: 'archived', archivedAt: new Date() },
         });
       }
@@ -159,6 +201,9 @@ export class PromptProfileService {
           escalationRules: input.escalationRules,
           forbiddenClaims: input.forbiddenClaims,
           fallbackBehavior: input.fallbackBehavior,
+          experimentEnabled: input.experimentEnabled ?? false,
+          experimentKey: input.experimentKey,
+          trafficWeight: input.trafficWeight ?? 100,
           status,
           version: 1,
           archivedAt: status === 'archived' ? new Date() : null,
@@ -173,7 +218,7 @@ export class PromptProfileService {
   async update(
     clientId: string,
     profileId: string,
-    input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior'>> & {
+    input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior' | 'experimentEnabled' | 'experimentKey' | 'trafficWeight'>> & {
       actorId?: string;
     },
   ): Promise<PromptProfile> {
@@ -205,10 +250,17 @@ export class PromptProfileService {
       if (existing === null) throw new NotFoundException(`Prompt profile not found: ${profileId}`);
 
       if (status === 'active') {
-        await tx.promptProfile.updateMany({
-          where: { clientId, status: 'active', id: { not: profileId } },
-          data: { status: 'archived', archivedAt: new Date() },
-        });
+        if (existing.experimentEnabled) {
+          await tx.promptProfile.updateMany({
+            where: { clientId, status: 'active', id: { not: profileId }, experimentEnabled: false },
+            data: { status: 'archived', archivedAt: new Date() },
+          });
+        } else {
+          await tx.promptProfile.updateMany({
+            where: { clientId, status: 'active', id: { not: profileId } },
+            data: { status: 'archived', archivedAt: new Date() },
+          });
+        }
       }
 
       const updated = await tx.promptProfile.update({
@@ -249,6 +301,9 @@ export class PromptProfileService {
           escalationRules: snapshot.escalationRules,
           forbiddenClaims: snapshot.forbiddenClaims,
           fallbackBehavior: snapshot.fallbackBehavior,
+          experimentEnabled: snapshot.experimentEnabled,
+          experimentKey: snapshot.experimentKey,
+          trafficWeight: snapshot.trafficWeight,
           status: 'draft',
           archivedAt: null,
           version: { increment: 1 },
@@ -272,6 +327,9 @@ export class PromptProfileService {
       escalationRules: string;
       forbiddenClaims: string;
       fallbackBehavior: string;
+      experimentEnabled?: boolean;
+      experimentKey?: string | null;
+      trafficWeight?: number;
       status: string;
     },
     action: PromptAction,
@@ -288,8 +346,11 @@ export class PromptProfileService {
         toneRules: profile.toneRules,
         escalationRules: profile.escalationRules,
         forbiddenClaims: profile.forbiddenClaims,
-        fallbackBehavior: profile.fallbackBehavior,
-        status: profile.status,
+      fallbackBehavior: profile.fallbackBehavior,
+      experimentEnabled: profile.experimentEnabled ?? false,
+      experimentKey: profile.experimentKey,
+      trafficWeight: profile.trafficWeight ?? 100,
+      status: profile.status,
         action,
         actorId,
       },

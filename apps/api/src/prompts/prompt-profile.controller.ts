@@ -9,6 +9,9 @@ const PromptProfileSchema = z.object({
   escalationRules: z.string().trim().min(2),
   forbiddenClaims: z.string().trim().min(2),
   fallbackBehavior: z.string().trim().min(2),
+  experimentEnabled: z.boolean().optional(),
+  experimentKey: z.string().trim().max(80).optional(),
+  trafficWeight: z.number().int().min(0).max(100).optional(),
   actorId: z.string().trim().min(2).optional(),
 });
 

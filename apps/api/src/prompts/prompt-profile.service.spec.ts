@@ -12,6 +12,9 @@ type ProfileRow = {
   forbiddenClaims: string;
   fallbackBehavior: string;
   status: string;
+  experimentEnabled?: boolean;
+  experimentKey?: string | null;
+  trafficWeight?: number;
   version: number;
   archivedAt: Date | null;
   createdAt: Date;
@@ -69,12 +72,17 @@ function createMockPrisma() {
         where,
         data,
       }: {
-        where: { clientId: string; status: string; id?: { not: string } };
+        where: { clientId: string; status: string; id?: { not: string }; experimentEnabled?: boolean };
         data: Partial<Pick<ProfileRow, 'status' | 'archivedAt'>>;
       }) => {
         let count = 0;
         profiles.forEach((profile) => {
-          if (profile.clientId !== where.clientId || profile.status !== where.status || profile.id === where.id?.not) return;
+          if (
+            profile.clientId !== where.clientId ||
+            profile.status !== where.status ||
+            profile.id === where.id?.not ||
+            (where.experimentEnabled !== undefined && profile.experimentEnabled !== where.experimentEnabled)
+          ) return;
           profiles.set(profile.id, { ...profile, ...data, updatedAt: new Date() });
           count += 1;
         });
@@ -146,5 +154,42 @@ describe('PromptProfileService', () => {
     expect(rolledBack.name).toBe('Default support prompt');
     expect(rolledBack.version).toBe(3);
     expect(actions).toEqual(expect.arrayContaining(['created', 'updated', 'rollback']));
+  });
+
+  it('keeps experiment variants active and chooses deterministically by traffic weight', async () => {
+    const { prisma } = createMockPrisma();
+    const service = new PromptProfileService(prisma);
+    const variantA = await service.createDraft({
+      ...promptInput,
+      name: 'Variant A',
+      status: 'active',
+      experimentEnabled: true,
+      trafficWeight: 100,
+    });
+    const variantB = await service.createDraft({
+      ...promptInput,
+      name: 'Variant B',
+      status: 'active',
+      experimentEnabled: true,
+      trafficWeight: 0,
+    });
+    const profiles = await service.list('pilot-client', 'active');
+    const selected = await service.getActiveForClient(
+      {
+        id: 'pilot-client',
+        businessName: 'Pilot',
+        pageId: 'page',
+        status: 'active',
+        onboardingStatus: 'active',
+        lifecycleStage: 'live',
+        defaultLanguage: 'english',
+        tone: 'friendly',
+        escalationKeywords: [],
+      },
+      { experimentKey: 'customer-1' },
+    );
+
+    expect(profiles.map((profile) => profile.id)).toEqual(expect.arrayContaining([variantA.id, variantB.id]));
+    expect(selected.id).toBe(variantA.id);
   });
 });

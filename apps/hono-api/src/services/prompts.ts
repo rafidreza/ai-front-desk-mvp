@@ -17,20 +17,43 @@ function createDefaultPromptProfile(client: ClientProfile) {
     escalationRules: `Escalate when customer mentions: ${client.escalationKeywords.join(', ')}.`,
     forbiddenClaims: 'Do not invent prices, stock, delivery promises, discounts, or policy details.',
     fallbackBehavior: 'Thanks for your message. Ami team ke check korte dicchi, tara shortly update debe.',
+    experimentEnabled: false,
+    trafficWeight: 100,
   };
+}
+
+function stableBucket(value: string) {
+  let hash = 0;
+  for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return hash % 100;
+}
+
+function chooseExperimentProfile(profiles: PromptProfile[], key: string) {
+  const weighted = profiles.filter((profile) => profile.experimentEnabled === true && (profile.trafficWeight ?? 0) > 0);
+  if (weighted.length < 2) return profiles[0];
+  const totalWeight = weighted.reduce((total, profile) => total + (profile.trafficWeight ?? 0), 0);
+  const bucket = stableBucket(key) % totalWeight;
+  let cursor = 0;
+  for (const profile of weighted) {
+    cursor += profile.trafficWeight ?? 0;
+    if (bucket < cursor) return profile;
+  }
+  return weighted[0];
 }
 
 export class PromptProfileService {
   constructor(private readonly db: AppDb) {}
 
-  async getActiveForClient(client: ClientProfile): Promise<PromptProfile> {
-    const [profile] = await this.db
+  async getActiveForClient(client: ClientProfile, context: { experimentKey?: string } = {}): Promise<PromptProfile> {
+    const rows = await this.db
       .select()
       .from(promptProfiles)
       .where(and(eq(promptProfiles.clientId, client.id), eq(promptProfiles.status, 'active')))
-      .orderBy(desc(promptProfiles.updatedAt))
-      .limit(1);
-    if (profile !== undefined) return toPromptProfile(profile);
+      .orderBy(desc(promptProfiles.updatedAt));
+    if (rows.length > 0) {
+      const profiles = rows.map(toPromptProfile);
+      return chooseExperimentProfile(profiles, context.experimentKey ?? client.id) ?? profiles[0]!;
+    }
     return this.createDraft({ ...createDefaultPromptProfile(client), status: 'active', actorId: 'system-fallback' });
   }
 
@@ -50,16 +73,19 @@ export class PromptProfileService {
     escalationRules: string;
     forbiddenClaims: string;
     fallbackBehavior: string;
+    experimentEnabled?: boolean;
+    experimentKey?: string;
+    trafficWeight?: number;
     status?: PromptProfile['status'];
     actorId?: string;
   }) {
     const status = input.status ?? 'draft';
     const now = new Date();
     if (status === 'active') {
-      await this.db
-        .update(promptProfiles)
-        .set({ status: 'archived', archivedAt: now, updatedAt: now })
-        .where(and(eq(promptProfiles.clientId, input.clientId), eq(promptProfiles.status, 'active')));
+      const archiveWhere = input.experimentEnabled === true
+        ? and(eq(promptProfiles.clientId, input.clientId), eq(promptProfiles.status, 'active'), eq(promptProfiles.experimentEnabled, false))
+        : and(eq(promptProfiles.clientId, input.clientId), eq(promptProfiles.status, 'active'));
+      await this.db.update(promptProfiles).set({ status: 'archived', archivedAt: now, updatedAt: now }).where(archiveWhere);
     }
     const [profile] = await this.db
       .insert(promptProfiles)
@@ -72,6 +98,9 @@ export class PromptProfileService {
         escalationRules: input.escalationRules,
         forbiddenClaims: input.forbiddenClaims,
         fallbackBehavior: input.fallbackBehavior,
+        experimentEnabled: input.experimentEnabled ?? false,
+        experimentKey: input.experimentKey,
+        trafficWeight: input.trafficWeight ?? 100,
         status,
         version: 1,
         archivedAt: status === 'archived' ? now : null,
@@ -83,7 +112,7 @@ export class PromptProfileService {
     return toPromptProfile(profile!);
   }
 
-  async update(clientId: string, profileId: string, input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior'>> & { actorId?: string }) {
+  async update(clientId: string, profileId: string, input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior' | 'experimentEnabled' | 'experimentKey' | 'trafficWeight'>> & { actorId?: string }) {
     const [existing] = await this.db.select().from(promptProfiles).where(and(eq(promptProfiles.id, profileId), eq(promptProfiles.clientId, clientId))).limit(1);
     if (existing === undefined) throw new NotFoundError(`Prompt profile not found: ${profileId}`);
     const { actorId, ...changes } = input;
@@ -101,10 +130,10 @@ export class PromptProfileService {
     if (existing === undefined) throw new NotFoundError(`Prompt profile not found: ${profileId}`);
     const now = new Date();
     if (status === 'active') {
-      await this.db
-        .update(promptProfiles)
-        .set({ status: 'archived', archivedAt: now, updatedAt: now })
-        .where(and(eq(promptProfiles.clientId, clientId), eq(promptProfiles.status, 'active'), ne(promptProfiles.id, profileId)));
+      const archiveWhere = existing.experimentEnabled
+        ? and(eq(promptProfiles.clientId, clientId), eq(promptProfiles.status, 'active'), ne(promptProfiles.id, profileId), eq(promptProfiles.experimentEnabled, false))
+        : and(eq(promptProfiles.clientId, clientId), eq(promptProfiles.status, 'active'), ne(promptProfiles.id, profileId));
+      await this.db.update(promptProfiles).set({ status: 'archived', archivedAt: now, updatedAt: now }).where(archiveWhere);
     }
     const [updated] = await this.db
       .update(promptProfiles)
@@ -146,6 +175,9 @@ export class PromptProfileService {
         escalationRules: snapshot.escalationRules,
         forbiddenClaims: snapshot.forbiddenClaims,
         fallbackBehavior: snapshot.fallbackBehavior,
+        experimentEnabled: snapshot.experimentEnabled,
+        experimentKey: snapshot.experimentKey,
+        trafficWeight: snapshot.trafficWeight,
         status: 'draft',
         archivedAt: null,
         version: sql`${promptProfiles.version} + 1`,
@@ -168,6 +200,9 @@ export class PromptProfileService {
       escalationRules: string;
       forbiddenClaims: string;
       fallbackBehavior: string;
+      experimentEnabled?: boolean;
+      experimentKey?: string | null;
+      trafficWeight?: number;
       status: string;
     },
     action: PromptAction,
@@ -184,6 +219,9 @@ export class PromptProfileService {
       escalationRules: profile.escalationRules,
       forbiddenClaims: profile.forbiddenClaims,
       fallbackBehavior: profile.fallbackBehavior,
+      experimentEnabled: profile.experimentEnabled ?? false,
+      experimentKey: profile.experimentKey,
+      trafficWeight: profile.trafficWeight ?? 100,
       status: profile.status,
       action,
       actorId,

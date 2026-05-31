@@ -538,7 +538,9 @@ export class ConversationService {
       .join('\n')
       .trim();
     const match = await this.knowledge.findRelevant(client.id, customerText);
-    const promptProfile = await this.prompts.getActiveForClient(client);
+    const promptProfile = await this.prompts.getActiveForClient(client, {
+      experimentKey: enrichedMessage.externalSenderId,
+    });
     const reply = await this.ai.generateReply({ client, customerText, knowledgeEntries: match.entries, promptProfile, retrievalConfidence: match.confidence });
     await this.repository.addMessage(conversation.id, { id: outboundMessageId, direction: 'outbound', text: reply.text, createdAt: new Date().toISOString() });
     const ticket = reply.shouldEscalate ? await this.tickets.createFromEscalation({ message: enrichedMessage, conversationId: conversation.id, reply }) : undefined;
