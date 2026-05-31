@@ -493,6 +493,16 @@ export async function importKnowledgeFiles(
   });
 }
 
+export async function importKnowledgeFromUrl(
+  clientId: string,
+  input: { url: string; actorId?: string },
+): Promise<KnowledgeImportResult> {
+  return apiFetch<KnowledgeImportResult>(`/clients/${clientId}/knowledge/import-url`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 export async function updateKnowledgeEntry(
   clientId: string,
   entryId: string,

@@ -1,6 +1,7 @@
 export const PRODUCT_NAME = 'Daemion';
 export { captureSentryException } from './error-reporting';
 export { extractMessengerHistoryCandidates, type MessengerHistoryCandidate } from './messenger-history-import';
+export { extractReadablePageText } from './public-page-import';
 export { checkFixedWindowRateLimit, type RateLimitBuckets } from './rate-limit';
 
 export type Channel = 'messenger' | 'whatsapp' | 'web';

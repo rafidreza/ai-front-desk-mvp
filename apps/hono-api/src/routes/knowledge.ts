@@ -27,6 +27,10 @@ const KnowledgeImportSchema = z.object({
   actorId: z.string().trim().min(2).optional(),
   files: z.array(z.object({ fileName: z.string().trim().min(2), contentType: z.string().trim().optional(), base64: z.string().trim().min(4) })).min(1).max(5),
 });
+const KnowledgeImportUrlSchema = z.object({
+  actorId: z.string().trim().min(2).optional(),
+  url: z.string().trim().url(),
+});
 const statusSchema = z.enum(['submitted', 'in_review', 'needs_clarification', 'approved', 'edited_then_published', 'rejected', 'published']);
 const urgencySchema = z.enum(['normal', 'urgent']);
 const ReviewActionSchema = z.object({
@@ -93,6 +97,7 @@ export function knowledgeRoutes() {
   });
   app.post('/clients/:clientId/knowledge/reindex', async (c) => c.json(await createServices(c).knowledge.reindex(c.req.param('clientId'))));
   app.post('/clients/:clientId/knowledge/import', async (c) => c.json(await createServices(c).imports.importFiles({ clientId: c.req.param('clientId'), ...KnowledgeImportSchema.parse(await jsonBody(c)) })));
+  app.post('/clients/:clientId/knowledge/import-url', async (c) => c.json(await createServices(c).imports.importPublicPage({ clientId: c.req.param('clientId'), ...KnowledgeImportUrlSchema.parse(await jsonBody(c)) })));
   app.patch('/clients/:clientId/knowledge/:entryId', async (c) =>
     c.json({ entry: await createServices(c).knowledge.update(c.req.param('clientId'), c.req.param('entryId'), KnowledgePatchSchema.parse(await jsonBody(c))) }),
   );

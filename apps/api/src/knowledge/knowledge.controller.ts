@@ -52,6 +52,11 @@ const KnowledgeImportSchema = z.object({
     .max(5),
 });
 
+const KnowledgeImportUrlSchema = z.object({
+  actorId: z.string().trim().min(2).optional(),
+  url: z.string().trim().url(),
+});
+
 @Controller('clients/:clientId/knowledge')
 export class KnowledgeController {
   constructor(
@@ -140,6 +145,12 @@ export class KnowledgeController {
   async import(@Param('clientId') clientId: string, @Body() body: unknown) {
     const parsed = KnowledgeImportSchema.parse(body);
     return this.imports.importFiles({ clientId, ...parsed });
+  }
+
+  @Post('import-url')
+  async importUrl(@Param('clientId') clientId: string, @Body() body: unknown) {
+    const parsed = KnowledgeImportUrlSchema.parse(body);
+    return this.imports.importPublicPage({ clientId, ...parsed });
   }
 
   @Patch(':entryId')

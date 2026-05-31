@@ -107,6 +107,46 @@ describe('KnowledgeImportService', () => {
     );
   });
 
+  it('creates draft entries from public page HTML', async () => {
+    const createDraft = vi.fn(async (input: { title: string; answer: string; keywords: string[]; clientId: string }) => ({
+      id: `entry-${createDraft.mock.calls.length}`,
+      clientId: input.clientId,
+      title: input.title,
+      answer: input.answer,
+      keywords: input.keywords,
+      status: 'draft' as const,
+      version: 1,
+    }));
+    const fetchImpl = vi.fn(async () =>
+      new Response(
+        '<html><head><title>About Pilot Boutique</title><script>ignore()</script></head><body><h1>Delivery information</h1><p>Inside Dhaka delivery takes 1 to 2 working days.</p><p>Outside Dhaka delivery takes 2 to 4 working days.</p></body></html>',
+        { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } },
+      ),
+    );
+    const service = new KnowledgeImportService({ createDraft } as unknown as KnowledgeService);
+
+    const result = await service.importPublicPage({
+      clientId: 'pilot-client',
+      url: 'https://facebook.com/pilot-boutique/about',
+      fetchImpl,
+    });
+
+    expect(result.imported).toHaveLength(1);
+    expect(result.imported[0]).toEqual(
+      expect.objectContaining({
+        sourceFileName: 'https://facebook.com/pilot-boutique/about',
+        sourceType: 'public_page',
+      }),
+    );
+    expect(createDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('Delivery information'),
+        answer: expect.stringContaining('Inside Dhaka delivery takes 1 to 2 working days.'),
+        actorId: 'page-scraper',
+      }),
+    );
+  });
+
   it('skips unsupported files without failing the full import', async () => {
     const createDraft = vi.fn();
     const service = new KnowledgeImportService({ createDraft } as unknown as KnowledgeService);

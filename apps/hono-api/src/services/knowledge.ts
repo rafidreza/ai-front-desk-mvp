@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
-import { extractMessengerHistoryCandidates } from '@ai-front-desk/shared';
+import { extractMessengerHistoryCandidates, extractReadablePageText } from '@ai-front-desk/shared';
 import type {
   KnowledgeChangeRequest,
   KnowledgeChangeRequestReviewDetail,
@@ -514,6 +514,7 @@ export class KnowledgeChangeRequestService {
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const MAX_DRAFTS_PER_IMPORT = 30;
+const MAX_PAGE_CHARS = 120_000;
 
 export class KnowledgeImportService {
   constructor(
@@ -551,6 +552,61 @@ export class KnowledgeImportService {
       skipped.push({ fileName: 'import batch', reason: `Created first ${MAX_DRAFTS_PER_IMPORT} drafts; split the remaining content into another import.` });
     }
     return { imported, skipped, extractedCharacters: extracted.reduce((total, file) => total + file.text.length, 0) };
+  }
+
+  async importPublicPage(input: { clientId: string; url: string; actorId?: string; fetchImpl?: typeof fetch }): Promise<KnowledgeImportResult> {
+    const url = this.parsePublicUrl(input.url);
+    const fetcher = input.fetchImpl ?? fetch;
+    const response = await fetcher(url.toString(), {
+      headers: {
+        'User-Agent': 'Daemion-KnowledgeImporter/1.0',
+        Accept: 'text/html,text/plain;q=0.9,*/*;q=0.5',
+      },
+    });
+    if (!response.ok) throw new BadRequestError(`Public page fetch failed: ${response.status}.`);
+
+    const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+    if (!contentType.includes('text/html') && !contentType.includes('text/plain') && !contentType.includes('application/xhtml')) {
+      throw new BadRequestError('Public page import supports HTML or plain-text pages only.');
+    }
+
+    const raw = await response.text();
+    const text = this.cleanText(extractReadablePageText(raw).slice(0, MAX_PAGE_CHARS));
+    if (text.length < 40) throw new BadRequestError('Public page did not contain enough readable text to create drafts.');
+
+    const candidates = this.extractDraftCandidates(text);
+    const imported = [];
+    for (const candidate of candidates.slice(0, MAX_DRAFTS_PER_IMPORT)) {
+      const entry = await this.knowledge.createDraft({
+        clientId: input.clientId,
+        title: candidate.title,
+        answer: candidate.answer,
+        keywords: candidate.keywords,
+        confidenceBoost: 0.03,
+        actorId: input.actorId ?? 'page-scraper',
+      });
+      imported.push({ entry, sourceFileName: url.toString(), sourceType: 'public_page' });
+    }
+    return {
+      imported,
+      skipped: candidates.length > MAX_DRAFTS_PER_IMPORT
+        ? [{ fileName: url.toString(), reason: `Created first ${MAX_DRAFTS_PER_IMPORT} drafts; split the remaining page content into another import.` }]
+        : [],
+      extractedCharacters: text.length,
+    };
+  }
+
+  private parsePublicUrl(value: string) {
+    let url: URL;
+    try {
+      url = new URL(value.trim());
+    } catch {
+      throw new BadRequestError('Enter a valid public URL.');
+    }
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      throw new BadRequestError('Only public HTTP or HTTPS URLs can be imported.');
+    }
+    return url;
   }
 
   private async extractFile(file: KnowledgeImportFileInput) {

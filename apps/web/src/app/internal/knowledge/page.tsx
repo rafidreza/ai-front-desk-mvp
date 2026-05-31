@@ -8,6 +8,7 @@ import {
   FileUp,
   History,
   Layers3,
+  Link2,
   Plus,
   RefreshCw,
   RotateCcw,
@@ -22,6 +23,7 @@ import {
   getKnowledgeEntries,
   getKnowledgeVersions,
   importKnowledgeFiles,
+  importKnowledgeFromUrl,
   markKnowledgeReviewed,
   rollbackKnowledgeEntry,
   setKnowledgeStatus,
@@ -107,6 +109,7 @@ export default function KnowledgePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isUrlImporting, setIsUrlImporting] = useState(false);
   const activeClient = clients.find((client) => client.id === selectedClientId);
   const clientId = selectedClientId;
 
@@ -279,6 +282,36 @@ export default function KnowledgePage() {
       setError(getErrorMessage(importError, 'Knowledge import failed. Fix: use a supported file type or check OCR/parser configuration, then retry.'));
     } finally {
       setIsImporting(false);
+    }
+  }
+
+  async function handleUrlImport(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const url = String(form.get('url') ?? '').trim();
+    if (url.length === 0) {
+      setError('No URL entered. Fix: paste a public Page, post, About, or website URL, then import drafts.');
+      return;
+    }
+
+    setIsUrlImporting(true);
+    setError(null);
+    setNotice(null);
+    setImportResult(null);
+    try {
+      const result = await importKnowledgeFromUrl(clientId, {
+        url,
+        actorId: 'internal-console',
+      });
+      setImportResult(result);
+      setNotice(`Imported ${result.imported.length} draft${result.imported.length === 1 ? '' : 's'} from public page text.`);
+      event.currentTarget.reset();
+      await loadEntries('draft', result.imported[0]?.entry.id);
+      setStatus('draft');
+    } catch (importError) {
+      setError(getErrorMessage(importError, 'Public page import failed. Fix: use a public page that can be opened without login, then retry.'));
+    } finally {
+      setIsUrlImporting(false);
     }
   }
 
@@ -679,6 +712,29 @@ export default function KnowledgePage() {
               ))}
             </div>
           )}
+        </form>
+
+        <form className="client-panel stack-form knowledge-import" onSubmit={handleUrlImport}>
+          <div className="section-label">
+            <Link2 size={15} />
+            Import public page
+          </div>
+          <label>
+            Public URL
+            <input
+              name="url"
+              inputMode="url"
+              placeholder="https://www.facebook.com/your-page"
+              type="url"
+            />
+          </label>
+          <p className="form-hint">
+            Works for public pages that can be opened without signing in. Creates draft entries only.
+          </p>
+          <button className="icon-button" disabled={isUrlImporting} type="submit">
+            <Link2 size={15} />
+            {isUrlImporting ? 'Importing...' : 'Import URL'}
+          </button>
         </form>
       </section>
     </InternalShell>

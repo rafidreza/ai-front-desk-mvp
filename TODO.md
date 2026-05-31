@@ -25,7 +25,7 @@
 | 3 — Phase 1 multi-tenant | 7 | 2 | 9 |
 | 4 — Client-facing features | 7 | 0 | 7 |
 | 5 — Channels | 3 | 0 | 3 |
-| 6 — KB build pipeline | 4 | 2 | 6 |
+| 6 — KB build pipeline | 5 | 1 | 6 |
 | 7 — QA & improvement loop | 4 | 1 | 5 |
 | 8 — Ops / launch readiness | 1 | 5 | 6 |
 | 9 — Improvement backlog | 18 | 0 | 18 |
@@ -33,7 +33,7 @@
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
 | 13 — UX Audit follow-up | 15 | 2 | 17 |
-| **TOTAL** | **142** | **22** | **164** |
+| **TOTAL** | **143** | **21** | **164** |
 
 ---
 
@@ -143,7 +143,7 @@
 ## Tier 6 — KB build pipeline (PRD 03)
 
 - [x] **T34** Messenger chat-history importer (Meta Data Tools export → Q&A extraction) — **DONE (2026-05-31): the existing knowledge file importer now recognizes Meta Messenger `message_*.json` history exports, extracts customer-message → seller-reply pairs into draft KB entries, labels the import source as `messenger_history`, and shares the parser across Nest and Hono with regression coverage.**
-- [ ] **T35** Facebook Page scraper (About, pinned post, album captions, post comments)
+- [x] **T35** Facebook Page scraper (About, pinned post, album captions, post comments) — **DONE (2026-05-31): added a public URL importer for Facebook/Page/About/post-style URLs and normal public pages. Operators can paste a public URL in `/internal/knowledge`; Nest and Hono fetch readable HTML/text, strip scripts/page chrome, create draft KB entries tagged as `public_page`, and keep review/publish control in the existing KB workflow. Private comments or login-only Facebook content still require Meta access.**
 - [x] **T36** File ingestor (image / PDF / Excel → OCR via Google Cloud Vision) — **DONE (2026-05-16): text/CSV/Markdown/JSON, PDF, and Excel files import into draft KB entries; image OCR path is wired through Google Cloud Vision when `GOOGLE_CLOUD_VISION_API_KEY` is configured**
 - [ ] **T37** Voice note ASR (vendor per PRD 08 Q10 benchmark)
 - [x] **T38** Industry templates (start with clothing) — **DONE (2026-05-16): clothing template JSON with 20 draft FAQ entries (delivery, payment, returns, sizing, fabric, custom orders, order status); `IndustryTemplateService` lists/get/apply with idempotent `templateKey` stamping; routes `GET /industry-templates`, `GET /industry-templates/:key`, `POST /clients/:clientId/industry-templates/:key/apply`; new `templateKey` column + index on `KnowledgeEntry` (migration `20260516130000_knowledge_industry_template`); covered by `industry-template.service.spec.ts` (5 tests incl. idempotency)**
