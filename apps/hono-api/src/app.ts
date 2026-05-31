@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { captureSentryException } from '@ai-front-desk/shared';
 import type { AppBindings } from './db/client';
 import { dbMiddleware } from './db/client';
 import { normalizeError } from './errors';
@@ -16,6 +17,20 @@ export function createApp() {
 
   app.onError((error, c) => {
     const normalized = normalizeError(error);
+    if (normalized.status >= 500) {
+      c.executionCtx.waitUntil(
+        captureSentryException(error, {
+          dsn: c.env.SENTRY_DSN,
+          environment: c.env.SENTRY_ENVIRONMENT ?? c.env.NODE_ENV,
+          release: c.env.APP_VERSION,
+          runtime: 'hono-api',
+          request: {
+            method: c.req.method,
+            url: c.req.url,
+          },
+        }),
+      );
+    }
     return c.json(normalized.body, normalized.status as 400 | 401 | 404 | 409 | 429 | 500);
   });
 

@@ -106,6 +106,9 @@ Copy `.env.example` to `.env` when credentials are available.
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` enable shared rate
   limits across Cloudflare Workers / server instances. When unset, local
   in-memory rate limits are used.
+- `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, and `APP_VERSION` enable backend error
+  reporting for unexpected 500-level failures. When `SENTRY_DSN` is empty,
+  reporting is disabled and structured logs remain the only signal.
 
 ## Database Migrations
 
@@ -169,6 +172,8 @@ and authenticated route checks. Add `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` before multi-instance or public traffic so rate-limit
 counters are shared. Add Meta, Postmark, Vision, and Anthropic keys when those
 integrations should run in staging.
+Add `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, and `APP_VERSION` when backend errors
+should be reported to Sentry.
 
 The web Worker needs `API_BASE_URL`, the same `INTERNAL_API_TOKEN`, and the web
 session secrets: `INTERNAL_CONSOLE_PASSWORD`,
@@ -186,6 +191,9 @@ npx wrangler secret put CLIENT_AUTH_CODE_SECRET --env staging
 npx wrangler secret put WEB_APP_URL --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_URL --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_TOKEN --env staging
+npx wrangler secret put SENTRY_DSN --env staging
+npx wrangler secret put SENTRY_ENVIRONMENT --env staging
+npx wrangler secret put APP_VERSION --env staging
 
 cd ../web
 npx wrangler secret put API_BASE_URL --env staging

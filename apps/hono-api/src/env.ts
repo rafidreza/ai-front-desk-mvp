@@ -32,6 +32,9 @@ export interface Env {
   CLIENT_SESSION_SECRET?: string;
   UPSTASH_REDIS_REST_URL?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
+  SENTRY_DSN?: string;
+  SENTRY_ENVIRONMENT?: string;
+  APP_VERSION?: string;
 }
 
 export function envString(env: Env, key: keyof Env, fallback?: string) {

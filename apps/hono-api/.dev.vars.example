@@ -39,3 +39,8 @@ CLIENT_SESSION_SECRET=change-this-long-random-client-session-secret
 # Leave empty for local in-memory rate limits.
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
+
+# Optional: backend error reporting. Leave empty to disable.
+SENTRY_DSN=
+SENTRY_ENVIRONMENT=development
+APP_VERSION=

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AuditLogController } from './audit/audit-log.controller';
 import { AuditLogService } from './audit/audit-log.service';
 import { AiService } from './ai/ai.service';
@@ -45,6 +45,8 @@ import { AuthCodeDeliveryService } from './notifications/auth-code-delivery.serv
 import { EmailDeliveryService } from './notifications/email-delivery.service';
 import { UrgentTicketNotificationService } from './notifications/urgent-ticket-notification.service';
 import { StructuredLoggerService } from './observability/structured-logger.service';
+import { ErrorReporterService } from './observability/error-reporter.service';
+import { ErrorReportingFilter } from './observability/error-reporting.filter';
 import { PromptProfileController } from './prompts/prompt-profile.controller';
 import { PromptProfileService } from './prompts/prompt-profile.service';
 import { BlockedSenderController } from './customers/blocked-sender.controller';
@@ -96,6 +98,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     ConversionChecklistService,
     DigestDeliveryService,
     EmbeddingService,
+    ErrorReporterService,
     ExternalDataService,
     IndustryTemplateService,
     InternalAuthService,
@@ -124,6 +127,10 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     {
       provide: APP_GUARD,
       useClass: ApiAuthGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ErrorReportingFilter,
     },
   ],
 })
