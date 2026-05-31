@@ -163,7 +163,7 @@
 
 ## Tier 8 — Ops / launch readiness
 
-- [ ] **T45** Meta App Review submission (privacy policy URL, demo video, business verification)
+- [ ] **T45** Meta App Review submission (privacy policy URL, demo video, business verification) — **PARTIAL (2026-05-31): public `/privacy` policy page added for review URL readiness; still needs legal review, final contact details, demo video, and business verification.**
 - [ ] **T46** WhatsApp BSP onboarding (per PRD 08 Q1 decision)
 - [ ] **T47** Domain + DKIM / SPF / DMARC for digest deliverability
 - [x] **T48** Sentry / observability beyond structured logs — **DONE (2026-05-31): added optional Sentry-compatible backend error reporting for Nest and Hono 500-level failures, with environment/release tags, private stack capture, generic public 500 responses, env documentation, and regression tests.**

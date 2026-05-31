@@ -162,6 +162,11 @@ test.describe('web smoke checks', () => {
     await expect(page.getByRole('link', { name: /Daemion/i }).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: /AI customer support/i })).toBeVisible();
     await expect(page.getByRole('link', { name: /Create client account/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Privacy' })).toBeVisible();
+
+    await page.goto('/privacy');
+    await expect(page.getByRole('heading', { name: /How Daemion handles support data/i })).toBeVisible();
+    await expect(page.getByText(/Last updated: May 31, 2026/i)).toBeVisible();
   });
 
   test('renders signup and login entry points', async ({ page }) => {

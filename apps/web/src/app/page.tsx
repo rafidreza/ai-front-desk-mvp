@@ -162,6 +162,8 @@ export default function LandingPage() {
       <footer className="landing-footer">
         <span>© 2026 Daemion · seeed.ing</span>
         <span>
+          <Link href="/privacy">Privacy</Link>
+          {' · '}
           <Link href="/internal/login">Internal access</Link>
           {' · '}
           <Link href="/client/login">Client login</Link>
