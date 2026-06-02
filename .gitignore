@@ -1,0 +1,7 @@
+dist
+node_modules
+.wrangler
+.screenshots
+test-results
+playwright-report
+.DS_Store

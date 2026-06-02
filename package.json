@@ -1,0 +1,19 @@
+{
+  "name": "daemion-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && npx serve dist -l 4173",
+    "preview": "npx serve dist -l 4173",
+    "test:smoke": "npm run build && playwright test",
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name daemion-website",
+    "deploy:check": "npm run build && find dist -maxdepth 2 -type f | sort"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "serve": "^14.2.4",
+    "wrangler": "^4.97.0"
+  }
+}
