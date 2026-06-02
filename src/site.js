@@ -90,22 +90,46 @@ function siteFooter() {
 
 function hero({ eyebrow, title, lede, actions = '', mark = true }) {
   return `<section class="hero">
-  <div class="wrap hero-grid">
-    <div>
-      <img class="hero-wordmark" src="/marks/daemion-lockup.svg" width="760" height="132" alt="Daemion">
-      <span class="eyebrow">${esc(eyebrow)}</span>
-      <h1>${title}</h1>
-      <p class="lede">${lede}</p>
-      ${actions ? `<div class="hero-actions">${actions}</div>` : ''}
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">${esc(eyebrow)}</span>
+        <h1>${title}</h1>
+        <p class="lede">${lede}</p>
+        ${actions ? `<div class="hero-actions">${actions}</div>` : ''}
+      </div>
+      ${
+        mark
+          ? `<div class="cognition-map" aria-hidden="true">
+              <div class="map-orbit outer"></div>
+              <div class="map-orbit inner"></div>
+              <div class="map-cross x"></div>
+              <div class="map-cross y"></div>
+              <img class="map-mark" src="/marks/daemion-mark.svg" width="160" height="160" alt="">
+              <span class="map-node n1">Core</span>
+              <span class="map-node n2">Vector</span>
+              <span class="map-node n3">Atlas</span>
+              <span class="map-node n4">Forge</span>
+              <span class="map-node n5">Helix</span>
+              <span class="map-node n6">Veil</span>
+              <span class="map-node p1">Eidolon</span>
+              <span class="map-node p2">Kheiron</span>
+              <span class="map-node p3">Merqis</span>
+              <span class="map-node p4">Aevum</span>
+            </div>`
+          : `<div class="document-panel" aria-hidden="true">
+              <img src="/marks/daemion-mark.svg" width="160" height="160" alt="">
+              <span>Public surface</span>
+              <strong>${esc(eyebrow)}</strong>
+            </div>`
+      }
     </div>
-    ${
-      mark
-        ? `<div class="hero-mark" aria-hidden="true">
-            <div class="orbital-ring"></div>
-            <img src="/marks/daemion-mark.svg" width="160" height="160" alt="">
-          </div>`
-        : ''
-    }
+    <div class="hero-ledger" aria-label="Daemion architecture summary">
+      <div><span>Divisions</span><strong>06</strong></div>
+      <div><span>Products</span><strong>04</strong></div>
+      <div><span>Internal labs</span><strong>04</strong></div>
+      <div><span>Headquarters</span><strong>Dhaka</strong></div>
+    </div>
   </div>
 </section>`;
 }
