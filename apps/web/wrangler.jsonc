@@ -21,16 +21,8 @@
       "workers_dev": true,
       "routes": [
         {
-          "pattern": "dev.daemion.io",
+          "pattern": "app.daemion.io",
           "custom_domain": true
-        },
-        {
-          "pattern": "daemion.io/*",
-          "zone_name": "daemion.io"
-        },
-        {
-          "pattern": "www.daemion.io/*",
-          "zone_name": "daemion.io"
         }
       ],
       "images": {

@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BotMessageSquare, Inbox, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Inbox, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
+import { DaemionLockup } from './_components/DaemionBrand';
 
 export const metadata: Metadata = {
-  title: 'Daemion — AI customer support for Bangladeshi F-Commerce sellers',
+  title: 'Daemion Client Portal — Autonomous customer operations',
   description:
-    'We answer your Facebook and WhatsApp customer messages with AI, and only send you the tickets that need your decision.',
+    'The Daemion customer application for support tickets, knowledge, customer conversations, and channel operations.',
 };
 
 export default function LandingPage() {
@@ -13,12 +14,12 @@ export default function LandingPage() {
     <main className="landing-shell">
       <nav className="landing-nav">
         <Link className="landing-nav-brand" href="/">
-          <span className="brand-mark">
-            <BotMessageSquare size={19} />
-          </span>
-          Daemion
+          <DaemionLockup />
         </Link>
         <div className="landing-nav-links">
+          <a className="landing-nav-link" href="https://daemion.io">
+            Public website
+          </a>
           <Link className="landing-nav-link" href="/internal/login">
             Internal access
           </Link>
@@ -33,18 +34,18 @@ export default function LandingPage() {
 
       <section className="landing-hero">
         <div className="landing-hero-copy">
-          <span className="landing-eyebrow">For Facebook & WhatsApp sellers</span>
-          <h1>AI customer support for Bangladeshi F-Commerce sellers.</h1>
+          <span className="landing-eyebrow">Customer application</span>
+          <h1>Autonomous support operations, held in one quiet workspace.</h1>
           <p className="landing-lede">
-            We answer your Facebook and WhatsApp customer messages with AI, and only send you the
-            tickets that need your decision.
+            Open the client portal to review escalated tickets, maintain your knowledge base, and
+            monitor the channels Daemion operates on your behalf.
           </p>
           <div className="landing-hero-ctas">
-            <Link className="btn-primary" href="/signup">
-              Create client account
+            <Link className="btn-primary" href="/client/login">
+              Customer login
             </Link>
-            <Link className="btn-ghost" href="/internal/login">
-              Internal access →
+            <Link className="btn-ghost" href="/signup">
+              Request access →
             </Link>
           </div>
           <div className="landing-hero-trust">
@@ -71,40 +72,37 @@ export default function LandingPage() {
           <span className="landing-pillar-icon">
             <MessageSquare size={18} />
           </span>
-          <h2>Auto-answers buyer DMs</h2>
+          <h2>Conversation control</h2>
           <p>
-            Price, delivery charge, COD, sizing, availability — answered in Bangla, Banglish, or
-            English from your own knowledge base.
+            Track what Daemion resolved automatically and where human review is still needed.
           </p>
         </div>
         <div className="landing-pillar">
           <span className="landing-pillar-icon">
             <Inbox size={18} />
           </span>
-          <h2>Only sends you tickets</h2>
+          <h2>Ticket signal</h2>
           <p>
-            Refunds, custom orders, complaints — escalated as a ticket with full context. P1 alerts
-            ping you on WhatsApp.
+            Refunds, custom orders, complaints, and exceptions arrive with context already attached.
           </p>
         </div>
         <div className="landing-pillar">
           <span className="landing-pillar-icon">
-            <BotMessageSquare size={18} />
+            <Sparkles size={18} />
           </span>
-          <h2>We do the setup</h2>
+          <h2>Knowledge upkeep</h2>
           <p>
-            You share your chat history and price list once. We build the knowledge base, tune the
-            agent, and run quality review before going live.
+            Approve suggested knowledge updates so the system gets sharper without becoming noisy.
           </p>
         </div>
       </section>
 
       <section className="landing-showcase">
         <header className="landing-showcase-head">
-          <h2>The only screen you log into.</h2>
+          <h2>The customer workspace behind Daemion.</h2>
           <p>
-            A small ticket queue with the messages our AI couldn&apos;t resolve on its own. Reply
-            once, we learn for next time.
+            Customers do not need to manage the whole machine. They only need the moments that
+            require judgment.
           </p>
         </header>
 
@@ -113,11 +111,11 @@ export default function LandingPage() {
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
-            <span className="landing-mock-url">daemion.io/tickets</span>
+            <span className="landing-mock-url">app.daemion.io/client/tickets</span>
           </div>
           <div className="landing-mock-body">
             <aside className="landing-mock-sidebar">
-              <div>Dashboard</div>
+              <div>Overview</div>
               <div className="is-active">Tickets · 3</div>
               <div>Conversations</div>
               <div>Knowledge</div>
@@ -160,7 +158,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="landing-footer">
-        <span>© 2026 Daemion · seeed.ing</span>
+        <span>© 2026 Daemion</span>
         <span>
           <Link href="/privacy">Privacy</Link>
           {' · '}

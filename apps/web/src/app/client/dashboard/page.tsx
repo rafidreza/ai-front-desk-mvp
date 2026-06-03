@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { captureCsat, getClientDashboard } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
@@ -70,7 +71,7 @@ export default function ClientDashboardPage() {
     <main className="client-shell">
       <header className="client-topbar">
         <div className="client-title-lockup">
-          <span className="client-mark">AF</span>
+          <span className="client-mark"><DaemionMark /></span>
           <div>
             <p className="eyebrow">{copy.dashboard.eyebrow}</p>
             <h1>{dashboard?.client.businessName ?? 'Daemion'}</h1>

@@ -160,8 +160,8 @@ test.describe('web smoke checks', () => {
   test('renders the public landing page', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('link', { name: /Daemion/i }).first()).toBeVisible();
-    await expect(page.getByRole('heading', { name: /AI customer support/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Create client account/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Autonomous support operations/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Customer login/i })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Privacy' })).toBeVisible();
 
     await page.goto('/privacy');
@@ -171,12 +171,12 @@ test.describe('web smoke checks', () => {
 
   test('renders signup and login entry points', async ({ page }) => {
     await page.goto('/signup');
-    await expect(page.getByText('Daemion')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Daemion' })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Open a workspace/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Create workspace and send code/i })).toBeVisible();
 
     await page.goto('/client/login');
-    await expect(page.getByText('Daemion')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Daemion' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Send code/i })).toBeVisible();
 
     await page.goto('/internal/login');

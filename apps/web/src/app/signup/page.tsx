@@ -2,6 +2,7 @@
 
 import { ArrowLeft, BadgeCheck, KeyRound, RefreshCw, Store } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { DaemionLockup } from '../_components/DaemionBrand';
 import { signupClient } from '@/lib/api';
 import { ClientProfile } from '@/types/domain';
 
@@ -113,8 +114,7 @@ export default function SignupPage() {
     <main className="client-auth-shell">
       <section className="client-auth-intro">
         <a className="client-auth-brand" href="/client/login">
-          <span>D</span>
-          <strong>Daemion</strong>
+          <DaemionLockup />
         </a>
         <div className="client-auth-copy">
           <p className="eyebrow">Client signup</p>

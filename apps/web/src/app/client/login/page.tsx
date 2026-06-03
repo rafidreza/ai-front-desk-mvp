@@ -2,6 +2,7 @@
 
 import { BadgeCheck, Info, KeyRound, LogIn, Store } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { DaemionLockup } from '../../_components/DaemionBrand';
 import { ClientProfile } from '@/types/domain';
 
 interface ChallengeResponse {
@@ -219,12 +220,11 @@ export default function ClientLoginPage() {
     <main className="client-auth-shell">
       <section className="client-auth-intro">
         <a className="client-auth-brand" href="/client/login">
-          <span>D</span>
-          <strong>Daemion</strong>
+          <DaemionLockup />
         </a>
         <div className="client-auth-copy">
           <p className="eyebrow">Client login</p>
-          <h1>Return to the support desk built around your customers.</h1>
+          <h1>Return to your Daemion operating workspace.</h1>
           <p>Use a verified email or WhatsApp code to open tickets, knowledge, and channel status.</p>
         </div>
         <div className="client-auth-rail" aria-label="Login access">

@@ -2,6 +2,7 @@
 
 import { Activity, AlertTriangle, CheckCircle2, Clock3, Filter, History, MessageSquareText, RefreshCw, Send, TicketCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { getClientDashboard, getClientTicketDetail, getClientTickets, updateClientTicketStatus } from '@/lib/api';
 import { getClientPortalCopy, priorityTone } from '@/lib/client-portal-copy';
@@ -108,7 +109,7 @@ export default function ClientTicketsPage() {
     <main className="client-shell">
       <header className="client-topbar">
         <div className="client-title-lockup">
-          <span className="client-mark">TK</span>
+          <span className="client-mark"><DaemionMark /></span>
           <div>
             <p className="eyebrow">{copy.tickets.eyebrow}</p>
             <h1>{copy.tickets.title}</h1>

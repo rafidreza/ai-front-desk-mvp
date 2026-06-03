@@ -2,6 +2,7 @@
 
 import { Link2, RefreshCw, Save, TableProperties } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import {
   getExternalDataSources,
@@ -166,7 +167,7 @@ export default function ClientDataSourcesPage() {
     <main className="client-shell">
       <header className="client-topbar">
         <div className="client-title-lockup">
-          <span className="client-mark">DS</span>
+          <span className="client-mark"><DaemionMark /></span>
           <div>
             <p className="eyebrow">{dataCopy.eyebrow}</p>
             <h1>{dataCopy.title}</h1>

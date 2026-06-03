@@ -2,6 +2,7 @@
 
 import { BookOpenText, Filter, Pencil, Plus, RefreshCw, Search, Send, ShieldCheck } from 'lucide-react';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import {
   getClientKnowledgeEntries,
@@ -208,7 +209,7 @@ export default function ClientKnowledgePage() {
     <main className="client-shell">
       <header className="client-topbar">
         <div className="client-title-lockup">
-          <span className="client-mark">KB</span>
+          <span className="client-mark"><DaemionMark /></span>
           <div>
             <p className="eyebrow">{knowledgeCopy.eyebrow}</p>
             <h1>{knowledgeCopy.title}</h1>

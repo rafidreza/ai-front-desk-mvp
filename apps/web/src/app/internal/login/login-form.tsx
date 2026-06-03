@@ -1,8 +1,9 @@
 'use client';
 
-import { BotMessageSquare, LockKeyhole, LockKeyholeOpen } from 'lucide-react';
+import { LockKeyhole, LockKeyholeOpen } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { DaemionMark } from '../../_components/DaemionBrand';
 
 type FeedbackTone = 'idle' | 'info' | 'error' | 'success';
 
@@ -48,7 +49,7 @@ export function InternalLoginForm() {
     <section className="login-panel">
       <div className="brand login-brand">
         <div className="brand-mark">
-          <BotMessageSquare size={19} />
+          <DaemionMark />
         </div>
         <div>
           <h1>Daemion</h1>

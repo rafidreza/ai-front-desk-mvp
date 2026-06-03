@@ -2,6 +2,7 @@
 
 import { BookOpenText, Building2, Link2, MessageCircle } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { getClientDashboard, submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
@@ -169,7 +170,7 @@ export default function ClientOnboardingPage() {
     <main className="client-shell">
       <header className="client-topbar">
         <div className="client-title-lockup">
-          <span className="client-mark">ST</span>
+          <span className="client-mark"><DaemionMark /></span>
           <div>
             <p className="eyebrow">{onboardingCopy.eyebrow}</p>
             <h1>{onboardingCopy.title}</h1>

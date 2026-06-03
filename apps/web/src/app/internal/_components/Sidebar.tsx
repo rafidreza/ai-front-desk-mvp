@@ -1,5 +1,4 @@
 import {
-  BotMessageSquare,
   Building2,
   ClipboardCheck,
   ClipboardList,
@@ -15,6 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
+import { DaemionMark } from '../../_components/DaemionBrand';
 import { ApiHealth } from '@/types/domain';
 
 type ActiveView =
@@ -59,7 +59,7 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
     <aside className="sidebar">
       <div className="brand">
         <div className="brand-mark">
-          <BotMessageSquare size={19} />
+          <DaemionMark />
         </div>
         <div>
           <h1>Daemion</h1>
