@@ -90,40 +90,29 @@ function siteFooter() {
 
 function hero({ eyebrow, title, lede, actions = '', mark = true }) {
   return `<section class="hero">
-  <div class="wrap">
-    <div class="hero-grid">
-      <div class="hero-copy">
-        <span class="eyebrow">${esc(eyebrow)}</span>
-        <h1>${title}</h1>
-        <p class="lede">${lede}</p>
-        ${actions ? `<div class="hero-actions">${actions}</div>` : ''}
-      </div>
-      ${
-        mark
-          ? `<div class="cognition-map" aria-hidden="true">
-              <div class="map-orbit outer"></div>
-              <div class="map-orbit inner"></div>
-              <div class="map-cross x"></div>
-              <div class="map-cross y"></div>
-              <img class="map-mark" src="/marks/daemion-mark.svg" width="160" height="160" alt="">
-              <span class="map-node n1">Core</span>
-              <span class="map-node n2">Vector</span>
-              <span class="map-node n3">Atlas</span>
-              <span class="map-node n4">Forge</span>
-              <span class="map-node n5">Helix</span>
-              <span class="map-node n6">Veil</span>
-              <span class="map-node p1">Eidolon</span>
-              <span class="map-node p2">Kheiron</span>
-              <span class="map-node p3">Merqis</span>
-              <span class="map-node p4">Aevum</span>
-            </div>`
-          : `<div class="document-panel" aria-hidden="true">
-              <img src="/marks/daemion-mark.svg" width="160" height="160" alt="">
-              <span>Public surface</span>
-              <strong>${esc(eyebrow)}</strong>
-            </div>`
-      }
+  <div class="wrap hero-wrap">
+    <div class="hero-copy">
+      <img class="hero-wordmark" src="/marks/daemion-lockup.svg" width="760" height="132" alt="Daemion">
+      <span class="eyebrow">${esc(eyebrow)}</span>
+      <h1>${title}</h1>
+      <p class="lede">${lede}</p>
+      ${actions ? `<div class="hero-actions">${actions}</div>` : ''}
     </div>
+    ${
+      mark
+        ? `<div class="premium-object" aria-hidden="true">
+            <div class="object-glow"></div>
+            <div class="object-disc">
+              <img src="/marks/daemion-mark.svg" width="180" height="180" alt="">
+            </div>
+            <div class="object-reflection"></div>
+          </div>`
+        : `<div class="document-panel" aria-hidden="true">
+            <img src="/marks/daemion-mark.svg" width="160" height="160" alt="">
+            <span>Public surface</span>
+            <strong>${esc(eyebrow)}</strong>
+          </div>`
+    }
     <div class="hero-ledger" aria-label="Daemion architecture summary">
       <div><span>Divisions</span><strong>06</strong></div>
       <div><span>Products</span><strong>04</strong></div>
@@ -147,13 +136,13 @@ function architectureTable() {
 }
 
 function home() {
-  const phases = [
-    ['I', 'Foundation models and enterprise cognition.'],
-    ['II', 'Autonomous operations layer for global business.'],
-    ['III', 'Infrastructure-scale intelligence systems.'],
-    ['IV', 'AI-governed logistics, economics, and robotics.'],
-    ['V', 'Civilizational coordination infrastructure.'],
-  ];
+  const productPreview = products
+    .map((p) => `<a class="product-tile" href="/products#${p.id}">
+      <span>${p.tier}</span>
+      <strong>${p.title}</strong>
+      <em>${p.line}</em>
+    </a>`)
+    .join('');
 
   return shell({
     slug: '',
@@ -161,82 +150,62 @@ function home() {
     description: site.description,
     schema: organizationSchema(),
     body: `${hero({
-      eyebrow: site.tagline,
-      title: 'Daemion builds cognition systems for the next industrial civilization.',
-      lede: 'Daemion is a frontier intelligence company. We design autonomous cognition systems operating across business, infrastructure, governance, and machine coordination. Not chatbots. Not apps. Cognition infrastructure.',
-      actions: '<a class="cta primary" href="/contact">Contact office</a><a class="cta" href="/divisions">See architecture</a>',
+      eyebrow: 'Frontier intelligence infrastructure',
+      title: site.tagline,
+      lede: site.masterLine,
+      actions: '<a class="cta primary" href="/contact">Contact office</a><a class="cta" href="/products">Explore products</a>',
     })}
-    <section class="page-section">
-      <div class="wrap split">
-        <div>
-          <span class="eyebrow">What Daemion is</span>
-          <h2>The cognition layer for institutions that operate on the order of decades.</h2>
-        </div>
-        <div class="copy">
-          <p>Daemion sits at the intersection of three reference identities: the philosophical depth of an alignment laboratory, the infrastructural seriousness of a planetary-scale platform, and the product elegance of a deeply considered consumer surface.</p>
-          <p>We build for sovereign systems, frontier enterprises, strategic operators, and the research community that informs them.</p>
-          <p>Daemion does not sell convenience. It constructs the substrate.</p>
-        </div>
+    <section class="page-section signature-section">
+      <div class="wrap statement">
+        <span class="eyebrow">Not chatbots. Not apps.</span>
+        <h2>Cognition infrastructure for institutions that operate on the order of decades.</h2>
       </div>
     </section>
-    <section class="page-section">
+    <section class="page-section product-showcase">
       <div class="wrap">
-        <div class="section-head">
+        <div class="section-head center">
+          <div>
+            <span class="eyebrow">Product family</span>
+            <h2>Four surfaces. One substrate.</h2>
+          </div>
+          <p>Each product is a different expression of the same Daemion cognition architecture.</p>
+        </div>
+        <div class="product-tile-grid">${productPreview}</div>
+      </div>
+    </section>
+    <section class="page-section architecture-showcase">
+      <div class="wrap">
+        <div class="section-head center">
           <div>
             <span class="eyebrow">Architecture</span>
-            <h2>6 divisions, 4 products, and 4 internal research labs.</h2>
+            <h2>6 divisions, 4 products, 4 internal labs.</h2>
           </div>
-          <p>Each addresses a distinct layer of the intelligence stack.</p>
+          <p>A complete operating map for frontier intelligence work.</p>
         </div>
         ${architectureTable()}
       </div>
     </section>
     <section class="page-section">
-      <div class="wrap split">
+      <div class="wrap split editorial-split">
         <div>
           <span class="eyebrow">Research</span>
-          <h2>Reasoning architectures, memory, alignment, and coordination.</h2>
+          <h2>Reasoning, memory, alignment, and coordination.</h2>
           <a class="cta" href="/research">Research statement</a>
         </div>
         <div class="copy">
-          <p>Daemion research concerns reasoning architectures, long-horizon planning under uncertainty, alignment of autonomous systems, persistent memory, and the operational coordination of machine agents at scale.</p>
-          <p>Internal labs operate under deliberate secrecy. Publications appear when warranted.</p>
+          <p>Daemion research concerns systems that can reason across long horizons, preserve context, and coordinate autonomous action without continuous human instruction.</p>
+          <p>Internal labs operate under deliberate secrecy. Publications appear when the field benefits from publication.</p>
         </div>
       </div>
     </section>
     <section class="page-section">
-      <div class="wrap split">
-        <div>
-          <span class="eyebrow">The arc</span>
-          <h2>Five phases describe the trajectory.</h2>
-        </div>
-        <div>
-          <ul class="phase-list">
-            ${phases.map(([n, text]) => `<li><span class="index-number">${n}</span><span>${text}</span></li>`).join('')}
-          </ul>
-          <p class="quote-line">At the final stage, Daemion becomes less a company, more a cognitive substrate for institutions.</p>
-        </div>
-      </div>
-    </section>
-    <section class="page-section">
-      <div class="wrap split">
-        <div>
-          <span class="eyebrow">What Daemion is not</span>
-          <h2>Not an everyday productivity tool. Not a consumer entertainment surface.</h2>
-        </div>
-        <div class="copy">
-          <p>Daemion is critical intelligence infrastructure for advanced civilization. The tone is restrained, the surfaces are silent, and the interfaces imply intelligence rather than advertise it.</p>
-        </div>
-      </div>
-    </section>
-    <section class="page-section">
-      <div class="wrap split">
+      <div class="wrap split editorial-split">
         <div>
           <span class="eyebrow">Engage</span>
-          <h2>Inquiries are handled directly through the Company office.</h2>
+          <h2>No sales funnel. Direct office routing.</h2>
         </div>
         <div class="copy">
-          <p>Inquiries from sovereign institutions, enterprise operators, frontier research collaborators, and capital partners are handled directly. Daemion does not run a sales funnel.</p>
+          <p>Inquiries from sovereign institutions, enterprise operators, frontier research collaborators, and capital partners are handled directly.</p>
           <a class="cta primary" href="/contact">Contact the office</a>
         </div>
       </div>
