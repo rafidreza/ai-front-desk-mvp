@@ -13,7 +13,7 @@
     "build:vinext": "vinext build",
     "start:vinext": "vinext start",
     "deploy:vinext": "vinext deploy",
-    "deploy:vinext:staging": "vinext build && wrangler deploy --env staging --name ai-front-desk-web-staging --keep-vars --domain app.daemion.io --route 'app.daemion.io/*'",
+    "deploy:vinext:staging": "vinext build && wrangler deploy --env staging --name ai-front-desk-web-staging --keep-vars",
     "deploy:vinext:dry-run:staging": "vinext build && wrangler deploy --dry-run --env staging --name ai-front-desk-web-staging"
   },
   "dependencies": {

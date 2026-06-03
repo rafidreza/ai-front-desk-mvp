@@ -23,6 +23,10 @@
         {
           "pattern": "app.daemion.io",
           "custom_domain": true
+        },
+        {
+          "pattern": "dev.daemion.io",
+          "custom_domain": true
         }
       ],
       "images": {
