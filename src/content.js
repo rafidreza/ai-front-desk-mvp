@@ -1,6 +1,7 @@
 export const site = {
   name: 'Daemion',
-  url: 'https://daemion.com',
+  url: 'https://daemion.io',
+  customerAppUrl: 'https://app.daemion.io/client/login',
   tagline: 'Intelligence Beyond Instruction.',
   masterLine: 'Daemion builds cognition systems for the next industrial civilization.',
   description: 'Daemion builds autonomous cognition systems for the next industrial civilization. Frontier intelligence infrastructure.',
@@ -16,6 +17,7 @@ export const nav = [
   ['Products', '/products'],
   ['Company', '/company'],
   ['Careers', '/careers'],
+  ['Customer login', site.customerAppUrl],
   ['Contact', '/contact'],
 ];
 
@@ -25,6 +27,7 @@ export const footer = {
     ['Products', '/products'],
     ['Company', '/company'],
     ['Careers', '/careers'],
+    ['Customer login', site.customerAppUrl],
     ['Contact', '/contact'],
   ],
   Research: [

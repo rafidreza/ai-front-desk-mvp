@@ -153,7 +153,7 @@ function home() {
       eyebrow: 'Frontier intelligence infrastructure',
       title: site.tagline,
       lede: site.masterLine,
-      actions: '<a class="cta primary" href="/contact">Contact office</a><a class="cta" href="/products">Explore products</a>',
+      actions: `<a class="cta primary" href="/contact">Contact office</a><a class="cta" href="${site.customerAppUrl}">Customer login</a><a class="cta" href="/products">Explore products</a>`,
     })}
     <section class="page-section signature-section">
       <div class="wrap statement">
