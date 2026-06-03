@@ -162,6 +162,7 @@ test.describe('web smoke checks', () => {
     await expect(page.getByRole('link', { name: /Daemion/i }).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: /Autonomous support operations/i })).toBeVisible();
     await expect(page.getByRole('link', { name: /Customer login/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Customer login/i })).toHaveAttribute('href', '/login');
     await expect(page.getByRole('link', { name: 'Privacy' })).toBeVisible();
 
     await page.goto('/privacy');
@@ -175,7 +176,8 @@ test.describe('web smoke checks', () => {
     await expect(page.getByRole('heading', { name: /Open a workspace/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Create workspace and send code/i })).toBeVisible();
 
-    await page.goto('/client/login');
+    await page.goto('/login');
+    await expect(page).toHaveURL(/\/client\/login/);
     await expect(page.getByRole('link', { name: 'Daemion' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Send code/i })).toBeVisible();
 

@@ -113,7 +113,7 @@ export default function SignupPage() {
   return (
     <main className="client-auth-shell">
       <section className="client-auth-intro">
-        <a className="client-auth-brand" href="/client/login">
+        <a className="client-auth-brand" href="/">
           <DaemionLockup />
         </a>
         <div className="client-auth-copy">
@@ -133,7 +133,7 @@ export default function SignupPage() {
 
       <section className="client-auth-workspace">
         <div className="client-auth-topline">
-          <a className="auth-text-link" href="/client/login">
+          <a className="auth-text-link" href="/login">
             <ArrowLeft size={15} />
             Back to client login
           </a>
@@ -175,7 +175,7 @@ export default function SignupPage() {
                 {isSubmitting ? 'Sending...' : 'Create workspace and send code'}
               </button>
               <p className="auth-switch-copy">
-                Already have a workspace? <a href="/client/login">Log in</a>
+                Already have a workspace? <a href="/login">Log in</a>
               </p>
             </form>
           ) : (
@@ -212,7 +212,7 @@ export default function SignupPage() {
                 </button>
               </div>
               <p className="auth-switch-copy">
-                Need a different account? <a href="/client/login">Return to login</a>
+                Need a different account? <a href="/login">Return to login</a>
               </p>
             </form>
           )}

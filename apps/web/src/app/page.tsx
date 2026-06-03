@@ -23,7 +23,7 @@ export default function LandingPage() {
           <Link className="landing-nav-link" href="/internal/login">
             Internal access
           </Link>
-          <Link className="landing-nav-link" href="/client/login">
+          <Link className="landing-nav-link" href="/login">
             Client login
           </Link>
           <Link className="btn-primary" href="/signup">
@@ -41,7 +41,7 @@ export default function LandingPage() {
             monitor the channels Daemion operates on your behalf.
           </p>
           <div className="landing-hero-ctas">
-            <Link className="btn-primary" href="/client/login">
+            <Link className="btn-primary" href="/login">
               Customer login
             </Link>
             <Link className="btn-ghost" href="/signup">
@@ -111,7 +111,7 @@ export default function LandingPage() {
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
-            <span className="landing-mock-url">app.daemion.io/client/tickets</span>
+            <span className="landing-mock-url">dev.daemion.io/client/tickets</span>
           </div>
           <div className="landing-mock-body">
             <aside className="landing-mock-sidebar">
@@ -164,7 +164,7 @@ export default function LandingPage() {
           {' · '}
           <Link href="/internal/login">Internal access</Link>
           {' · '}
-          <Link href="/client/login">Client login</Link>
+          <Link href="/login">Client login</Link>
         </span>
       </footer>
     </main>

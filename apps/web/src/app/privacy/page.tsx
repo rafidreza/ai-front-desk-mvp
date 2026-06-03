@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           Daemion
         </Link>
         <div className="landing-nav-links">
-          <Link className="landing-nav-link" href="/client/login">
+          <Link className="landing-nav-link" href="/login">
             Client login
           </Link>
           <Link className="btn-primary" href="/signup">
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
         <span>
           <Link href="/privacy">Privacy</Link>
           {' · '}
-          <Link href="/client/login">Client login</Link>
+          <Link href="/login">Client login</Link>
         </span>
       </footer>
     </main>

@@ -82,7 +82,7 @@ export default function ClientLoginPage() {
   }, []);
 
   const redirectedFromLabel = useMemo(() => {
-    if (nextPath === null || nextPath === '' || nextPath === '/client/login') return null;
+    if (nextPath === null || nextPath === '' || nextPath === '/client/login' || nextPath === '/login') return null;
     if (nextPath.startsWith('/client/dashboard')) return 'dashboard';
     if (nextPath.startsWith('/client/tickets')) return 'ticket list';
     if (nextPath.startsWith('/client/knowledge')) return 'knowledge base';
@@ -219,7 +219,7 @@ export default function ClientLoginPage() {
   return (
     <main className="client-auth-shell">
       <section className="client-auth-intro">
-        <a className="client-auth-brand" href="/client/login">
+        <a className="client-auth-brand" href="/">
           <DaemionLockup />
         </a>
         <div className="client-auth-copy">
