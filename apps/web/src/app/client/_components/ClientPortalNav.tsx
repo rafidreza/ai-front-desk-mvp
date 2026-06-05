@@ -30,8 +30,14 @@ export function ClientPortalNav({ active, clientId, language }: { active: Client
       {navItems.map((item) => {
         const Icon = item.icon;
         return (
-          <a className="client-nav-link" data-active={active === item.id} href={withClientId(item.href, clientId)} key={item.id}>
-            <Icon size={15} />
+          <a
+            aria-current={active === item.id ? 'page' : undefined}
+            className="client-nav-link"
+            data-active={active === item.id}
+            href={withClientId(item.href, clientId)}
+            key={item.id}
+          >
+            <Icon aria-hidden="true" size={15} />
             {copy.nav[item.labelKey]}
           </a>
         );

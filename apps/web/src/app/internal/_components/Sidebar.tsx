@@ -71,6 +71,7 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
         {topLinks.map((item) =>
           onChangeView !== undefined && (item.view === 'operations' || item.view === 'qa') ? (
             <button
+              aria-pressed={activeView === item.view}
               className="side-link"
               data-active={activeView === item.view}
               key={item.view}
@@ -81,29 +82,60 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
               {item.label}
             </button>
           ) : (
-            <Link className="side-link" data-active={activeView === item.view} href={item.href} key={item.view}>
+            <Link
+              aria-current={activeView === item.view ? 'page' : undefined}
+              className="side-link"
+              data-active={activeView === item.view}
+              href={item.href}
+              key={item.view}
+            >
               {item.icon}
               {item.label}
             </Link>
           ),
         )}
-        <Link className="side-link" data-active={activeView === 'knowledge'} href="/internal/knowledge">
+        <Link
+          aria-current={activeView === 'knowledge' ? 'page' : undefined}
+          className="side-link"
+          data-active={activeView === 'knowledge'}
+          href="/internal/knowledge"
+        >
           <DatabaseZap size={17} />
           Knowledge
         </Link>
-        <Link className="side-link" data-active={activeView === 'kb-review'} href="/internal/kb-review">
+        <Link
+          aria-current={activeView === 'kb-review' ? 'page' : undefined}
+          className="side-link"
+          data-active={activeView === 'kb-review'}
+          href="/internal/kb-review"
+        >
           <ClipboardCheck size={17} />
           KB Review
         </Link>
-        <Link className="side-link" data-active={activeView === 'audit-log'} href="/internal/audit-log">
+        <Link
+          aria-current={activeView === 'audit-log' ? 'page' : undefined}
+          className="side-link"
+          data-active={activeView === 'audit-log'}
+          href="/internal/audit-log"
+        >
           <ClipboardList size={17} />
           Audit Log
         </Link>
-        <Link className="side-link" data-active={activeView === 'data-sources'} href="/internal/data-sources">
+        <Link
+          aria-current={activeView === 'data-sources' ? 'page' : undefined}
+          className="side-link"
+          data-active={activeView === 'data-sources'}
+          href="/internal/data-sources"
+        >
           <DatabaseZap size={17} />
           Data Sources
         </Link>
-        <Link className="side-link" data-active={activeView === 'agent-config'} href="/internal/agent-config">
+        <Link
+          aria-current={activeView === 'agent-config' ? 'page' : undefined}
+          className="side-link"
+          data-active={activeView === 'agent-config'}
+          href="/internal/agent-config"
+        >
           <Settings2 size={17} />
           Agent Config
         </Link>
@@ -112,7 +144,7 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
       <div className="sidebar-footer">
         {sessionUser !== undefined && sessionUser !== null && (
           <div className="side-status" data-ok>
-            <span />
+            <span aria-hidden="true" />
             <div>
               <strong>{sessionUser.label}</strong>
               <small>{sessionUser.role}</small>
@@ -120,7 +152,7 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
           </div>
         )}
         <div className="side-status" data-ok={health?.database.ok === true}>
-          <span />
+          <span aria-hidden="true" />
           <div>
             <strong>
               {health?.database.ok ? 'Neon online' : healthError === null ? 'Database check' : 'Health issue'}

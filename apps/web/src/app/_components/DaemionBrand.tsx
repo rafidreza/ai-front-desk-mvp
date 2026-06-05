@@ -4,11 +4,15 @@ type DaemionBrandProps = {
 };
 
 export function DaemionMark({ className = '', label = 'Daemion' }: DaemionBrandProps) {
+  const isDecorative = label.trim() === '';
+
   return (
     <svg
-      aria-label={label}
+      aria-hidden={isDecorative ? true : undefined}
+      aria-label={isDecorative ? undefined : label}
       className={className}
-      role="img"
+      focusable="false"
+      role={isDecorative ? undefined : 'img'}
       viewBox="122 71 160 160"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -22,10 +26,17 @@ export function DaemionMark({ className = '', label = 'Daemion' }: DaemionBrandP
 }
 
 export function DaemionLockup({ className = '', label = 'Daemion' }: DaemionBrandProps) {
+  const hasLabel = label.trim() !== '';
+
   return (
-    <span aria-label={label} className={`daemion-lockup ${className}`.trim()}>
+    <span
+      aria-hidden={hasLabel ? undefined : true}
+      aria-label={hasLabel ? label : undefined}
+      className={`daemion-lockup ${className}`.trim()}
+      role={hasLabel ? 'img' : undefined}
+    >
       <DaemionMark className="daemion-lockup-mark" label="" />
-      <span>DAEMION</span>
+      <span aria-hidden="true">DAEMION</span>
     </span>
   );
 }

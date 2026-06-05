@@ -131,6 +131,7 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
 
   return (
     <main className="app-frame">
+      <a className="skip-link" href="#main-content">Skip to console content</a>
       <Sidebar
         activeView={activeView}
         health={health}
@@ -139,7 +140,7 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
         onLogout={() => void handleLogout()}
       />
 
-      <section className="workspace">
+      <section className="workspace" id="main-content" tabIndex={-1}>
         <header className="page-head">
           <div>
             <p className="eyebrow">{eyebrow}</p>
