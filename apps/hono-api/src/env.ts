@@ -30,6 +30,7 @@ export interface Env {
   ANTHROPIC_MODEL?: string;
   INTERNAL_CONSOLE_PASSWORD?: string;
   INTERNAL_CONSOLE_SESSION_SECRET?: string;
+  ENABLE_DEV_INTERNAL_USERS?: string;
   CLIENT_AUTH_CODE_SECRET?: string;
   DEV_RETURN_AUTH_CODE?: string;
   DEV_CLIENT_AUTH_CODE?: string;

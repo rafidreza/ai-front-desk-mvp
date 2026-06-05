@@ -17,6 +17,7 @@
     "ENABLE_P1_WHATSAPP_PINGS": "true",
     "POSTMARK_MESSAGE_STREAM": "outbound",
     "ANTHROPIC_MODEL": "claude-3-5-haiku-latest",
+    "ENABLE_DEV_INTERNAL_USERS": "true",
     "DEV_RETURN_AUTH_CODE": "false"
   },
   "env": {
@@ -39,6 +40,7 @@
         "ENABLE_P1_WHATSAPP_PINGS": "true",
         "POSTMARK_MESSAGE_STREAM": "outbound",
         "ANTHROPIC_MODEL": "claude-3-5-haiku-latest",
+        "ENABLE_DEV_INTERNAL_USERS": "true",
         "DEV_RETURN_AUTH_CODE": "false"
       }
     }

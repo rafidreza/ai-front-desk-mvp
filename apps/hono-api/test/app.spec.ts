@@ -43,6 +43,54 @@ describe('Hono API mirror', () => {
     }
   });
 
+  it('authenticates explicit dev internal users for the staging portal', async () => {
+    const response = await app.request(
+      '/internal/auth/login',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.INTERNAL_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: 'admin@daemion.local',
+          password: 'dev-internal-pass',
+        }),
+      },
+      { ...env, NODE_ENV: 'production', ENABLE_DEV_INTERNAL_USERS: 'true' },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      user: {
+        id: 'ops-admin',
+        email: 'admin@daemion.local',
+        role: 'admin',
+      },
+    });
+  });
+
+  it('rejects dev internal users when the staging flag is disabled in production', async () => {
+    const response = await app.request(
+      '/internal/auth/login',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.INTERNAL_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: 'admin@daemion.local',
+          password: 'dev-internal-pass',
+        }),
+      },
+      { ...env, NODE_ENV: 'production', ENABLE_DEV_INTERNAL_USERS: 'false' },
+    );
+
+    expect(response.status).toBe(401);
+  });
+
   it('keeps the web chat route public while validating its body', async () => {
     const response = await app.request(
       '/web-chat/messages',
