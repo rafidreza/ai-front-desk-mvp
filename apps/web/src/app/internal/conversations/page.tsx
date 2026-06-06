@@ -384,7 +384,7 @@ export default function ConversationsPage() {
       }
     >
       {notice !== null && <div className="inline-success">{notice}</div>}
-      {error !== null && <div className="inline-alert">{error}</div>}
+      {error !== null && conversations.length > 0 && <div className="inline-alert">{error}</div>}
 
       <section className="conversation-search">
         <div className="conversation-search__input">

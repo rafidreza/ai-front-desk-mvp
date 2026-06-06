@@ -21,7 +21,7 @@ export function ConversationsPanel({
   onSelect,
 }: ConversationsPanelProps) {
   return (
-    <aside className="panel">
+    <aside className="panel" aria-label="Conversation queue">
       <div className="panel-header">
         <div className="panel-title">
           <MessagesSquare size={16} />
@@ -30,7 +30,13 @@ export function ConversationsPanel({
         <div className="panel-actions">
           {isConversationsLoading && <span className="badge">Loading</span>}
           <span className="count">{conversations.length}</span>
-          <button className="mini-button" type="button" onClick={onReload} disabled={isConversationsLoading}>
+          <button
+            aria-label="Refresh conversations"
+            className="mini-button"
+            type="button"
+            onClick={onReload}
+            disabled={isConversationsLoading}
+          >
             <RefreshCw size={14} />
           </button>
         </div>

@@ -92,7 +92,7 @@ export function TicketDetailPanel({
   }
 
   return (
-    <section className="detail-panel">
+    <section className="detail-panel" aria-label="Active case detail">
       <div className="panel-header">
         <div className="panel-title">
           <Activity size={16} />
@@ -102,6 +102,7 @@ export function TicketDetailPanel({
           {isDetailLoading && <span className="badge">Loading</span>}
           {activeTicket !== undefined && (
             <button
+              aria-label="Refresh active case"
               className="mini-button"
               type="button"
               onClick={() => onReloadDetail(activeTicket.id)}

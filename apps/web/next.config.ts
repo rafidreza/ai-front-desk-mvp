@@ -14,6 +14,7 @@ if (existsSync(repoEnvPath)) {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: repoRoot,
+  devIndicators: false,
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');

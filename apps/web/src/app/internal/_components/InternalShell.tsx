@@ -36,10 +36,11 @@ interface InternalShellProps {
   eyebrow: string;
   title: string;
   action?: ReactNode;
+  onChangeView?: (view: 'operations' | 'qa') => void;
   children: ReactNode;
 }
 
-export function InternalShell({ activeView, eyebrow, title, action, children }: InternalShellProps) {
+export function InternalShell({ activeView, eyebrow, title, action, onChangeView, children }: InternalShellProps) {
   const [health, setHealth] = useState<ApiHealth | null>(null);
   const [aiHealth, setAiHealth] = useState<AiProviderHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
@@ -134,6 +135,7 @@ export function InternalShell({ activeView, eyebrow, title, action, children }: 
       <a className="skip-link" href="#main-content">Skip to console content</a>
       <Sidebar
         activeView={activeView}
+        onChangeView={onChangeView}
         health={health}
         healthError={healthError}
         sessionUser={sessionUser}

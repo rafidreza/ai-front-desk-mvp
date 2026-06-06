@@ -493,7 +493,7 @@ function baseCopy(language: ClientLanguage) {
       eyebrow: 'Client dashboard',
       supportCoverage: 'Support coverage',
       coverageTitle: (connected: number) =>
-        `${formatLocalizedNumber(connected, 'mixed')} of ${formatLocalizedNumber(3, 'mixed')} customer channels e AI assistance active`,
+        `${formatLocalizedNumber(connected, 'mixed')} of ${formatLocalizedNumber(3, 'mixed')} customer channels with AI assistance active`,
       coverageDescription:
         'Messenger, WhatsApp, ar web widget alada track kora hocche, jate live channel, setup-needed channel, ar customer traffic clear thake.',
       clientAccount: 'Client account',

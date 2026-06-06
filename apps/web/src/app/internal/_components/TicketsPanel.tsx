@@ -41,7 +41,7 @@ export function TicketsPanel({
   const someSelected = selectionEnabled && !allSelected && tickets.some((ticket) => selectedIds.has(ticket.id));
 
   return (
-    <aside className="panel">
+    <aside className="panel" aria-label="Ticket queue">
       <div className="panel-header">
         <div className="panel-title">
           <TicketCheck size={16} />

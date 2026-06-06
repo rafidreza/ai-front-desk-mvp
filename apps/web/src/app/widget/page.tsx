@@ -101,6 +101,7 @@ export default function WebChatWidgetPage() {
 
   return (
     <main className="widget-shell">
+      <h1 className="sr-only">Daemion web chat</h1>
       <section className="widget-frame" aria-label="Daemion web chat">
         <header className="widget-header">
           <div className="widget-mark">

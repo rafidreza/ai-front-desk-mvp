@@ -56,7 +56,7 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" aria-label="Internal console navigation">
       <div className="brand">
         <div className="brand-mark">
           <DaemionMark />

@@ -55,28 +55,36 @@ export default function OnboardingReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function bootstrap() {
-      setIsLoading(true);
-      try {
-        const data = await getClients();
-        setClients(data);
-        const requested =
-          typeof window === 'undefined'
-            ? null
-            : new URLSearchParams(window.location.search).get('clientId');
-        const initial = data.find((entry) => entry.id === requested) ?? data[0] ?? null;
-        if (initial !== null) {
-          setSelectedClientId(initial.id);
-          setForm(formFromClient(initial));
-        }
-      } catch (loadError) {
-        setError(getErrorMessage(loadError, 'Could not load client list.'));
-      } finally {
-        setIsLoading(false);
+  async function loadClients() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getClients();
+      setClients(data);
+      const requested =
+        typeof window === 'undefined'
+          ? null
+          : new URLSearchParams(window.location.search).get('clientId');
+      const initial = data.find((entry) => entry.id === requested) ?? data[0] ?? null;
+      if (initial !== null) {
+        setSelectedClientId(initial.id);
+        setForm(formFromClient(initial));
+      } else {
+        setSelectedClientId('');
+        setForm(null);
       }
+    } catch (loadError) {
+      setClients([]);
+      setSelectedClientId('');
+      setForm(null);
+      setError(getErrorMessage(loadError, 'Could not load client list.'));
+    } finally {
+      setIsLoading(false);
     }
-    void bootstrap();
+  }
+
+  useEffect(() => {
+    void loadClients();
   }, []);
 
   const activeClient = useMemo(
@@ -147,10 +155,20 @@ export default function OnboardingReviewPage() {
         </div>
       }
     >
-      {error !== null && <div className="inline-alert">{error}</div>}
+      {error !== null && activeClient !== null && <div className="inline-alert">{error}</div>}
       {notice !== null && <div className="inline-success">{notice}</div>}
 
       {isLoading && form === null && <div className="empty">Loading clients…</div>}
+      {!isLoading && error !== null && activeClient === null && (
+        <section className="empty-state empty-state--panel">
+          <strong>Client list did not load</strong>
+          <p>{error}</p>
+          <button className="mini-button" type="button" onClick={() => void loadClients()}>
+            <RefreshCw size={14} />
+            Retry clients
+          </button>
+        </section>
+      )}
 
       {activeClient !== null && form !== null && (
         <section className="onboarding-review-layout">

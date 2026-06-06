@@ -4,10 +4,8 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   addTicketComment,
-  getAiProviderHealth,
   getCalibrationQueue,
   getConversations,
-  getDatabaseHealth,
   getInternalUsers,
   getTicketDetail,
   getTickets,
@@ -16,8 +14,6 @@ import {
   updateTicketStatus,
 } from '@/lib/api';
 import {
-  AiProviderHealth,
-  ApiHealth,
   CalibrationQueueFilter,
   CalibrationQueueSummary,
   ConversationLog,
@@ -28,16 +24,14 @@ import {
   TicketStatus,
 } from '@/types/domain';
 import { ConversationsPanel } from './_components/ConversationsPanel';
+import { InternalShell } from './_components/InternalShell';
 import { MetricCards } from './_components/MetricCards';
 import { QaReview } from './_components/QaReview';
-import { Sidebar } from './_components/Sidebar';
 import { TicketDetailPanel } from './_components/TicketDetailPanel';
 import { TicketsPanel } from './_components/TicketsPanel';
 import { assigneeLabel, getErrorMessage, statusLabels } from './_lib/helpers';
 
 export default function InternalConsole() {
-  const [health, setHealth] = useState<ApiHealth | null>(null);
-  const [aiHealth, setAiHealth] = useState<AiProviderHealth | null>(null);
   const [conversations, setConversations] = useState<ConversationLog[]>([]);
   const [calibrationConversations, setCalibrationConversations] = useState<ConversationLog[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -49,14 +43,12 @@ export default function InternalConsole() {
   const [commentDraft, setCommentDraft] = useState('');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [isHealthLoading, setIsHealthLoading] = useState(true);
   const [isTicketsLoading, setIsTicketsLoading] = useState(true);
   const [isConversationsLoading, setIsConversationsLoading] = useState(true);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
-  const [healthError, setHealthError] = useState<string | null>(null);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [conversationsError, setConversationsError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -64,23 +56,6 @@ export default function InternalConsole() {
   const [updateNotice, setUpdateNotice] = useState<string | null>(null);
   const [qaNotice, setQaNotice] = useState<string | null>(null);
   const [selectedTicketDetail, setSelectedTicketDetail] = useState<TicketDetail | null>(null);
-
-  async function loadHealthPanel() {
-    setIsHealthLoading(true);
-    setHealthError(null);
-    try {
-      const [databaseHealth, providerHealth] = await Promise.all([
-        getDatabaseHealth(),
-        getAiProviderHealth(),
-      ]);
-      setHealth(databaseHealth);
-      setAiHealth(providerHealth);
-    } catch (loadError) {
-      setHealthError(getErrorMessage(loadError, 'Database health check failed. Fix: confirm the API server and database connection are running, then refresh.'));
-    } finally {
-      setIsHealthLoading(false);
-    }
-  }
 
   async function loadConversationsPanel() {
     setIsConversationsLoading(true);
@@ -134,7 +109,6 @@ export default function InternalConsole() {
 
   async function loadData() {
     await Promise.all([
-      loadHealthPanel(),
       loadConversationsPanel(),
       loadCalibrationQueuePanel(),
       loadTicketsPanel(),
@@ -245,7 +219,7 @@ export default function InternalConsole() {
             conversations.length) *
             100,
         );
-  const isLoading = isHealthLoading || isTicketsLoading || isConversationsLoading;
+  const isLoading = isTicketsLoading || isConversationsLoading;
 
   async function handleStatusChange(status: TicketStatus) {
     if (activeTicket === undefined) return;
@@ -331,45 +305,20 @@ export default function InternalConsole() {
     }
   }
 
-  async function handleLogout() {
-    await fetch('/api/internal-logout', { method: 'POST' });
-    window.location.href = '/internal/login';
-  }
-
   return (
-    <main className="app-frame">
-      <a className="skip-link" href="#main-content">Skip to console content</a>
-      <Sidebar
-        activeView={activeView}
-        onChangeView={setActiveView}
-        health={health}
-        healthError={healthError}
-        onLogout={() => void handleLogout()}
-      />
-
-      <section className="workspace" id="main-content" tabIndex={-1}>
-        <header className="page-head">
-          <div>
-            <p className="eyebrow">
-              {activeView === 'operations' ? 'Managed support operations' : 'Quality control'}
-            </p>
-            <h2>{activeView === 'operations' ? 'Conversation Triage' : 'Manual QA Review'}</h2>
-          </div>
-          <button className="icon-button" type="button" onClick={() => void loadData()} disabled={isLoading}>
-            <RefreshCw size={16} />
-            Refresh
-          </button>
-        </header>
-
-        {aiHealth?.isDegraded === true && (
-          <div className="degradation-banner">
-            <AlertTriangle size={16} />
-            <span>AI is slow right now — using fallback replies.</span>
-            <a href="/internal">Internal status</a>
-          </div>
-        )}
-
-        <MetricCards
+    <InternalShell
+      activeView={activeView}
+      eyebrow={activeView === 'operations' ? 'Managed support operations' : 'Quality control'}
+      title={activeView === 'operations' ? 'Conversation Triage' : 'Manual QA Review'}
+      onChangeView={setActiveView}
+      action={
+        <button className="icon-button" type="button" onClick={() => void loadData()} disabled={isLoading}>
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      }
+    >
+      <MetricCards
           activeView={activeView}
           openTickets={openTickets}
           p1Tickets={p1Tickets}
@@ -381,82 +330,81 @@ export default function InternalConsole() {
           averageConfidence={averageConfidence}
           ticketsError={ticketsError}
           conversationsError={conversationsError}
+      />
+
+      {updateError !== null && (
+        <div className="error-banner">
+          <AlertTriangle size={16} />
+          {updateError}
+        </div>
+      )}
+
+      {activeView === 'qa' ? (
+        <QaReview
+          conversations={queueConversations}
+          queueFilter={qaFilter}
+          queueSummary={queueSummary}
+          qaNotice={qaNotice}
+          conversationsError={conversationsError}
+          isConversationsLoading={isConversationsLoading}
+          isGrading={isGrading}
+          onChangeFilter={(filter) => {
+            setQaFilter(filter);
+            void loadCalibrationQueuePanel(filter);
+          }}
+          onReload={() => void loadCalibrationQueuePanel()}
+          onGrade={(conversation, grade, hallucinationFlag) =>
+            void handleGradeConversation(conversation, grade, hallucinationFlag)
+          }
         />
-
-        {updateError !== null && (
-          <div className="error-banner">
-            <AlertTriangle size={16} />
-            {updateError}
-          </div>
-        )}
-
-        {activeView === 'qa' ? (
-          <QaReview
-            conversations={queueConversations}
-            queueFilter={qaFilter}
-            queueSummary={queueSummary}
-            qaNotice={qaNotice}
-            conversationsError={conversationsError}
-            isConversationsLoading={isConversationsLoading}
-            isGrading={isGrading}
-            onChangeFilter={(filter) => {
-              setQaFilter(filter);
-              void loadCalibrationQueuePanel(filter);
+      ) : (
+        <section className="triage-grid">
+          <TicketsPanel
+            tickets={filteredTickets}
+            assigneeOptions={assigneeOptions}
+            assigneeFilter={assigneeFilter}
+            activeTicketId={activeTicket?.id}
+            isTicketsLoading={isTicketsLoading}
+            ticketsError={ticketsError}
+            onChangeFilter={setAssigneeFilter}
+            onReload={() => void loadTicketsPanel()}
+            onSelectTicket={(ticket) => {
+              setSelectedTicketId(ticket.id);
+              setSelectedConversationId(ticket.conversationId);
             }}
-            onReload={() => void loadCalibrationQueuePanel()}
-            onGrade={(conversation, grade, hallucinationFlag) =>
-              void handleGradeConversation(conversation, grade, hallucinationFlag)
-            }
           />
-        ) : (
-          <section className="triage-grid">
-            <TicketsPanel
-              tickets={filteredTickets}
-              assigneeOptions={assigneeOptions}
-              assigneeFilter={assigneeFilter}
-              activeTicketId={activeTicket?.id}
-              isTicketsLoading={isTicketsLoading}
-              ticketsError={ticketsError}
-              onChangeFilter={setAssigneeFilter}
-              onReload={() => void loadTicketsPanel()}
-              onSelectTicket={(ticket) => {
-                setSelectedTicketId(ticket.id);
-                setSelectedConversationId(ticket.conversationId);
-              }}
-            />
 
-            <ConversationsPanel
-              conversations={conversations}
-              activeConversationId={selectedConversation?.id}
-              isConversationsLoading={isConversationsLoading}
-              conversationsError={conversationsError}
-              onReload={() => void loadConversationsPanel()}
-              onSelect={(conversation) => {
-                setSelectedConversationId(conversation.id);
-                setSelectedTicketId(conversation.ticketId ?? null);
-              }}
-            />
+          <ConversationsPanel
+            conversations={conversations}
+            activeConversationId={selectedConversation?.id}
+            isConversationsLoading={isConversationsLoading}
+            conversationsError={conversationsError}
+            onReload={() => void loadConversationsPanel()}
+            onSelect={(conversation) => {
+              setSelectedConversationId(conversation.id);
+              setSelectedTicketId(conversation.ticketId ?? null);
+            }}
+          />
 
-            <TicketDetailPanel
-              activeTicket={activeTicket}
-              selectedConversation={selectedConversation}
-              selectedTicketDetail={selectedTicketDetail}
-              assigneeOptions={assigneeOptions}
-              isDetailLoading={isDetailLoading}
-              detailError={detailError}
-              updateNotice={updateNotice}
-              isUpdating={isUpdating}
-              isCommenting={isCommenting}
-              commentDraft={commentDraft}
-              onReloadDetail={(ticketId) => void loadTicketDetailPanel(ticketId)}
-              onChangeStatus={(status) => void handleStatusChange(status)}
-              onChangeAssignee={(assigneeId) => void handleAssigneeChange(assigneeId)}
-              onChangeCommentDraft={setCommentDraft}
-              onAddComment={() => void handleAddComment()}
-            />
-          </section>
-        )}
-      </section>
-    </main>
+          <TicketDetailPanel
+            activeTicket={activeTicket}
+            selectedConversation={selectedConversation}
+            selectedTicketDetail={selectedTicketDetail}
+            assigneeOptions={assigneeOptions}
+            isDetailLoading={isDetailLoading}
+            detailError={detailError}
+            updateNotice={updateNotice}
+            isUpdating={isUpdating}
+            isCommenting={isCommenting}
+            commentDraft={commentDraft}
+            onReloadDetail={(ticketId) => void loadTicketDetailPanel(ticketId)}
+            onChangeStatus={(status) => void handleStatusChange(status)}
+            onChangeAssignee={(assigneeId) => void handleAssigneeChange(assigneeId)}
+            onChangeCommentDraft={setCommentDraft}
+            onAddComment={() => void handleAddComment()}
+          />
+        </section>
+      )}
+    </InternalShell>
   );
 }
