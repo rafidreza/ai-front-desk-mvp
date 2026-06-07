@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Daemion design system — preview</title>
+<link rel="stylesheet" href="./packages/tokens/fonts.css" />
+<link rel="stylesheet" href="./packages/tokens/tokens.css" />
+<style>
+  /* This page hand-writes the component styles from @daemion/ui purely so it
+     can render with NO build step. Source of truth is still tokens.css. */
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--font-body); font-size: var(--text-body); line-height: var(--lh-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 64px 32px 120px; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: var(--tracking-tight); line-height: var(--lh-heading); margin: 0; }
+  h1 { font-size: var(--text-display); font-weight: var(--fw-display); }
+  .sub { color: var(--text-muted); margin-top: 8px; }
+  section { margin-top: 56px; }
+  .eyebrow { font-family: var(--font-mono); font-size: var(--text-micro); text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-faint); margin-bottom: 16px; }
+  .dot { color: var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .grid { display: grid; gap: 12px; }
+
+  /* palette */
+  .swatches { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); }
+  .sw { border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
+  .sw .chip { height: 64px; }
+  .sw .meta { padding: 8px 10px; font-family: var(--font-mono); font-size: var(--text-micro); }
+  .sw .meta b { display:block; font-family: var(--font-body); font-size: var(--text-tiny); text-transform: none; letter-spacing: 0; color: var(--text); }
+  .sw .meta span { color: var(--text-faint); }
+
+  /* type scale */
+  .type-row { display:flex; align-items: baseline; gap: 16px; border-top: 1px solid var(--line); padding: 14px 0; }
+  .type-row .tag { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--text-faint); width: 110px; flex: none; }
+
+  /* button */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 16px;
+         font-family: var(--font-body); font-weight: var(--fw-medium); font-size: var(--text-small);
+         border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+  .btn-primary { background: var(--accent); color: var(--text-on-accent); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: var(--surface-2); color: var(--text); border-color: var(--line); }
+  .btn-ghost { background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover { color: var(--text); background: var(--surface-2); }
+  /* THE FIX (audit R1): disabled = explicit off surface, legible, obviously dead */
+  .btn:disabled { cursor: not-allowed; background: var(--disabled-bg); color: var(--disabled-fg); border-color: var(--disabled-border); }
+
+  /* input + field */
+  .field { display:flex; flex-direction:column; gap:6px; max-width: 320px; }
+  .field label { font-family: var(--font-mono); font-size: var(--text-micro); text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-faint); }
+  .input { height:40px; padding:0 12px; border-radius: var(--radius-md); background: var(--surface-2); color: var(--text); border:1px solid var(--line); font: inherit; font-size: var(--text-small); }
+  .input::placeholder { color: var(--text-faint); }
+  .input:focus { outline: none; border-color: var(--accent-border); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .input:disabled { background: var(--disabled-bg); color: var(--disabled-fg); border-color: var(--disabled-border); }
+
+  /* card */
+  .card { background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-lg); padding: 20px; }
+  .card.raised { background: var(--surface-2); box-shadow: var(--shadow-md); }
+  .card h3 { font-size: var(--text-h3); }
+  .card p { color: var(--text-muted); font-size: var(--text-small); margin: 6px 0 0; }
+
+  /* pill */
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius: var(--radius-pill); border:1px solid var(--line);
+          font-family: var(--font-mono); font-size: var(--text-micro); text-transform: uppercase; letter-spacing: var(--tracking-wide); }
+  .pill .d { width:6px; height:6px; border-radius:999px; background: currentColor; }
+  .pill-neutral { background: var(--surface-2); color: var(--text-muted); }
+  .pill-accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+  .pill-danger { background: var(--danger-soft); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
+
+  .note { font-size: var(--text-tiny); color: var(--text-faint); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Daemion design system <span class="dot">·</span> preview</div>
+    <h1>The signal at the surface<span class="dot">.</span></h1>
+    <p class="sub">Tokens + component library. Dark ground, bone text, cyan as the charge. Everything below is driven by <code>@daemion/tokens</code>.</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">Palette</div>
+    <div class="grid swatches">
+      <div class="sw"><div class="chip" style="background:var(--d-void)"></div><div class="meta"><b>Void</b><span>#000000 · ground</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--d-carbon)"></div><div class="meta"><b>Carbon</b><span>#0B0D0E · surface</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--d-carbon-2)"></div><div class="meta"><b>Carbon-2</b><span>#101315 · raised</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--d-slate)"></div><div class="meta"><b>Slate</b><span>#1C2123 · lines</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--d-ash)"></div><div class="meta"><b>Ash</b><span>#8A9499 · muted text</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--d-bone)"></div><div class="meta"><b>Bone</b><span>#EBEBEB · text</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--d-signal)"></div><div class="meta"><b>Signal</b><span>#54E3F9 · the charge</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--d-signal-deep)"></div><div class="meta"><b>Deep Cyan</b><span>#0E3A44 · tint</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Type scale</div>
+    <div class="type-row"><span class="tag">display / 40</span><span style="font-family:var(--font-display);font-size:var(--text-display);font-weight:700">Autonomous front desk</span></div>
+    <div class="type-row"><span class="tag">h2 / 24</span><span style="font-family:var(--font-display);font-size:var(--text-h2);font-weight:650">Real numbers, real timings</span></div>
+    <div class="type-row"><span class="tag">body / 16</span><span>Plain words. Talk like a helpful person, not a press release or a bot.</span></div>
+    <div class="type-row"><span class="tag">mono / 11</span><span style="font-family:var(--font-mono);text-transform:uppercase;letter-spacing:var(--tracking-wide);color:var(--text-faint)">SYSTEM · ONLINE · 99.98% UPTIME</span></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Buttons</div>
+    <div class="row">
+      <button class="btn btn-primary">Open console</button>
+      <button class="btn btn-secondary">Cancel</button>
+      <button class="btn btn-ghost">Skip</button>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn btn-primary" disabled>Open console</button>
+      <input class="input" disabled value="disabled input" style="width:160px" />
+    </div>
+    <p class="note">↑ Audit R1 fix: the disabled button reads clearly as <em>off</em> and stays legible — no more washed-teal-on-dim-gray from <code>opacity:0.55</code>.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Form field</div>
+    <div class="field">
+      <label for="e">Work email</label>
+      <input id="e" class="input" placeholder="you@company.com" />
+    </div>
+    <p class="note">↑ Audit R2 fix: ALL-CAPS label now in <code>--text-faint</code> (≥4.5:1) instead of sub-threshold gray.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Cards + pills</div>
+    <div class="grid" style="grid-template-columns: 1fr 1fr">
+      <div class="card">
+        <h3>Conversations</h3>
+        <p>14 active across WhatsApp, web widget, and voice.</p>
+        <div class="row" style="margin-top:14px">
+          <span class="pill pill-accent"><span class="d"></span>Live</span>
+          <span class="pill pill-neutral">Queue 3</span>
+        </div>
+      </div>
+      <div class="card raised">
+        <h3>System health</h3>
+        <p>All channels nominal. Latency 42ms.</p>
+        <div class="row" style="margin-top:14px">
+          <span class="pill pill-warn"><span class="d"></span>Degraded</span>
+          <span class="pill pill-danger"><span class="d"></span>P1</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "@daemion/tokens",
+  "version": "0.0.0",
+  "description": "Daemion design tokens — palette, type, space, radius. CSS-variable source of truth + Tailwind v4 theme.",
+  "type": "module",
+  "files": [
+    "tokens.css",
+    "theme.css",
+    "fonts.css"
+  ],
+  "exports": {
+    "./tokens.css": "./tokens.css",
+    "./theme.css": "./theme.css",
+    "./fonts.css": "./fonts.css"
+  }
+}

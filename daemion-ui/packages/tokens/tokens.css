@@ -1,0 +1,123 @@
+/* ============================================================
+   Daemion design tokens — single source of truth.
+   Extracted from daemion-brand/BRAND_GUIDELINES.html.
+   Daemion is a DARK brand: void ground, bone text, cyan as the charge.
+   Plain CSS variables — consumable by React apps (via theme.css)
+   AND the static website (link this file directly).
+   ============================================================ */
+
+:root {
+  /* ---- Raw palette (never reference these directly in components;
+          use the semantic roles below) ---- */
+  --d-void: #000000;        /* ground */
+  --d-carbon: #0b0d0e;      /* base surface */
+  --d-carbon-2: #101315;    /* raised surface */
+  --d-slate: #1c2123;       /* hairlines / borders */
+  --d-ash-dim: #5a6166;     /* decorative only — NOT readable text */
+  --d-ash: #8a9499;         /* secondary text (AA on void) */
+  --d-bone-dim: #c9ced1;
+  --d-bone: #ebebeb;        /* primary text / foreground */
+  --d-signal: #54e3f9;      /* THE charge — accent only, ~5% usage */
+  --d-signal-mid: #16343a;
+  --d-signal-deep: #0e3a44; /* cyan tint / borders */
+
+  /* status hues */
+  --d-warn: #f7b733;
+  --d-danger: #ff4d4d;
+  --d-danger-soft: #e8635f;
+  --d-violet: #9b5cff;
+
+  /* ============================================================
+     SEMANTIC ROLES — components reference ONLY these.
+     ============================================================ */
+
+  /* surfaces */
+  --bg: var(--d-void);
+  --surface: var(--d-carbon);
+  --surface-2: var(--d-carbon-2);
+  --surface-3: #16191b;
+
+  /* text — every value here clears WCAG AA (4.5:1) on --bg/--surface */
+  --text: var(--d-bone);
+  --text-muted: var(--d-ash);     /* ~5.0:1 on void */
+  --text-faint: #79817f;          /* lowest readable gray, ~4.5:1 — labels/captions */
+  --text-on-accent: var(--d-void);/* black text on cyan */
+
+  /* lines */
+  --line: var(--d-slate);
+  --line-strong: rgba(235, 235, 235, 0.16);
+
+  /* accent (the signal) */
+  --accent: var(--d-signal);
+  --accent-hover: #6fe9fb;
+  --accent-pressed: #3fcfe6;
+  --accent-soft: rgba(84, 227, 249, 0.12);
+  --accent-border: var(--d-signal-deep);
+
+  /* status */
+  --success: var(--d-signal);
+  --success-soft: rgba(84, 227, 249, 0.12);
+  --warn: var(--d-warn);
+  --warn-soft: rgba(247, 183, 51, 0.13);
+  --danger: var(--d-danger-soft);
+  --danger-soft: rgba(232, 99, 95, 0.13);
+  --info: var(--d-signal);
+
+  /* ---- DISABLED (fixes audit R1/R3) ----
+     Disabled is an explicit non-interactive surface, NOT opacity-dimmed
+     accent. Reads clearly as "off" and stays legible.
+     WCAG exempts disabled controls, so dim fg is intentional. */
+  --disabled-bg: #16191b;
+  --disabled-fg: var(--d-ash-dim);
+  --disabled-border: var(--d-slate);
+
+  /* focus ring */
+  --ring: var(--d-signal);
+  --ring-offset: var(--bg);
+
+  /* ============================================================
+     TYPE
+     ============================================================ */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-display: 40px;
+  --text-h1: 30px;
+  --text-h2: 24px;
+  --text-h3: 19px;
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-tiny: 12px;
+  --text-micro: 11px;
+
+  --fw-display: 700;
+  --fw-heading: 650;
+  --fw-medium: 500;
+  --fw-body: 400;
+
+  --lh-tight: 1.1;
+  --lh-heading: 1.2;
+  --lh-body: 1.55;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-wide: 0.08em;   /* ALL-CAPS labels */
+
+  /* ============================================================
+     SPACE / RADIUS / ELEVATION
+     ============================================================ */
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 12px 40px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.36);
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+}

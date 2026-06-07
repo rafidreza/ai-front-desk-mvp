@@ -1,0 +1,10 @@
+{
+  "name": "daemion-ui",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Daemion design system — tokens + React component library",
+  "workspaces": [
+    "packages/*"
+  ],
+  "type": "module"
+}
