@@ -4980,6 +4980,24 @@ button {
 }
 
 @media (max-width: 880px) {
+  .landing-nav {
+    flex-wrap: wrap;
+  }
+
+  .landing-nav-links {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .landing-nav-link,
+  .landing-nav-links .btn-primary {
+    flex: 0 0 auto;
+  }
+
   .landing-hero {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -7921,6 +7939,239 @@ body {
 
 .audit-log-panel .empty {
   min-height: 180px;
+}
+
+/* ============================================
+   Brand guideline alignment — authentic Daemion components
+   Source: daemion-brand/BRAND_GUIDELINES.html
+   ============================================ */
+
+.daemion-lockup {
+  width: clamp(132px, 13vw, 164px);
+  display: inline-flex;
+  align-items: center;
+  color: #ebebeb;
+  line-height: 1;
+}
+
+.daemion-lockup-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.landing-nav-brand .daemion-lockup,
+.client-auth-brand .daemion-lockup {
+  width: clamp(142px, 16vw, 178px);
+}
+
+.brand {
+  display: grid;
+  align-items: start;
+  gap: 9px;
+}
+
+.brand .daemion-lockup,
+.login-brand .daemion-lockup {
+  width: 152px;
+  margin: 0;
+  color: #ebebeb;
+}
+
+.brand-subtitle {
+  display: block;
+  margin: 0;
+  color: rgba(235, 235, 235, 0.58);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.login-brand {
+  padding-bottom: 18px;
+}
+
+.landing-shell,
+.login-screen,
+.client-auth-shell,
+.client-shell,
+.app-frame,
+.workspace {
+  background:
+    radial-gradient(circle at 50% -18%, rgba(84, 227, 249, 0.1), transparent 34rem),
+    linear-gradient(180deg, #101315 0%, #000000 62%),
+    #000000;
+}
+
+.login-panel,
+.auth-form-panel,
+.panel,
+.detail-panel,
+.client-panel,
+.client-command-card,
+.client-ticket-command,
+.client-knowledge-command,
+.client-data-command,
+.metric,
+.side-status,
+.logout-button,
+.landing-pillar,
+.landing-mock-shell,
+.widget-frame,
+.idle-timeout-modal {
+  border-color: rgba(235, 235, 235, 0.12);
+  background:
+    linear-gradient(180deg, rgba(235, 235, 235, 0.045), rgba(235, 235, 235, 0.018)),
+    rgba(11, 13, 14, 0.94);
+  color: #ebebeb;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+}
+
+.landing-mock-chrome,
+.panel-header,
+.client-topbar,
+.landing-mock-row,
+.client-nav {
+  border-color: rgba(235, 235, 235, 0.1);
+  background: rgba(16, 19, 21, 0.86);
+  color: #ebebeb;
+}
+
+.landing-mock-url,
+.landing-mock-sidebar,
+.client-auth-workspace,
+.client-auth-intro {
+  background: #000000;
+  color: #ebebeb;
+}
+
+.landing-nav-link,
+.landing-footer a,
+.client-nav-link,
+.side-link {
+  color: rgba(235, 235, 235, 0.66);
+}
+
+.side-link:hover,
+.side-link[data-active="true"],
+.client-nav-link:hover,
+.client-nav-link[data-active="true"] {
+  border-color: rgba(84, 227, 249, 0.34);
+  background: rgba(84, 227, 249, 0.09);
+  color: #ebebeb;
+  box-shadow: none;
+}
+
+.eyebrow,
+.landing-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  color: var(--brand);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before,
+.landing-eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 12px rgba(84, 227, 249, 0.72);
+}
+
+.landing-eyebrow {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(84, 227, 249, 0.18);
+  background: rgba(84, 227, 249, 0.08);
+  border-radius: 999px;
+}
+
+.btn-primary,
+.auth-form-panel .icon-button[type="submit"],
+.widget-input button,
+.widget-consent button {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #000000;
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.btn-primary:hover:not(:disabled),
+.auth-form-panel .icon-button[type="submit"]:hover,
+.widget-input button:hover,
+.widget-consent button:hover {
+  border-color: var(--brand-hover);
+  background: var(--brand-hover);
+  color: #000000;
+}
+
+.login-lock,
+.login-copy svg,
+.landing-pillar-icon,
+.landing-widget-tag,
+.inline-success,
+.badge[data-tone="green"],
+.landing-mock-pill.ok {
+  color: var(--brand);
+}
+
+.landing-pillar-icon,
+.landing-widget-tag,
+.inline-success,
+.landing-mock-pill.ok {
+  border-color: rgba(84, 227, 249, 0.24);
+  background: rgba(84, 227, 249, 0.1);
+}
+
+.landing-mock-pill.p1 {
+  border: 1px solid rgba(232, 99, 95, 0.32);
+  background: rgba(232, 99, 95, 0.13);
+  color: #ffaaa7;
+}
+
+.landing-mock-pill.p2 {
+  border: 1px solid rgba(247, 183, 51, 0.32);
+  background: rgba(247, 183, 51, 0.13);
+  color: #ffd08a;
+}
+
+.legal-hero h1,
+.legal-content h2,
+.landing-hero h1,
+.landing-showcase-head h2,
+.client-auth-copy h1,
+.login-copy h2,
+.page-head h2,
+.client-topbar h1 {
+  color: #ebebeb;
+  font-family: var(--display);
+  letter-spacing: 0;
+}
+
+.legal-hero p,
+.legal-content p,
+.landing-hero p.landing-lede,
+.landing-showcase-head p,
+.client-auth-copy p:last-child,
+.client-command-card p,
+.client-ticket-command p,
+.client-knowledge-command p,
+.client-data-command p {
+  color: #c9ced1;
 }
 
 @media (max-width: 1280px) {

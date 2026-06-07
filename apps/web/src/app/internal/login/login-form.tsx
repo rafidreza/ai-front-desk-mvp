@@ -3,7 +3,7 @@
 import { LockKeyhole, LockKeyholeOpen } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
-import { DaemionMark } from '../../_components/DaemionBrand';
+import { DaemionLockup } from '../../_components/DaemionBrand';
 
 type FeedbackTone = 'idle' | 'info' | 'error' | 'success';
 
@@ -48,13 +48,8 @@ export function InternalLoginForm() {
   return (
     <section className="login-panel">
       <div className="brand login-brand">
-        <div className="brand-mark">
-          <DaemionMark />
-        </div>
-        <div>
-          <h1>Daemion</h1>
-          <span>Internal access</span>
-        </div>
+        <DaemionLockup className="brand-lockup" />
+        <span className="brand-subtitle">Internal access</span>
       </div>
 
       <div className="login-copy">

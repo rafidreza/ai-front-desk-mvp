@@ -14,7 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { DaemionMark } from '../../_components/DaemionBrand';
+import { DaemionLockup } from '../../_components/DaemionBrand';
 import { ApiHealth } from '@/types/domain';
 
 type ActiveView =
@@ -58,13 +58,8 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
   return (
     <aside className="sidebar" aria-label="Internal console navigation">
       <div className="brand">
-        <div className="brand-mark">
-          <DaemionMark />
-        </div>
-        <div>
-          <h1>Daemion</h1>
-          <span>Ops console</span>
-        </div>
+        <DaemionLockup className="brand-lockup" />
+        <span className="brand-subtitle">Ops console</span>
       </div>
 
       <nav className="side-nav" aria-label="Internal sections">

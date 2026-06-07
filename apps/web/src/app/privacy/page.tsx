@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BotMessageSquare, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import { DaemionLockup } from '../_components/DaemionBrand';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — Daemion',
@@ -13,10 +14,7 @@ export default function PrivacyPage() {
     <main className="landing-shell">
       <nav className="landing-nav">
         <Link className="landing-nav-brand" href="/">
-          <span className="brand-mark">
-            <BotMessageSquare size={19} />
-          </span>
-          Daemion
+          <DaemionLockup />
         </Link>
         <div className="landing-nav-links">
           <Link className="landing-nav-link" href="/login">
