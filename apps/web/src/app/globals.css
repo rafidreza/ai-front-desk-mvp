@@ -1037,12 +1037,23 @@ button {
 .ticket-state-card--control select {
   min-height: 30px;
   width: 100%;
-  border: 1px solid var(--line-strong);
-  background: #ffffff;
-  color: var(--ink);
+  border: 1px solid rgba(84, 227, 249, 0.28);
+  background: rgba(84, 227, 249, 0.1);
+  color: #ebebeb;
   border-radius: 7px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.ticket-state-card--control select:focus {
+  border-color: rgba(84, 227, 249, 0.48);
+  box-shadow: 0 0 0 3px rgba(84, 227, 249, 0.1);
+  outline: none;
+}
+
+.ticket-state-card--control select option {
+  background: #0b0d0e;
+  color: #ebebeb;
 }
 
 .field {
