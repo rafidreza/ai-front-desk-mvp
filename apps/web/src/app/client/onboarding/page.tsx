@@ -4,7 +4,7 @@ import { BookOpenText, Building2, Link2, MessageCircle } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { getClientDashboard, submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
+import { getClientDashboard, startMetaOAuth, submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import {
   ClientFacebookSetupPreference,
@@ -38,6 +38,7 @@ export default function ClientOnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConnectingFacebook, setIsConnectingFacebook] = useState(false);
 
   const clientId = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -137,6 +138,20 @@ export default function ClientOnboardingPage() {
       setError(channelError instanceof Error ? channelError.message : onboardingCopy.skipError);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function connectFacebookPage() {
+    setIsConnectingFacebook(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const returnTo = `/client/onboarding?clientId=${encodeURIComponent(clientId)}`;
+      const result = await startMetaOAuth(clientId, returnTo);
+      window.location.href = result.authorizationUrl;
+    } catch (connectError) {
+      setError(connectError instanceof Error ? connectError.message : onboardingCopy.channelError);
+      setIsConnectingFacebook(false);
     }
   }
 
@@ -270,7 +285,15 @@ export default function ClientOnboardingPage() {
                     <option value="skip">{onboardingCopy.skipNow}</option>
                   </select>
                 </label>
-                {facebookSetup === 'oauth' && <div className="inline-success">{onboardingCopy.facebookOauthRequested}</div>}
+                {facebookSetup === 'oauth' && (
+                  <div className="inline-success">
+                    <Link2 size={14} />
+                    <span>{onboardingCopy.facebookOauthRequested}</span>
+                    <button className="mini-button" disabled={isConnectingFacebook} type="button" onClick={() => void connectFacebookPage()}>
+                      {isConnectingFacebook ? 'Opening Facebook...' : 'Connect Facebook Page'}
+                    </button>
+                  </div>
+                )}
                 {facebookSetup !== 'skip' && (
                   <label>
                     {onboardingCopy.facebookPageId}

@@ -9,6 +9,7 @@ import { AuthCodeDeliveryService, ChannelSendService, EmailDeliveryService, Urge
 import { InternalUsersService } from './internal-users';
 import { KnowledgeChangeRequestService, KnowledgeImportService, KnowledgeService } from './knowledge';
 import { LoggerService } from './logger';
+import { MetaOAuthService } from './meta-oauth';
 import { PromptProfileService } from './prompts';
 import { IndustryTemplateService } from './templates';
 
@@ -22,6 +23,7 @@ export function createServices(c: Context<AppBindings>) {
   const repository = new ConversationRepository(db);
   const ticketService = new TicketService(repository, knowledge, logger);
   const channelSend = new ChannelSendService(c.env, logger);
+  const metaOAuth = new MetaOAuthService(db, c.env);
   const email = new EmailDeliveryService(c.env, logger);
   const authDelivery = new AuthCodeDeliveryService(email, channelSend);
   const auth = new ClientAuthService(db, c.env, clients, authDelivery);
@@ -53,6 +55,7 @@ export function createServices(c: Context<AppBindings>) {
     internalUsers,
     knowledge,
     knowledgeRequests,
+    metaOAuth,
     prompts,
     repository,
     templates,

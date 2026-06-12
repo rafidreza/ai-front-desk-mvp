@@ -95,6 +95,8 @@ Copy `.env.example` to `.env` when credentials are available.
 - `MESSENGER_PAGE_ACCESS_TOKEN` enables real Messenger sends.
 - `MESSENGER_GRAPH_VERSION` optionally pins the Messenger Graph API version; defaults to `v20.0`.
 - `MESSENGER_APP_SECRET` enables signed-webhook verification.
+- `META_APP_ID`, `META_OAUTH_REDIRECT_URI`, and `META_OAUTH_SCOPES` configure the customer Facebook Page OAuth connection flow. Dev uses `https://api.dev.daemion.io/oauth/meta/callback`.
+- `META_APP_SECRET` must be set as a secret, never committed. It signs OAuth state, exchanges callback codes, and encrypts saved Page access tokens.
 - `ENABLE_P1_WHATSAPP_PINGS=false` disables urgent-ticket WhatsApp alerts. By default, P1 alerts dry-run when WhatsApp credentials are missing.
 - `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` enable real WhatsApp Cloud API P1 alerts to the client's `whatsappPoc` or `ownerPhone`.
 - `WHATSAPP_VERIFY_TOKEN` and `WHATSAPP_APP_SECRET` secure the `/webhooks/whatsapp` adapter. During migration-free alpha setup, set a client's `pageId` to the WhatsApp `phone_number_id` so inbound webhook events route to the right workspace.
@@ -199,6 +201,7 @@ npx wrangler secret put DATABASE_URL --env staging
 npx wrangler secret put INTERNAL_API_TOKEN --env staging
 npx wrangler secret put CLIENT_AUTH_CODE_SECRET --env staging
 npx wrangler secret put WEB_APP_URL --env staging
+npx wrangler secret put META_APP_SECRET --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_URL --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_TOKEN --env staging
 npx wrangler secret put OPENAI_API_KEY --env staging

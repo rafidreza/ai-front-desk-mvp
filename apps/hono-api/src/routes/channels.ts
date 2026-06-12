@@ -165,7 +165,9 @@ export function channelRoutes() {
     const parsed = MessengerWebhookSchema.parse(JSON.parse(rawBody));
     const processed = [];
     for (const entry of parsed.entry) {
-      const client = await createServices(c).clients.findByPageId(entry.id);
+      const services = createServices(c);
+      const client = await services.clients.findByPageId(entry.id);
+      const pageAccessToken = await services.metaOAuth.getConnectedPageAccessToken({ clientId: client.id, pageId: entry.id });
       for (const event of entry.messaging) {
         const csatScore = parseMessengerCsat(event.message?.quick_reply?.payload ?? event.postback?.payload, event.message?.text ?? event.postback?.title);
         if (csatScore !== null) {
@@ -199,7 +201,12 @@ export function channelRoutes() {
         });
         const sendResult = result.alreadyProcessed
           ? { mode: 'skipped' as const, recipientId: event.sender.id, text: result.reply.text }
-          : await createServices(c).channelSend.sendText({ channel: 'messenger', recipientId: event.sender.id, text: result.reply.text });
+          : await services.channelSend.sendText({
+              channel: 'messenger',
+              recipientId: event.sender.id,
+              text: result.reply.text,
+              accessToken: pageAccessToken,
+            });
         processed.push({ incomingMessageId: event.message.mid, reply: result.reply, ticket: result.ticket, sendResult });
       }
     }

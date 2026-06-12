@@ -10,6 +10,7 @@ import { conversationRoutes } from './routes/conversations';
 import { healthRoutes } from './routes/health';
 import { internalRoutes } from './routes/internal';
 import { knowledgeRoutes } from './routes/knowledge';
+import { metaOAuthRoutes } from './routes/meta-oauth';
 import { promptRoutes } from './routes/prompts';
 
 export function createApp() {
@@ -46,6 +47,7 @@ export function createApp() {
   app.route('/', conversationRoutes());
   app.route('/', internalRoutes());
   app.route('/', knowledgeRoutes());
+  app.route('/', metaOAuthRoutes());
   app.route('/', promptRoutes());
 
   app.notFound((c) => c.json({ statusCode: 404, message: 'Not Found' }, 404));

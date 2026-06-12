@@ -67,6 +67,51 @@ export const clientAuthChallenges = pgTable(
   }),
 );
 
+export const clientChannels = pgTable(
+  'ClientChannel',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    channel: text('channel').notNull(),
+    externalId: text('externalId').notNull(),
+    label: text('label').notNull(),
+    status: text('status').notNull().default('connected'),
+    isPrimary: boolean('isPrimary').notNull().default(false),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
+    connectedAt: timestamp('connectedAt', { mode: 'date' }).notNull().defaultNow(),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    channelExternalUnique: uniqueIndex('ClientChannel_channel_externalId_key').on(table.channel, table.externalId),
+    clientIdIdx: index('ClientChannel_clientId_idx').on(table.clientId),
+    clientChannelIdx: index('ClientChannel_clientId_channel_idx').on(table.clientId, table.channel),
+    channelExternalIdx: index('ClientChannel_channel_externalId_idx').on(table.channel, table.externalId),
+  }),
+);
+
+export const metaOAuthSessions = pgTable(
+  'MetaOAuthSession',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('started'),
+    returnTo: text('returnTo'),
+    pages: jsonb('pages').$type<Record<string, unknown>[] | null>(),
+    selectedPageId: text('selectedPageId'),
+    error: text('error'),
+    expiresAt: timestamp('expiresAt', { mode: 'date' }).notNull(),
+    completedAt: timestamp('completedAt', { mode: 'date' }),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('MetaOAuthSession_clientId_idx').on(table.clientId),
+    statusIdx: index('MetaOAuthSession_status_idx').on(table.status),
+    expiresAtIdx: index('MetaOAuthSession_expiresAt_idx').on(table.expiresAt),
+  }),
+);
+
 export const externalDataSources = pgTable(
   'ExternalDataSource',
   {
@@ -468,10 +513,15 @@ export const ticketComments = pgTable(
 export const clientRelations = relations(clients, ({ many }) => ({
   conversations: many(conversations),
   tickets: many(tickets),
+  channels: many(clientChannels),
   knowledgeEntries: many(knowledgeEntries),
   externalDataSources: many(externalDataSources),
   productRecords: many(productRecords),
   orderRecords: many(orderRecords),
+}));
+
+export const clientChannelRelations = relations(clientChannels, ({ one }) => ({
+  client: one(clients, { fields: [clientChannels.clientId], references: [clients.id] }),
 }));
 
 export const externalDataSourceRelations = relations(externalDataSources, ({ many, one }) => ({
@@ -524,6 +574,8 @@ export const ticketCommentRelations = relations(ticketComments, ({ one }) => ({
 export const schema = {
   clients,
   clientAuthChallenges,
+  clientChannels,
+  metaOAuthSessions,
   internalUsers,
   externalDataSources,
   externalDataSyncRuns,

@@ -13,12 +13,12 @@ export class ChannelSendService {
     private readonly logger = new LoggerService(),
   ) {}
 
-  async sendText(input: { channel: 'messenger' | 'whatsapp'; recipientId: string; text: string; purpose?: string }): Promise<SendResult> {
+  async sendText(input: { channel: 'messenger' | 'whatsapp'; recipientId: string; text: string; purpose?: string; accessToken?: string }): Promise<SendResult> {
     return input.channel === 'messenger' ? this.sendMessenger(input) : this.sendWhatsApp(input);
   }
 
-  private async sendMessenger(input: { recipientId: string; text: string }) {
-    const token = envString(this.env, 'MESSENGER_PAGE_ACCESS_TOKEN');
+  private async sendMessenger(input: { recipientId: string; text: string; accessToken?: string }) {
+    const token = input.accessToken ?? envString(this.env, 'MESSENGER_PAGE_ACCESS_TOKEN');
     if (token === undefined) {
       return { mode: 'dry-run' as const, channel: 'messenger' as const, recipientId: input.recipientId, text: input.text, reason: 'MESSENGER_PAGE_ACCESS_TOKEN missing' };
     }

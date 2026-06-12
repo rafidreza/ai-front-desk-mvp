@@ -10,6 +10,10 @@ export interface Env {
   MESSENGER_GRAPH_VERSION?: string;
   MESSENGER_APP_SECRET?: string;
   MESSENGER_PAGE_ACCESS_TOKEN?: string;
+  META_APP_ID?: string;
+  META_APP_SECRET?: string;
+  META_OAUTH_REDIRECT_URI?: string;
+  META_OAUTH_SCOPES?: string;
   ENABLE_P1_WHATSAPP_PINGS?: string;
   ENABLE_WHATSAPP?: string;
   WHATSAPP_VERIFY_TOKEN?: string;

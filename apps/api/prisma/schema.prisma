@@ -58,9 +58,29 @@ model Client {
   blockedSenders          BlockedSender[]
   testCustomers           TestCustomer[]
   auditLogs               AuditLog[]
+  metaOAuthSessions       MetaOAuthSession[]
 
   @@index([status])
   @@index([lifecycleStage])
+}
+
+model MetaOAuthSession {
+  id             String    @id
+  clientId       String
+  status         String    @default("started")
+  returnTo       String?
+  pages          Json?
+  selectedPageId String?
+  error          String?
+  expiresAt      DateTime
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([status])
+  @@index([expiresAt])
 }
 
 model ClientAutoReplyRule {

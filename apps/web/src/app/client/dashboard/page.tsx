@@ -4,7 +4,7 @@ import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw,
 import { useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { captureCsat, getClientDashboard } from '@/lib/api';
+import { captureCsat, getClientDashboard, startMetaOAuth } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { formatBdt, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
 import { ClientDashboardSummary } from '@/types/domain';
@@ -19,6 +19,7 @@ export default function ClientDashboardPage() {
   const [dashboard, setDashboard] = useState<ClientDashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectingChannel, setConnectingChannel] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
 
   const clientId = useMemo(() => {
@@ -65,6 +66,19 @@ export default function ClientDashboardPage() {
   async function copyWidgetUrl(path: string) {
     if (navigator.clipboard === undefined) return;
     await navigator.clipboard.writeText(`${origin}${path}`);
+  }
+
+  async function connectFacebookPage() {
+    setConnectingChannel('messenger');
+    setError(null);
+    try {
+      const returnTo = `/client/dashboard?clientId=${encodeURIComponent(clientId)}`;
+      const result = await startMetaOAuth(clientId, returnTo);
+      window.location.href = result.authorizationUrl;
+    } catch (connectError) {
+      setError(connectError instanceof Error ? connectError.message : 'Unable to start Facebook Page connection.');
+      setConnectingChannel(null);
+    }
   }
 
   return (
@@ -168,7 +182,13 @@ export default function ClientDashboardPage() {
                     </button>
                   </>
                 ) : (
-                  <span>{channel.actionLabel}</span>
+                  channel.channel === 'messenger' && channel.status === 'needs_setup' ? (
+                    <button className="mini-button" disabled={connectingChannel === 'messenger'} type="button" onClick={() => void connectFacebookPage()}>
+                      {connectingChannel === 'messenger' ? 'Opening Facebook...' : 'Connect Facebook Page'}
+                    </button>
+                  ) : (
+                    <span>{channel.actionLabel}</span>
+                  )
                 )}
               </div>
             </article>

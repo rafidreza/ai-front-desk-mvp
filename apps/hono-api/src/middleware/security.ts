@@ -6,7 +6,7 @@ import { RateLimitError, UnauthorizedError } from '../errors';
 import { timingSafeStringEqual } from '../utils/crypto';
 import type { AppBindings } from '../db/client';
 
-const publicPrefixes = ['/health', '/webhooks/messenger', '/webhooks/whatsapp', '/web-chat'];
+const publicPrefixes = ['/health', '/webhooks/messenger', '/webhooks/whatsapp', '/web-chat', '/oauth/meta/callback'];
 const buckets: RateLimitBuckets = new Map();
 
 export function corsMiddleware() {

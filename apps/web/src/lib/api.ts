@@ -276,6 +276,44 @@ export async function getClientDashboard(clientId: string): Promise<ClientDashbo
   return apiFetch<ClientDashboardSummary>(`/clients/${clientId}/dashboard`);
 }
 
+export type MetaOAuthPageOption = {
+  id: string;
+  name: string;
+};
+
+export type MetaOAuthSession = {
+  id: string;
+  status: string;
+  error?: string;
+  pages: MetaOAuthPageOption[];
+  selectedPageId?: string;
+  expiresAt: string;
+  completedAt?: string;
+};
+
+export async function startMetaOAuth(clientId: string, returnTo?: string): Promise<{ authorizationUrl: string; expiresAt: string }> {
+  return apiFetch<{ authorizationUrl: string; expiresAt: string }>(`/clients/${clientId}/meta/oauth/start`, {
+    method: 'POST',
+    body: JSON.stringify({ returnTo }),
+  });
+}
+
+export async function getMetaOAuthSession(clientId: string, sessionId: string): Promise<MetaOAuthSession> {
+  const data = await apiFetch<{ session: MetaOAuthSession }>(`/clients/${clientId}/meta/oauth-sessions/${sessionId}`);
+  return data.session;
+}
+
+export async function selectMetaOAuthPage(clientId: string, sessionId: string, pageId: string): Promise<{ page: MetaOAuthPageOption }> {
+  const data = await apiFetch<{ connection: { page: MetaOAuthPageOption } }>(
+    `/clients/${clientId}/meta/oauth-sessions/${sessionId}/select`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ pageId }),
+    },
+  );
+  return data.connection;
+}
+
 export async function getClientTickets(clientId: string, status = 'all'): Promise<Ticket[]> {
   const data = await apiFetch<{ tickets: Ticket[] }>(`/clients/${clientId}/tickets?status=${status}`);
   return data.tickets;

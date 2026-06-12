@@ -3034,6 +3034,31 @@ button {
   accent-color: var(--green);
 }
 
+.meta-page-picker {
+  display: grid;
+  gap: 1rem;
+}
+
+.meta-page-picker p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 720px;
+}
+
+.meta-page-picker .choice-control {
+  align-items: flex-start;
+  padding-block: 10px;
+}
+
+.meta-page-picker .choice-control span {
+  display: grid;
+  gap: 3px;
+}
+
+.meta-page-picker .choice-control small {
+  color: var(--muted);
+}
+
 .stack-form {
   display: grid;
   gap: 12px;
