@@ -17,8 +17,9 @@ export function randomId(prefix?: string) {
   return prefix === undefined ? id : `${prefix}${id}`;
 }
 
-export function randomSixDigitCode(env: { NODE_ENV?: string; DEV_CLIENT_AUTH_CODE?: string }) {
-  if (env.NODE_ENV !== 'production' && env.DEV_CLIENT_AUTH_CODE !== undefined && env.DEV_CLIENT_AUTH_CODE !== '') {
+export function randomSixDigitCode(env: { NODE_ENV?: string; DAEMION_ENV?: string; DEV_CLIENT_AUTH_CODE?: string }) {
+  const allowDevCode = env.NODE_ENV !== 'production' || env.DAEMION_ENV === 'preview';
+  if (allowDevCode && env.DEV_CLIENT_AUTH_CODE !== undefined && env.DEV_CLIENT_AUTH_CODE !== '') {
     if (!/^\d{6}$/.test(env.DEV_CLIENT_AUTH_CODE)) {
       throw new Error('DEV_CLIENT_AUTH_CODE must be exactly 6 digits.');
     }

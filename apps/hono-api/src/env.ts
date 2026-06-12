@@ -44,6 +44,7 @@ export interface Env {
   SENTRY_DSN?: string;
   SENTRY_ENVIRONMENT?: string;
   APP_VERSION?: string;
+  DAEMION_ENV?: string;
 }
 
 export function envString(env: Env, key: keyof Env, fallback?: string) {
@@ -57,6 +58,14 @@ export function nodeEnv(env: Env) {
 
 export function isProduction(env: Env) {
   return nodeEnv(env) === 'production';
+}
+
+// A preview deployment (e.g. dev.daemion.io) runs with NODE_ENV=production so the
+// secret-length guards stay enforced, but is NOT the real production environment.
+// Dev-only conveniences (returning the login code in the API response, fixed dev
+// codes) are allowed on preview but never on real production.
+export function isPreviewEnv(env: Env) {
+  return envString(env, 'DAEMION_ENV') === 'preview';
 }
 
 export function allowedOrigins(env: Env) {
@@ -83,8 +92,9 @@ export function authCodeSecret(env: Env) {
 }
 
 export function shouldReturnDevCode(env: Env) {
-  if (isProduction(env) && env.DEV_RETURN_AUTH_CODE === 'true') {
+  if (env.DEV_RETURN_AUTH_CODE !== 'true') return false;
+  if (isProduction(env) && !isPreviewEnv(env)) {
     throw new Error('DEV_RETURN_AUTH_CODE must not be enabled in production.');
   }
-  return env.DEV_RETURN_AUTH_CODE === 'true';
+  return true;
 }
