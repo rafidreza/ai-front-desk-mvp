@@ -120,6 +120,26 @@ export class ClientService {
     return toClientProfile(client!);
   }
 
+  async disconnectWhatsApp(clientId: string) {
+    const [existing] = await this.db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+    if (existing === undefined) throw new NotFoundError(`Client not found: ${clientId}`);
+
+    const [client] = await this.db
+      .update(clients)
+      .set({
+        whatsappPoc: null,
+        onboardingProfile: {
+          ...(existing.onboardingProfile ?? {}),
+          whatsappSetup: 'skip',
+        },
+        updatedAt: new Date(),
+      })
+      .where(eq(clients.id, clientId))
+      .returning();
+
+    return toClientProfile(client!);
+  }
+
   async findByPageId(pageId: string) {
     const [client] = await this.db.select().from(clients).where(eq(clients.pageId, pageId)).limit(1);
     if (client === undefined) throw new NotFoundError(`Client not found for page: ${pageId}`);
@@ -323,7 +343,7 @@ export class DashboardService {
 
   private buildChannelSummaries(client: ClientProfile, conversationsByChannel: Map<Channel, number>): ClientChannelSummary[] {
     const messengerConnected = client.pageId.trim().length > 0 && !client.pageId.endsWith('-page-pending');
-    const whatsappContact = client.whatsappPoc ?? client.ownerPhone;
+    const whatsappContact = client.whatsappPoc;
     const whatsappConnected = whatsappContact !== undefined && whatsappContact.trim().length > 0;
 
     return [

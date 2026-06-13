@@ -8052,6 +8052,8 @@ body {
 .client-ticket-command,
 .client-knowledge-command,
 .client-data-command,
+.channel-card,
+.client-row,
 .metric,
 .side-status,
 .logout-button,
@@ -8070,11 +8072,33 @@ body {
 .landing-mock-chrome,
 .panel-header,
 .client-topbar,
+.channel-title > span,
 .landing-mock-row,
 .client-nav {
   border-color: rgba(235, 235, 235, 0.1);
   background: rgba(16, 19, 21, 0.86);
   color: #ebebeb;
+}
+
+.channel-card[data-status="connected"],
+.channel-card[data-status="available"],
+.channel-card[data-status="needs_setup"],
+.client-row:hover {
+  border-color: rgba(84, 227, 249, 0.2);
+}
+
+.channel-title strong,
+.channel-count strong,
+.client-row strong {
+  color: #ebebeb;
+}
+
+.channel-title small,
+.channel-count span,
+.channel-card p,
+.channel-action-row span,
+.client-row small {
+  color: rgba(235, 235, 235, 0.62);
 }
 
 .landing-mock-url,

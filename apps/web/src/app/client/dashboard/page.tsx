@@ -4,7 +4,7 @@ import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw,
 import { useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { captureCsat, disconnectMetaPage, getClientDashboard, startMetaOAuth } from '@/lib/api';
+import { captureCsat, disconnectMetaPage, disconnectWhatsApp, getClientDashboard, startMetaOAuth } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { formatBdt, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
 import { ClientDashboardSummary } from '@/types/domain';
@@ -92,6 +92,22 @@ export default function ClientDashboardPage() {
       await loadDashboard();
     } catch (disconnectError) {
       setError(disconnectError instanceof Error ? disconnectError.message : 'Unable to disconnect Facebook Page.');
+    } finally {
+      setConnectingChannel(null);
+    }
+  }
+
+  async function disconnectWhatsAppChannel() {
+    if (!window.confirm('Disconnect WhatsApp support for this workspace? WhatsApp handoff will stop until a support contact is added again.')) {
+      return;
+    }
+    setConnectingChannel('whatsapp-disconnect');
+    setError(null);
+    try {
+      await disconnectWhatsApp(clientId);
+      await loadDashboard();
+    } catch (disconnectError) {
+      setError(disconnectError instanceof Error ? disconnectError.message : 'Unable to disconnect WhatsApp.');
     } finally {
       setConnectingChannel(null);
     }
@@ -217,6 +233,15 @@ export default function ClientDashboardPage() {
                       </button>
                     </>
                   )
+                ) : channel.channel === 'whatsapp' && channel.status !== 'needs_setup' ? (
+                  <button
+                    className="mini-button"
+                    disabled={connectingChannel === 'whatsapp-disconnect'}
+                    type="button"
+                    onClick={() => void disconnectWhatsAppChannel()}
+                  >
+                    {connectingChannel === 'whatsapp-disconnect' ? 'Disconnecting...' : 'Disconnect WhatsApp'}
+                  </button>
                 ) : (
                   <span>{channel.actionLabel}</span>
                 )}

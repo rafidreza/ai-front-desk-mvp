@@ -276,6 +276,13 @@ export async function getClientDashboard(clientId: string): Promise<ClientDashbo
   return apiFetch<ClientDashboardSummary>(`/clients/${clientId}/dashboard`);
 }
 
+export async function disconnectWhatsApp(clientId: string): Promise<ClientProfile> {
+  const data = await apiFetch<{ client: ClientProfile }>(`/clients/${clientId}/whatsapp/disconnect`, {
+    method: 'POST',
+  });
+  return data.client;
+}
+
 export type MetaOAuthPageOption = {
   id: string;
   name: string;

@@ -12,6 +12,7 @@ function isClientAllowedBackendPath(pathname: string) {
     /^\/api\/backend\/clients\/[^/]+\/dashboard$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/onboarding$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/tickets(?:\/[^/]+(?:\/status)?)?$/.test(pathname) ||
+    /^\/api\/backend\/clients\/[^/]+\/whatsapp\/disconnect$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/conversations\/[^/]+\/csat$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/external-data\/(?:sources(?:\/[^/]+\/sync)?|google-sheet|products|orders)$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/meta\/(?:disconnect|oauth(?:\/start|-sessions\/[^/]+(?:\/select)?))$/.test(pathname) ||

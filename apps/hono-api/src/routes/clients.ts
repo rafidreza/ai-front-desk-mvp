@@ -68,6 +68,10 @@ export function clientRoutes() {
     return c.json({ client: await createServices(c).clients.updateOnboarding(c.req.param('clientId'), parsed) });
   });
 
+  app.post('/clients/:clientId/whatsapp/disconnect', async (c) =>
+    c.json({ client: await createServices(c).clients.disconnectWhatsApp(c.req.param('clientId')) }),
+  );
+
   app.get('/clients/:clientId/dashboard', async (c) => c.json(await createServices(c).dashboard.getDashboard(c.req.param('clientId'))));
 
   app.get('/clients/:clientId/digests/:cadence/preview', async (c) =>
