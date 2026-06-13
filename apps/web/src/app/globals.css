@@ -3527,8 +3527,11 @@ button {
   display: grid;
   gap: 10px;
   padding: 12px;
-  border: 1px solid #d9e2dd;
-  background: #ffffff;
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(180deg, rgba(235, 235, 235, 0.045), rgba(235, 235, 235, 0.018)),
+    rgba(11, 13, 14, 0.92);
+  color: var(--ink);
   border-radius: 8px;
 }
 
@@ -3561,7 +3564,7 @@ button {
 .knowledge-request-row p,
 .knowledge-request-feedback p {
   margin: 0;
-  color: #2e3945;
+  color: rgba(235, 235, 235, 0.82);
   font-size: 13px;
   line-height: 1.48;
 }
@@ -3601,8 +3604,11 @@ button {
   align-items: center;
   gap: 10px;
   padding: 12px;
-  border: 1px solid #d9e2dd;
-  background: #ffffff;
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(180deg, rgba(235, 235, 235, 0.045), rgba(235, 235, 235, 0.018)),
+    rgba(11, 13, 14, 0.92);
+  color: var(--ink);
   border-radius: 8px;
 }
 
@@ -3611,8 +3617,10 @@ button {
   display: grid;
   gap: 5px;
   padding: 10px;
-  border-left: 3px solid #c0674a;
-  background: #fbf4ef;
+  border: 1px solid rgba(255, 198, 71, 0.24);
+  border-left: 3px solid var(--amber);
+  background: rgba(255, 198, 71, 0.08);
+  color: var(--ink);
   border-radius: 8px;
 }
 
