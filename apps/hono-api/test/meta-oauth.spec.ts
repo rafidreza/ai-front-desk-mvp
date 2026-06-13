@@ -88,6 +88,14 @@ function createFakeDb() {
         },
       };
     },
+    delete(table: unknown) {
+      return {
+        where() {
+          if (table === clientChannels) state.channel = undefined;
+          return Promise.resolve();
+        },
+      };
+    },
   };
 
   return { db: db as unknown as AppDb, state };
@@ -147,5 +155,28 @@ describe('Meta OAuth flow', () => {
 
     const token = await service.getConnectedPageAccessToken({ clientId: 'client-1', pageId: 'page-1' });
     expect(token).toBe('page-token-secret');
+  });
+
+  it('disconnects the saved Messenger Page and returns the client to setup-needed state', async () => {
+    const { db, state } = createFakeDb();
+    state.client.pageId = 'page-1';
+    state.channel = {
+      id: 'client-1:messenger:page-1',
+      clientId: 'client-1',
+      channel: 'messenger',
+      externalId: 'page-1',
+      label: 'Demo Page',
+      status: 'connected',
+      isPrimary: true,
+      metadata: { pageAccessTokenEncrypted: 'encrypted-token' },
+    };
+    const service = new MetaOAuthService(db, env);
+
+    await expect(service.disconnectPage({ clientId: 'client-1' })).resolves.toMatchObject({
+      disconnected: true,
+      pageId: 'page-1',
+    });
+    expect(state.channel).toBeUndefined();
+    expect(state.client.pageId).toBe('client-1-page-pending');
   });
 });

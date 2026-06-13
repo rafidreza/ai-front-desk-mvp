@@ -314,6 +314,13 @@ export async function selectMetaOAuthPage(clientId: string, sessionId: string, p
   return data.connection;
 }
 
+export async function disconnectMetaPage(clientId: string): Promise<{ disconnected: true; pageId: string }> {
+  const data = await apiFetch<{ connection: { disconnected: true; pageId: string } }>(`/clients/${clientId}/meta/disconnect`, {
+    method: 'POST',
+  });
+  return data.connection;
+}
+
 export async function getClientTickets(clientId: string, status = 'all'): Promise<Ticket[]> {
   const data = await apiFetch<{ tickets: Ticket[] }>(`/clients/${clientId}/tickets?status=${status}`);
   return data.tickets;

@@ -4,7 +4,7 @@ import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw,
 import { useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { captureCsat, getClientDashboard, startMetaOAuth } from '@/lib/api';
+import { captureCsat, disconnectMetaPage, getClientDashboard, startMetaOAuth } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { formatBdt, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
 import { ClientDashboardSummary } from '@/types/domain';
@@ -77,6 +77,22 @@ export default function ClientDashboardPage() {
       window.location.href = result.authorizationUrl;
     } catch (connectError) {
       setError(connectError instanceof Error ? connectError.message : 'Unable to start Facebook Page connection.');
+      setConnectingChannel(null);
+    }
+  }
+
+  async function disconnectFacebookPage() {
+    if (!window.confirm('Disconnect this Facebook Page from Daemion? Messenger automation will stop for this workspace until you reconnect a Page.')) {
+      return;
+    }
+    setConnectingChannel('messenger-disconnect');
+    setError(null);
+    try {
+      await disconnectMetaPage(clientId);
+      await loadDashboard();
+    } catch (disconnectError) {
+      setError(disconnectError instanceof Error ? disconnectError.message : 'Unable to disconnect Facebook Page.');
+    } finally {
       setConnectingChannel(null);
     }
   }
@@ -181,14 +197,28 @@ export default function ClientDashboardPage() {
                       {copy.common.copy}
                     </button>
                   </>
-                ) : (
-                  channel.channel === 'messenger' && channel.status === 'needs_setup' ? (
+                ) : channel.channel === 'messenger' ? (
+                  channel.status === 'needs_setup' ? (
                     <button className="mini-button" disabled={connectingChannel === 'messenger'} type="button" onClick={() => void connectFacebookPage()}>
                       {connectingChannel === 'messenger' ? 'Opening Facebook...' : 'Connect Facebook Page'}
                     </button>
                   ) : (
-                    <span>{channel.actionLabel}</span>
+                    <>
+                      <button className="mini-button" disabled={connectingChannel === 'messenger'} type="button" onClick={() => void connectFacebookPage()}>
+                        {connectingChannel === 'messenger' ? 'Opening Facebook...' : 'Reconnect Page'}
+                      </button>
+                      <button
+                        className="mini-button"
+                        disabled={connectingChannel === 'messenger-disconnect'}
+                        type="button"
+                        onClick={() => void disconnectFacebookPage()}
+                      >
+                        {connectingChannel === 'messenger-disconnect' ? 'Disconnecting...' : 'Disconnect'}
+                      </button>
+                    </>
                   )
+                ) : (
+                  <span>{channel.actionLabel}</span>
                 )}
               </div>
             </article>

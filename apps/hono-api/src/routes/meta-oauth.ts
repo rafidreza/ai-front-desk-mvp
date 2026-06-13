@@ -77,5 +77,13 @@ export function metaOAuthRoutes() {
     });
   });
 
+  app.post('/clients/:clientId/meta/disconnect', async (c) =>
+    c.json({
+      connection: await createServices(c).metaOAuth.disconnectPage({
+        clientId: c.req.param('clientId'),
+      }),
+    }),
+  );
+
   return app;
 }

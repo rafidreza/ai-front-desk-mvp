@@ -283,6 +283,26 @@ export class MetaOAuthService {
     return decryptSecret(appSecret(this.env), encrypted);
   }
 
+  async disconnectPage(input: { clientId: string }) {
+    const [client] = await this.db.select().from(clients).where(eq(clients.id, input.clientId)).limit(1);
+    if (client === undefined) throw new NotFoundError(`Client not found: ${input.clientId}`);
+
+    const now = new Date();
+    await this.db.delete(clientChannels).where(and(eq(clientChannels.clientId, input.clientId), eq(clientChannels.channel, 'messenger')));
+    await this.db
+      .update(clients)
+      .set({
+        pageId: `${input.clientId}-page-pending`,
+        updatedAt: now,
+      })
+      .where(eq(clients.id, input.clientId));
+
+    return {
+      disconnected: true,
+      pageId: client.pageId,
+    };
+  }
+
   private async exchangeCode(code: string) {
     const url = new URL(`https://graph.facebook.com/${graphVersion(this.env)}/oauth/access_token`);
     url.searchParams.set('client_id', appId(this.env));
