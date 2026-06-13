@@ -3466,14 +3466,58 @@ button {
   background: rgba(84, 227, 249, 0.08);
 }
 
-.conversation-comfort-panel {
-  grid-column: 1 / -1;
+.conversation-comfort-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.conversation-comfort-modal {
+  width: min(1040px, 100%);
+  max-height: min(820px, calc(100vh - 48px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(235, 235, 235, 0.14);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(84, 227, 249, 0.12), transparent 28rem),
+    linear-gradient(180deg, rgba(20, 23, 25, 0.98), rgba(7, 9, 10, 0.98));
+  color: var(--ink);
+  border-radius: 10px;
+  box-shadow: 0 30px 120px rgba(0, 0, 0, 0.62);
+}
+
+.conversation-comfort-modal > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px;
+  border-bottom: 1px solid rgba(235, 235, 235, 0.12);
+}
+
+.conversation-comfort-modal h2 {
+  margin: 6px 0 0;
+  font-size: var(--text-h2);
+  line-height: var(--lh-heading);
+}
+
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .conversation-comfort-body {
   display: grid;
   gap: 14px;
   padding: 14px;
+  overflow: auto;
 }
 
 .conversation-assurance-grid {
@@ -3515,7 +3559,7 @@ button {
 .client-conversation-thread {
   display: grid;
   gap: 10px;
-  max-height: 420px;
+  max-height: 46vh;
   overflow: auto;
   padding: 12px;
   border: 1px solid var(--line-strong);
@@ -4480,6 +4524,24 @@ button {
   .delegation-actions,
   .client-case-layout .status-actions {
     grid-template-columns: 1fr;
+  }
+
+  .conversation-comfort-overlay {
+    padding: 12px;
+  }
+
+  .conversation-comfort-modal > header,
+  .conversation-rating-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .modal-header-actions {
+    justify-content: space-between;
+  }
+
+  .client-conversation-bubble {
+    width: 100%;
   }
 
   .csat-buttons {

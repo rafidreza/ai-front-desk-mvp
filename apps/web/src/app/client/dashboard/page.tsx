@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert } from 'lucide-react';
+import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
@@ -39,9 +39,7 @@ export default function ClientDashboardPage() {
   const connectedChannelCount = channels.filter((channel) => channel.status !== 'needs_setup').length;
   const language = dashboard?.client.defaultLanguage;
   const copy = getClientPortalCopy(language);
-  const selectedConversation =
-    dashboard?.recentConversations.find((conversation) => conversation.id === selectedConversationId) ??
-    dashboard?.recentConversations[0];
+  const selectedConversation = dashboard?.recentConversations.find((conversation) => conversation.id === selectedConversationId);
   const selectedLastMessage = selectedConversation?.messages.at(-1);
   const selectedAiReplies = selectedConversation?.messages.filter((message) => message.direction === 'outbound').length ?? 0;
   const selectedCustomerMessages = selectedConversation?.messages.filter((message) => message.direction === 'inbound').length ?? 0;
@@ -66,6 +64,15 @@ export default function ClientDashboardPage() {
     setOrigin(window.location.origin);
     void loadDashboard();
   }, []);
+
+  useEffect(() => {
+    if (selectedConversationId === null) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSelectedConversationId(null);
+    }
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [selectedConversationId]);
 
   async function handleCsat(conversationId: string, score: number) {
     await captureCsat(clientId, conversationId, { score });
@@ -321,7 +328,7 @@ export default function ClientDashboardPage() {
             {(dashboard?.recentConversations ?? []).map((conversation) => {
               const last = conversation.messages.at(-1);
               return (
-                <article className="client-row client-conversation-row" data-selected={selectedConversation?.id === conversation.id} key={conversation.id}>
+                <article className="client-row client-conversation-row" data-selected={selectedConversationId === conversation.id} key={conversation.id}>
                   <div>
                     <strong>{conversation.externalSenderId}</strong>
                     <small>{conversationLabel(conversation)} | {last?.text ?? copy.common.noMessages}</small>
@@ -335,23 +342,32 @@ export default function ClientDashboardPage() {
             {dashboard !== null && dashboard.recentConversations.length === 0 && <div className="empty">No conversations yet</div>}
           </div>
         </section>
+      </section>
 
-        <section className="client-panel conversation-comfort-panel">
-          <div className="panel-header">
-            <div className="panel-title">
-              <CheckCircle2 size={16} />
-              Conversation handling detail
-            </div>
-            {selectedConversation !== undefined && (
-              <span className="status-pill" data-status={selectedConversation.ticketId === undefined ? 'connected' : 'needs_setup'}>
-                {selectedConversation.ticketId === undefined ? 'Handled by AI' : 'Ticket opened'}
-              </span>
-            )}
-          </div>
+      {selectedConversation !== undefined && (
+        <div className="conversation-comfort-overlay" role="presentation" onClick={() => setSelectedConversationId(null)}>
+          <section
+            aria-labelledby="conversation-comfort-title"
+            aria-modal="true"
+            className="conversation-comfort-modal"
+            role="dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <p className="eyebrow">Conversation handling</p>
+                <h2 id="conversation-comfort-title">{selectedConversation.externalSenderId}</h2>
+              </div>
+              <div className="modal-header-actions">
+                <span className="status-pill" data-status={selectedConversation.ticketId === undefined ? 'connected' : 'needs_setup'}>
+                  {selectedConversation.ticketId === undefined ? 'Handled by AI' : 'Ticket opened'}
+                </span>
+                <button className="mini-button" type="button" onClick={() => setSelectedConversationId(null)} aria-label="Close conversation details">
+                  <X size={15} />
+                </button>
+              </div>
+            </header>
 
-          {selectedConversation === undefined ? (
-            <div className="empty">Recent customer conversations will appear here once Daemion starts handling them.</div>
-          ) : (
             <div className="conversation-comfort-body">
               <div className="conversation-assurance-grid">
                 <div>
@@ -407,9 +423,9 @@ export default function ClientDashboardPage() {
                 </div>
               </div>
             </div>
-          )}
-        </section>
-      </section>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
