@@ -98,7 +98,7 @@ export class MetaOAuthService {
   constructor(
     private readonly db: AppDb,
     private readonly env: Env,
-    private readonly fetchImpl: typeof fetch = fetch,
+    private readonly fetchImpl: typeof fetch = (input, init) => fetch(input, init),
   ) {}
 
   async start(input: { clientId: string; returnTo?: string }) {

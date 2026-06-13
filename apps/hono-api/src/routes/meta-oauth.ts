@@ -46,12 +46,21 @@ export function metaOAuthRoutes() {
       }));
     }
 
-    const result = await createServices(c).metaOAuth.handleCallback({
-      state,
-      code: c.req.query('code'),
-      error: c.req.query('error'),
-      errorDescription: c.req.query('error_description'),
-    });
+    let result: Awaited<ReturnType<ReturnType<typeof createServices>['metaOAuth']['handleCallback']>>;
+    try {
+      result = await createServices(c).metaOAuth.handleCallback({
+        state,
+        code: c.req.query('code'),
+        error: c.req.query('error'),
+        errorDescription: c.req.query('error_description'),
+      });
+    } catch (error) {
+      console.error('Meta OAuth callback failed', error);
+      return c.redirect(callbackRedirect(c.env, {
+        status: 'failed',
+        message: 'Daemion could not complete the Facebook Page connection. Please start the connection again.',
+      }));
+    }
 
     return c.redirect(callbackRedirect(c.env, {
       clientId: result.clientId,
