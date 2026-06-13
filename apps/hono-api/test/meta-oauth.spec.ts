@@ -7,7 +7,7 @@ const env = {
   NODE_ENV: 'development',
   META_APP_ID: '2238102173658208',
   META_APP_SECRET: 'test-meta-secret-do-not-log',
-  META_OAUTH_REDIRECT_URI: 'https://api.dev.daemion.io/oauth/meta/callback',
+  META_OAUTH_REDIRECT_URI: 'https://dev.daemion.io/api/meta/callback',
   META_OAUTH_SCOPES: 'pages_show_list,pages_manage_metadata,pages_messaging',
   MESSENGER_GRAPH_VERSION: 'v20.0',
 };
@@ -108,7 +108,7 @@ describe('Meta OAuth flow', () => {
     expect(url.origin).toBe('https://www.facebook.com');
     expect(url.pathname).toBe('/v20.0/dialog/oauth');
     expect(url.searchParams.get('client_id')).toBe('2238102173658208');
-    expect(url.searchParams.get('redirect_uri')).toBe('https://api.dev.daemion.io/oauth/meta/callback');
+    expect(url.searchParams.get('redirect_uri')).toBe('https://dev.daemion.io/api/meta/callback');
     expect(url.searchParams.get('scope')).toBe('pages_show_list,pages_manage_metadata,pages_messaging');
     expect(url.searchParams.get('state')).toBe('state-1.sig-1');
   });

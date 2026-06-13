@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppBindings } from '../db/client';
 import { envString } from '../env';
-import { BadRequestError } from '../errors';
 import { createServices } from '../services';
 import { jsonBody } from './helpers';
 
@@ -40,7 +39,12 @@ export function metaOAuthRoutes() {
 
   app.get('/oauth/meta/callback', async (c) => {
     const state = c.req.query('state');
-    if (state === undefined || state.trim() === '') throw new BadRequestError('Meta OAuth state is required.');
+    if (state === undefined || state.trim() === '') {
+      return c.redirect(callbackRedirect(c.env, {
+        status: 'failed',
+        message: 'Meta did not return a valid connection session. Start the Facebook Page connection again from your dashboard.',
+      }));
+    }
 
     const result = await createServices(c).metaOAuth.handleCallback({
       state,

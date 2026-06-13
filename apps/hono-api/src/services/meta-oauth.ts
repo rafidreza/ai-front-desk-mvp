@@ -47,7 +47,7 @@ function appSecret(env: Env) {
 }
 
 function redirectUri(env: Env) {
-  const value = envString(env, 'META_OAUTH_REDIRECT_URI', 'https://api.dev.daemion.io/oauth/meta/callback');
+  const value = envString(env, 'META_OAUTH_REDIRECT_URI', 'https://dev.daemion.io/api/meta/callback');
   if (value === undefined) throw new Error('META_OAUTH_REDIRECT_URI is required for Meta OAuth.');
   return value;
 }

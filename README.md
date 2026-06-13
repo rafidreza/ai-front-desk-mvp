@@ -95,7 +95,7 @@ Copy `.env.example` to `.env` when credentials are available.
 - `MESSENGER_PAGE_ACCESS_TOKEN` enables real Messenger sends.
 - `MESSENGER_GRAPH_VERSION` optionally pins the Messenger Graph API version; defaults to `v20.0`.
 - `MESSENGER_APP_SECRET` enables signed-webhook verification.
-- `META_APP_ID`, `META_OAUTH_REDIRECT_URI`, and `META_OAUTH_SCOPES` configure the customer Facebook Page OAuth connection flow. Dev uses `https://api.dev.daemion.io/oauth/meta/callback`.
+- `META_APP_ID`, `META_OAUTH_REDIRECT_URI`, and `META_OAUTH_SCOPES` configure the customer Facebook Page OAuth connection flow. Dev uses `https://dev.daemion.io/api/meta/callback`.
 - `META_APP_SECRET` must be set as a secret, never committed. It signs OAuth state, exchanges callback codes, and encrypts saved Page access tokens.
 - `ENABLE_P1_WHATSAPP_PINGS=false` disables urgent-ticket WhatsApp alerts. By default, P1 alerts dry-run when WhatsApp credentials are missing.
 - `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` enable real WhatsApp Cloud API P1 alerts to the client's `whatsappPoc` or `ownerPhone`.

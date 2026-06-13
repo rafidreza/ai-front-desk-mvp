@@ -142,6 +142,14 @@ describe('Hono API mirror', () => {
     expect(await whatsapp.text()).toBe('w-123');
   });
 
+  it('redirects broken Meta OAuth callbacks back to the client portal', async () => {
+    const response = await app.request('/oauth/meta/callback?error=access_denied', {}, env);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).toContain('/client/meta/select');
+    expect(response.headers.get('location')).toContain('status=failed');
+  });
+
   it('enforces webhook signatures before database work when a secret is configured', async () => {
     const response = await app.request(
       '/webhooks/messenger',
