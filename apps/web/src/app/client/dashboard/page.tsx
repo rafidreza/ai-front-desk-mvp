@@ -20,6 +20,7 @@ export default function ClientDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectingChannel, setConnectingChannel] = useState<string | null>(null);
+  const [facebookAuthUrl, setFacebookAuthUrl] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
 
   const clientId = useMemo(() => {
@@ -71,12 +72,18 @@ export default function ClientDashboardPage() {
   async function connectFacebookPage() {
     setConnectingChannel('messenger');
     setError(null);
+    setFacebookAuthUrl(null);
     try {
       const returnTo = `/client/dashboard?clientId=${encodeURIComponent(clientId)}`;
       const result = await startMetaOAuth(clientId, returnTo);
-      window.location.href = result.authorizationUrl;
+      setFacebookAuthUrl(result.authorizationUrl);
+      const opened = window.open(result.authorizationUrl, '_blank', 'noopener,noreferrer');
+      if (opened === null) {
+        setError('Your browser blocked the Facebook connection tab. Use the “Open Facebook connection” link below.');
+      }
     } catch (connectError) {
       setError(connectError instanceof Error ? connectError.message : 'Unable to start Facebook Page connection.');
+    } finally {
       setConnectingChannel(null);
     }
   }
@@ -136,6 +143,21 @@ export default function ClientDashboardPage() {
       </header>
 
       {error !== null && <div className="inline-alert">{error}</div>}
+      {facebookAuthUrl !== null && (
+        <div className="inline-alert inline-alert--recovery">
+          <TriangleAlert size={15} />
+          <div className="inline-alert__body">
+            <strong>Facebook connection opened in a separate tab.</strong>
+            <span>
+              If Facebook still says “Can’t load URL”, add <strong>daemion.io</strong> and <strong>dev.daemion.io</strong> to Meta
+              App Domains, then add <strong>https://dev.daemion.io/api/meta/callback</strong> as a valid OAuth redirect URI.
+            </span>
+            <a className="mini-button" href={facebookAuthUrl} target="_blank" rel="noreferrer">
+              Open Facebook connection
+            </a>
+          </div>
+        </div>
+      )}
 
       <section className="client-command-card">
         <div className="client-command-main">

@@ -110,6 +110,7 @@ describe('Meta OAuth flow', () => {
     expect(url.searchParams.get('client_id')).toBe('2238102173658208');
     expect(url.searchParams.get('redirect_uri')).toBe('https://dev.daemion.io/api/meta/callback');
     expect(url.searchParams.get('scope')).toBe('pages_show_list,pages_manage_metadata,pages_messaging');
+    expect(url.searchParams.get('display')).toBe('popup');
     expect(url.searchParams.get('state')).toBe('state-1.sig-1');
   });
 

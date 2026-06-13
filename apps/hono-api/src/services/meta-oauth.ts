@@ -90,6 +90,7 @@ export async function buildMetaOAuthUrl(input: {
   url.searchParams.set('state', `${input.stateId}.${input.stateSignature}`);
   url.searchParams.set('scope', oauthScopes(input.env).join(','));
   url.searchParams.set('response_type', 'code');
+  url.searchParams.set('display', 'popup');
   return url.toString();
 }
 
