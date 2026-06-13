@@ -1549,26 +1549,28 @@ button {
   gap: 10px;
   padding: 16px;
   overflow: auto;
-  background: #f5f7f9;
+  background: rgba(0, 0, 0, 0.28);
 }
 
 .bubble {
   width: min(84%, 600px);
   padding: 10px 12px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  background: #070909;
+  color: var(--ink);
   border-radius: 10px 10px 10px 3px;
 }
 
 .bubble[data-direction="outbound"] {
   justify-self: end;
-  border-color: #b8d7c9;
-  background: #e8f5ef;
+  border-color: rgba(84, 227, 249, 0.32);
+  background: rgba(84, 227, 249, 0.1);
   border-radius: 10px 10px 3px 10px;
 }
 
 .bubble p {
   margin: 0;
+  color: rgba(235, 235, 235, 0.86);
   line-height: 1.45;
   font-size: 13px;
 }
@@ -1576,7 +1578,7 @@ button {
 .bubble time {
   display: block;
   margin-top: 8px;
-  color: var(--faint);
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -1630,7 +1632,7 @@ button {
   min-height: 420px;
   padding: 16px;
   overflow: auto;
-  background: #f5f7f9;
+  background: rgba(0, 0, 0, 0.28);
 }
 
 .conversation-thread .bubble small {
