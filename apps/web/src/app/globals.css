@@ -3461,6 +3461,117 @@ button {
   gap: 6px;
 }
 
+.client-conversation-row[data-selected="true"] {
+  border-color: rgba(84, 227, 249, 0.34);
+  background: rgba(84, 227, 249, 0.08);
+}
+
+.conversation-comfort-panel {
+  grid-column: 1 / -1;
+}
+
+.conversation-comfort-body {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.conversation-assurance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.conversation-assurance-grid div,
+.conversation-comfort-summary {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  background: rgba(235, 235, 235, 0.035);
+  border-radius: 8px;
+}
+
+.conversation-assurance-grid span,
+.conversation-rating-row > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.conversation-assurance-grid strong,
+.conversation-comfort-summary strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.conversation-comfort-summary small {
+  color: rgba(235, 235, 235, 0.68);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.client-conversation-thread {
+  display: grid;
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 8px;
+}
+
+.client-conversation-bubble {
+  width: min(760px, 84%);
+  display: grid;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-strong);
+  background: rgba(235, 235, 235, 0.05);
+  color: var(--ink);
+  border-radius: 10px 10px 10px 3px;
+}
+
+.client-conversation-bubble[data-direction="outbound"] {
+  justify-self: end;
+  border-color: rgba(84, 227, 249, 0.3);
+  background: rgba(84, 227, 249, 0.1);
+  border-radius: 10px 10px 3px 10px;
+}
+
+.client-conversation-bubble span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.client-conversation-bubble p,
+.client-conversation-bubble small {
+  margin: 0;
+  color: rgba(235, 235, 235, 0.84);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.client-conversation-bubble time {
+  color: rgba(235, 235, 235, 0.58);
+  font-size: 11px;
+}
+
+.conversation-rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(84, 227, 249, 0.2);
+  background: rgba(84, 227, 249, 0.06);
+  border-radius: 8px;
+}
+
 .filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -4227,6 +4338,7 @@ button {
   .qa-row,
   .qa-actions,
   .delegation-actions,
+  .conversation-assurance-grid,
   .comment-form {
     grid-template-columns: 1fr;
   }

@@ -6,8 +6,8 @@ import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
 import { captureCsat, disconnectMetaPage, disconnectWhatsApp, getClientDashboard, startMetaOAuth } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
-import { formatBdt, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
-import { ClientDashboardSummary } from '@/types/domain';
+import { formatBdt, formatLocalizedDateTime, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
+import type { ClientDashboardSummary, ConversationLog } from '@/types/domain';
 
 const channelIcons = {
   messenger: MessageSquareText,
@@ -15,12 +15,19 @@ const channelIcons = {
   web: Code2,
 };
 
+function conversationLabel(conversation: ConversationLog) {
+  if (conversation.channel === 'messenger') return 'Facebook Messenger';
+  if (conversation.channel === 'whatsapp') return 'WhatsApp';
+  return 'Web chat';
+}
+
 export default function ClientDashboardPage() {
   const [dashboard, setDashboard] = useState<ClientDashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectingChannel, setConnectingChannel] = useState<string | null>(null);
   const [facebookAuthUrl, setFacebookAuthUrl] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
 
   const clientId = useMemo(() => {
@@ -32,6 +39,12 @@ export default function ClientDashboardPage() {
   const connectedChannelCount = channels.filter((channel) => channel.status !== 'needs_setup').length;
   const language = dashboard?.client.defaultLanguage;
   const copy = getClientPortalCopy(language);
+  const selectedConversation =
+    dashboard?.recentConversations.find((conversation) => conversation.id === selectedConversationId) ??
+    dashboard?.recentConversations[0];
+  const selectedLastMessage = selectedConversation?.messages.at(-1);
+  const selectedAiReplies = selectedConversation?.messages.filter((message) => message.direction === 'outbound').length ?? 0;
+  const selectedCustomerMessages = selectedConversation?.messages.filter((message) => message.direction === 'inbound').length ?? 0;
 
   async function loadDashboard() {
     setIsLoading(true);
@@ -308,22 +321,93 @@ export default function ClientDashboardPage() {
             {(dashboard?.recentConversations ?? []).map((conversation) => {
               const last = conversation.messages.at(-1);
               return (
-                <article className="client-row" key={conversation.id}>
+                <article className="client-row client-conversation-row" data-selected={selectedConversation?.id === conversation.id} key={conversation.id}>
                   <div>
                     <strong>{conversation.externalSenderId}</strong>
-                    <small>{last?.text ?? copy.common.noMessages}</small>
+                    <small>{conversationLabel(conversation)} | {last?.text ?? copy.common.noMessages}</small>
                   </div>
-                  <div className="csat-buttons">
-                    {[1, 2, 3, 4, 5].map((score) => (
-                      <button className="mini-button" key={score} type="button" onClick={() => void handleCsat(conversation.id, score)}>
-                        {formatLocalizedNumber(score, language)}
-                      </button>
-                    ))}
-                  </div>
+                  <button className="mini-button" type="button" onClick={() => setSelectedConversationId(conversation.id)}>
+                    View details
+                  </button>
                 </article>
               );
             })}
+            {dashboard !== null && dashboard.recentConversations.length === 0 && <div className="empty">No conversations yet</div>}
           </div>
+        </section>
+
+        <section className="client-panel conversation-comfort-panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <CheckCircle2 size={16} />
+              Conversation handling detail
+            </div>
+            {selectedConversation !== undefined && (
+              <span className="status-pill" data-status={selectedConversation.ticketId === undefined ? 'connected' : 'needs_setup'}>
+                {selectedConversation.ticketId === undefined ? 'Handled by AI' : 'Ticket opened'}
+              </span>
+            )}
+          </div>
+
+          {selectedConversation === undefined ? (
+            <div className="empty">Recent customer conversations will appear here once Daemion starts handling them.</div>
+          ) : (
+            <div className="conversation-comfort-body">
+              <div className="conversation-assurance-grid">
+                <div>
+                  <span>Channel</span>
+                  <strong>{conversationLabel(selectedConversation)}</strong>
+                </div>
+                <div>
+                  <span>Customer messages</span>
+                  <strong>{formatLocalizedNumber(selectedCustomerMessages, language)}</strong>
+                </div>
+                <div>
+                  <span>AI replies</span>
+                  <strong>{formatLocalizedNumber(selectedAiReplies, language)}</strong>
+                </div>
+                <div>
+                  <span>AI confidence</span>
+                  <strong>
+                    {selectedConversation.lastConfidence === undefined
+                      ? 'Not scored'
+                      : formatLocalizedPercent(Math.round(selectedConversation.lastConfidence * 100), language)}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="conversation-comfort-summary">
+                <strong>{selectedLastMessage?.text ?? copy.common.noMessages}</strong>
+                <small>
+                  {selectedConversation.ticketId === undefined
+                    ? 'Daemion answered this without needing your team to step in.'
+                    : 'Daemion escalated this to your ticket queue because a business decision was needed.'}
+                </small>
+              </div>
+
+              <div className="client-conversation-thread">
+                {selectedConversation.messages.map((message) => (
+                  <article className="client-conversation-bubble" data-direction={message.direction} key={message.id}>
+                    <span>{message.direction === 'inbound' ? 'Customer' : 'Daemion AI'}</span>
+                    <p>{message.text}</p>
+                    {message.transcript !== undefined && message.transcript.trim() !== '' && <small>Transcript: {message.transcript}</small>}
+                    <time>{formatLocalizedDateTime(message.createdAt, language)}</time>
+                  </article>
+                ))}
+              </div>
+
+              <div className="conversation-rating-row">
+                <span>Rate this handling</span>
+                <div className="csat-buttons">
+                  {[1, 2, 3, 4, 5].map((score) => (
+                    <button className="mini-button" key={score} type="button" onClick={() => void handleCsat(selectedConversation.id, score)}>
+                      {formatLocalizedNumber(score, language)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       </section>
     </main>
