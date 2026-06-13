@@ -3754,10 +3754,28 @@ button {
 
 .client-ticket-thread {
   border-top: 1px solid var(--line);
+  background: var(--surface);
 }
 
 .client-ticket-thread .section-label {
   margin-bottom: 2px;
+  color: var(--muted);
+}
+
+.client-ticket-thread .bubble {
+  border-color: var(--line-strong);
+  background: #070909;
+  color: var(--ink);
+}
+
+.client-ticket-thread .bubble[data-direction="outbound"] {
+  border-color: rgba(84, 227, 249, 0.32);
+  background: rgba(84, 227, 249, 0.1);
+  color: var(--ink);
+}
+
+.client-ticket-thread .bubble time {
+  color: var(--muted);
 }
 
 .knowledge-layout {
