@@ -8194,13 +8194,31 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  border-bottom-color: rgba(235, 235, 235, 0.12);
+  background:
+    linear-gradient(180deg, rgba(235, 235, 235, 0.04), rgba(235, 235, 235, 0.015)),
+    rgba(11, 13, 14, 0.94) !important;
 }
 
 .kb-review-status-tabs .status-button {
   flex: 1 1 130px;
   justify-content: center;
   min-width: 0;
+  border-color: rgba(235, 235, 235, 0.14);
+  background: rgba(16, 19, 21, 0.94) !important;
+  color: #ebebeb;
   white-space: normal;
+}
+
+.kb-review-status-tabs .status-button:hover,
+.kb-review-status-tabs .status-button[data-active="true"] {
+  border-color: rgba(84, 227, 249, 0.4);
+  background: rgba(84, 227, 249, 0.12) !important;
+  color: var(--brand);
+}
+
+.kb-review-status-tabs .status-button span {
+  color: currentColor;
 }
 
 .audit-log-panel .empty {
