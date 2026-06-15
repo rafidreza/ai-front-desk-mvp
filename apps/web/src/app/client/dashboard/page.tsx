@@ -15,10 +15,19 @@ const channelIcons = {
   web: Code2,
 };
 
+type FacebookConnectDiagnostic = {
+  step: string;
+  message: string;
+};
+
 function conversationLabel(conversation: ConversationLog) {
   if (conversation.channel === 'messenger') return 'Facebook Messenger';
   if (conversation.channel === 'whatsapp') return 'WhatsApp';
   return 'Web chat';
+}
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message.trim() !== '' ? error.message : fallback;
 }
 
 export default function ClientDashboardPage() {
@@ -27,6 +36,7 @@ export default function ClientDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [connectingChannel, setConnectingChannel] = useState<string | null>(null);
   const [facebookAuthUrl, setFacebookAuthUrl] = useState<string | null>(null);
+  const [facebookDiagnostic, setFacebookDiagnostic] = useState<FacebookConnectDiagnostic | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
 
@@ -93,16 +103,21 @@ export default function ClientDashboardPage() {
     setConnectingChannel('messenger');
     setError(null);
     setFacebookAuthUrl(null);
+    setFacebookDiagnostic(null);
     try {
       const returnTo = `/client/dashboard?clientId=${encodeURIComponent(clientId)}`;
       const result = await startMetaOAuth(clientId, returnTo);
       setFacebookAuthUrl(result.authorizationUrl);
       const opened = window.open(result.authorizationUrl, '_blank', 'noopener,noreferrer');
       if (opened === null) {
-        setError('Your browser blocked the Facebook connection tab. Use the “Open Facebook connection” link below.');
+        const message = 'Your browser blocked the Facebook connection tab. Use the “Open Facebook connection” link below.';
+        setError(message);
+        setFacebookDiagnostic({ step: 'Opening Facebook OAuth window', message });
       }
     } catch (connectError) {
-      setError(connectError instanceof Error ? connectError.message : 'Unable to start Facebook Page connection.');
+      const message = errorMessage(connectError, 'Unable to start Facebook Page connection.');
+      setError('Facebook Page reconnect failed before Facebook opened.');
+      setFacebookDiagnostic({ step: 'Starting Meta OAuth session', message });
     } finally {
       setConnectingChannel(null);
     }
@@ -163,6 +178,16 @@ export default function ClientDashboardPage() {
       </header>
 
       {error !== null && <div className="inline-alert">{error}</div>}
+      {facebookDiagnostic !== null && (
+        <div className="inline-alert inline-alert--recovery">
+          <TriangleAlert size={15} />
+          <div className="inline-alert__body">
+            <strong>Facebook reconnect error details</strong>
+            <span>Step: {facebookDiagnostic.step}</span>
+            <small>{facebookDiagnostic.message}</small>
+          </div>
+        </div>
+      )}
       {facebookAuthUrl !== null && (
         <div className="inline-alert inline-alert--recovery">
           <TriangleAlert size={15} />

@@ -7,10 +7,15 @@ import { ClientPortalNav } from '../../_components/ClientPortalNav';
 import { getClientDashboard, getMetaOAuthSession, MetaOAuthSession, selectMetaOAuthPage } from '@/lib/api';
 import { ClientProfile } from '@/types/domain';
 
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message.trim() !== '' ? error.message : fallback;
+}
+
 export default function MetaPageSelectionPage() {
   const [session, setSession] = useState<MetaOAuthSession | null>(null);
   const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
   const [error, setError] = useState<string | null>(null);
+  const [errorStep, setErrorStep] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPageId, setSelectedPageId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -28,6 +33,7 @@ export default function MetaPageSelectionPage() {
 
   async function loadSession() {
     if (params.clientId === '' || params.sessionId === '') {
+      setErrorStep('Reading Meta OAuth callback');
       setError(params.message || 'The Meta connection session is missing. Start again from your dashboard.');
       setIsLoading(false);
       return;
@@ -35,6 +41,7 @@ export default function MetaPageSelectionPage() {
 
     setIsLoading(true);
     setError(null);
+    setErrorStep(null);
     try {
       const [nextSession, dashboard] = await Promise.all([
         getMetaOAuthSession(params.clientId, params.sessionId),
@@ -43,9 +50,13 @@ export default function MetaPageSelectionPage() {
       setSession(nextSession);
       setLanguage(dashboard.client.defaultLanguage);
       setSelectedPageId(nextSession.selectedPageId ?? nextSession.pages[0]?.id ?? '');
-      if (nextSession.error !== undefined && nextSession.error !== null) setError(nextSession.error);
+      if (nextSession.error !== undefined && nextSession.error !== null) {
+        setErrorStep('Meta returned an OAuth error');
+        setError(nextSession.error);
+      }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load Facebook Pages from Meta.');
+      setErrorStep('Loading Facebook Pages from Meta');
+      setError(errorMessage(loadError, 'Unable to load Facebook Pages from Meta.'));
     } finally {
       setIsLoading(false);
     }
@@ -59,11 +70,13 @@ export default function MetaPageSelectionPage() {
     if (session === null || selectedPageId === '') return;
     setIsSaving(true);
     setError(null);
+    setErrorStep(null);
     try {
       await selectMetaOAuthPage(params.clientId, session.id, selectedPageId);
       window.location.href = `/client/dashboard?clientId=${encodeURIComponent(params.clientId)}`;
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to connect the selected Facebook Page.');
+      setErrorStep('Saving selected Facebook Page');
+      setError(errorMessage(saveError, 'Unable to connect the selected Facebook Page.'));
       setIsSaving(false);
     }
   }
@@ -96,9 +109,19 @@ export default function MetaPageSelectionPage() {
         </div>
 
         {error !== null && (
-          <div className="inline-alert">
+          <div className="inline-alert inline-alert--recovery">
             <TriangleAlert size={15} />
-            {error}
+            <div className="inline-alert__body">
+              <strong>Facebook connection error</strong>
+              {errorStep !== null && <span>Step: {errorStep}</span>}
+              <small>{error}</small>
+              {(params.status !== '' || params.sessionId !== '') && (
+                <small>
+                  Status: {params.status || session?.status || 'unknown'}
+                  {params.sessionId !== '' ? ` | Session: ${params.sessionId}` : ''}
+                </small>
+              )}
+            </div>
           </div>
         )}
 

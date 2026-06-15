@@ -40,6 +40,25 @@ import {
 
 const apiBaseUrl = '/api/backend';
 
+function readApiErrorMessage(status: number, responseBody: string) {
+  const fallback = `API request failed: ${status}`;
+  if (responseBody.trim() === '') return fallback;
+
+  try {
+    const parsed = JSON.parse(responseBody) as Record<string, unknown>;
+    const message = parsed.message ?? parsed.error ?? parsed.detail;
+    if (typeof message === 'string' && message.trim() !== '') {
+      return `${message.trim()} (HTTP ${status})`;
+    }
+  } catch {
+    if (!responseBody.trim().startsWith('<')) {
+      return `${responseBody.trim()} (HTTP ${status})`;
+    }
+  }
+
+  return fallback;
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
@@ -51,7 +70,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    throw new Error(readApiErrorMessage(response.status, await response.text()));
   }
 
   return response.json() as Promise<T>;
