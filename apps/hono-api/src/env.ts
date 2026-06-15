@@ -10,6 +10,7 @@ export interface Env {
   MESSENGER_GRAPH_VERSION?: string;
   MESSENGER_APP_SECRET?: string;
   MESSENGER_PAGE_ACCESS_TOKEN?: string;
+  MESSENGER_PAGE_TOKEN_EXPIRES_AT?: string;
   META_APP_ID?: string;
   META_APP_SECRET?: string;
   META_OAUTH_REDIRECT_URI?: string;

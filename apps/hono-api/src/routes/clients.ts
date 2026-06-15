@@ -53,6 +53,31 @@ const VerifyCodeSchema = z.object({
   code: z.string().trim().regex(/^\d{6}$/),
 });
 
+const WhatsAppTemplateSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  languageCode: z.string().trim().min(2).max(20).optional(),
+  category: z.string().trim().min(2).max(60).optional(),
+  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+  body: z.string().trim().min(2).max(2000),
+  rejectionReason: z.string().trim().max(500).optional(),
+  lastSyncedAt: z.string().trim().datetime().optional(),
+});
+
+const AutoReplyRuleSchema = z.object({
+  ruleType: z.enum(['holiday', 'off_hours']),
+  label: z.string().trim().min(2).max(120),
+  timezone: z.string().trim().min(2).max(80).optional(),
+  startDate: z.string().trim().max(20).optional(),
+  endDate: z.string().trim().max(20).optional(),
+  dayOfWeek: z.number().int().min(0).max(6).optional(),
+  startMinute: z.number().int().min(0).max(1440).optional(),
+  endMinute: z.number().int().min(0).max(1440).optional(),
+  replyText: z.string().trim().min(2).max(1200),
+  enabled: z.boolean().optional(),
+});
+
+const AutoReplyRulePatchSchema = AutoReplyRuleSchema.partial();
+
 export function clientRoutes() {
   const app = new Hono<AppBindings>();
 
@@ -71,6 +96,41 @@ export function clientRoutes() {
   app.post('/clients/:clientId/whatsapp/disconnect', async (c) =>
     c.json({ client: await createServices(c).clients.disconnectWhatsApp(c.req.param('clientId')) }),
   );
+
+  app.get('/clients/:clientId/whatsapp/templates', async (c) =>
+    c.json({ templates: await createServices(c).channelAdmin.listWhatsAppTemplates(c.req.param('clientId')) }),
+  );
+
+  app.post('/clients/:clientId/whatsapp/templates', async (c) => {
+    const parsed = WhatsAppTemplateSchema.parse(await jsonBody(c));
+    return c.json({ template: await createServices(c).channelAdmin.saveWhatsAppTemplate(c.req.param('clientId'), parsed) });
+  });
+
+  app.delete('/clients/:clientId/whatsapp/templates/:templateId', async (c) => {
+    await createServices(c).channelAdmin.deleteWhatsAppTemplate(c.req.param('clientId'), c.req.param('templateId'));
+    return c.json({ deleted: true });
+  });
+
+  app.get('/clients/:clientId/auto-replies', async (c) =>
+    c.json({ rules: await createServices(c).channelAdmin.listAutoReplyRules(c.req.param('clientId')) }),
+  );
+
+  app.post('/clients/:clientId/auto-replies', async (c) => {
+    const parsed = AutoReplyRuleSchema.parse(await jsonBody(c));
+    return c.json({ rule: await createServices(c).channelAdmin.createAutoReplyRule(c.req.param('clientId'), parsed) });
+  });
+
+  app.patch('/clients/:clientId/auto-replies/:ruleId', async (c) => {
+    const parsed = AutoReplyRulePatchSchema.parse(await jsonBody(c));
+    return c.json({
+      rule: await createServices(c).channelAdmin.updateAutoReplyRule(c.req.param('clientId'), c.req.param('ruleId'), parsed),
+    });
+  });
+
+  app.delete('/clients/:clientId/auto-replies/:ruleId', async (c) => {
+    await createServices(c).channelAdmin.deleteAutoReplyRule(c.req.param('clientId'), c.req.param('ruleId'));
+    return c.json({ deleted: true });
+  });
 
   app.get('/clients/:clientId/dashboard', async (c) => c.json(await createServices(c).dashboard.getDashboard(c.req.param('clientId'))));
 

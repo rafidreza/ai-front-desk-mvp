@@ -149,7 +149,21 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    const fallback = `API request failed: ${response.status}`;
+    const body = await response.text();
+    if (body.trim() !== '') {
+      try {
+        const parsed = JSON.parse(body) as Record<string, unknown>;
+        const message = parsed.message ?? parsed.error ?? parsed.detail;
+        if (typeof message === 'string' && message.trim() !== '') {
+          throw new Error(`${message.trim()} (HTTP ${response.status})`);
+        }
+      } catch (error) {
+        if (error instanceof Error && !error.message.startsWith('Unexpected token')) throw error;
+        if (!body.trim().startsWith('<')) throw new Error(`${body.trim()} (HTTP ${response.status})`);
+      }
+    }
+    throw new Error(fallback);
   }
   return response.json() as Promise<T>;
 }

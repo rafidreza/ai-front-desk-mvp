@@ -112,6 +112,57 @@ export const metaOAuthSessions = pgTable(
   }),
 );
 
+export const whatsAppTemplates = pgTable(
+  'WhatsAppTemplate',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    languageCode: text('languageCode').notNull().default('en_US'),
+    category: text('category').notNull().default('utility'),
+    status: text('status').notNull().default('pending'),
+    body: text('body').notNull(),
+    rejectionReason: text('rejectionReason'),
+    lastSyncedAt: timestamp('lastSyncedAt', { mode: 'date' }),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientNameLanguageUnique: uniqueIndex('WhatsAppTemplate_clientId_name_languageCode_key').on(
+      table.clientId,
+      table.name,
+      table.languageCode,
+    ),
+    clientIdIdx: index('WhatsAppTemplate_clientId_idx').on(table.clientId),
+    statusIdx: index('WhatsAppTemplate_status_idx').on(table.status),
+  }),
+);
+
+export const clientAutoReplyRules = pgTable(
+  'ClientAutoReplyRule',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    ruleType: text('ruleType').notNull().default('holiday'),
+    label: text('label').notNull(),
+    timezone: text('timezone').notNull().default('Asia/Dhaka'),
+    startDate: text('startDate'),
+    endDate: text('endDate'),
+    dayOfWeek: integer('dayOfWeek'),
+    startMinute: integer('startMinute').notNull().default(0),
+    endMinute: integer('endMinute').notNull().default(1440),
+    replyText: text('replyText').notNull(),
+    enabled: boolean('enabled').notNull().default(false),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('ClientAutoReplyRule_clientId_idx').on(table.clientId),
+    clientEnabledIdx: index('ClientAutoReplyRule_clientId_enabled_idx').on(table.clientId, table.enabled),
+    ruleTypeIdx: index('ClientAutoReplyRule_ruleType_idx').on(table.ruleType),
+  }),
+);
+
 export const externalDataSources = pgTable(
   'ExternalDataSource',
   {
@@ -576,6 +627,8 @@ export const schema = {
   clientAuthChallenges,
   clientChannels,
   metaOAuthSessions,
+  whatsAppTemplates,
+  clientAutoReplyRules,
   internalUsers,
   externalDataSources,
   externalDataSyncRuns,

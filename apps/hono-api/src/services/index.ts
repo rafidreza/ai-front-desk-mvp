@@ -3,6 +3,7 @@ import type { AppBindings } from '../db/client';
 import { requireDb } from '../db/client';
 import { AiService } from './ai';
 import { ClientAuthService } from './auth';
+import { ChannelAdminService } from './channel-admin';
 import { ClientService, DashboardService } from './clients';
 import { ConversationRepository, ConversationService, TicketService } from './conversations';
 import { AuthCodeDeliveryService, ChannelSendService, EmailDeliveryService, UrgentTicketNotificationService } from './delivery';
@@ -44,9 +45,11 @@ export function createServices(c: Context<AppBindings>) {
   const knowledgeRequests = new KnowledgeChangeRequestService(db, knowledge);
   const templates = new IndustryTemplateService(knowledge);
   const internalUsers = new InternalUsersService(db);
+  const channelAdmin = new ChannelAdminService(db, c.env);
 
   return {
     auth,
+    channelAdmin,
     channelSend,
     clients,
     conversations,

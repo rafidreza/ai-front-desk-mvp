@@ -125,6 +125,8 @@ async function verifyWhatsAppSignature(env: AppBindings['Bindings'], signature: 
 export function channelRoutes() {
   const app = new Hono<AppBindings>();
 
+  app.get('/internal/channel-health', async (c) => c.json(await createServices(c).channelAdmin.getHealthDashboard()));
+
   app.post('/web-chat/messages', async (c) => {
     const parsed = WebChatMessageSchema.parse(await jsonBody(c));
     if (parsed.pdpaConsent !== true) {
