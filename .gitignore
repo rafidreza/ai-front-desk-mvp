@@ -15,3 +15,4 @@ playwright-report
 .run/
 .agents/
 *.tsbuildinfo
+.cloudflare.env

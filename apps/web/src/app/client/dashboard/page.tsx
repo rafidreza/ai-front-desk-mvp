@@ -4,7 +4,7 @@ import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw,
 import { useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { captureCsat, disconnectMetaPage, disconnectWhatsApp, getClientDashboard, startMetaOAuth } from '@/lib/api';
+import { captureCsat, disconnectMetaPage, disconnectWhatsApp, getClientDashboard, startMetaOAuth, updateClientOnboarding } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { formatBdt, formatLocalizedDateTime, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
 import type { ClientDashboardSummary, ConversationLog } from '@/types/domain';
@@ -108,12 +108,8 @@ export default function ClientDashboardPage() {
       const returnTo = `/client/dashboard?clientId=${encodeURIComponent(clientId)}`;
       const result = await startMetaOAuth(clientId, returnTo);
       setFacebookAuthUrl(result.authorizationUrl);
-      const opened = window.open(result.authorizationUrl, '_blank', 'noopener,noreferrer');
-      if (opened === null) {
-        const message = 'Your browser blocked the Facebook connection tab. Use the “Open Facebook connection” link below.';
-        setError(message);
-        setFacebookDiagnostic({ step: 'Opening Facebook OAuth window', message });
-      }
+      // Redirect the current tab straight to Facebook. Avoids popup blockers that kill window.open('_blank').
+      window.location.assign(result.authorizationUrl);
     } catch (connectError) {
       const message = errorMessage(connectError, 'Unable to start Facebook Page connection.');
       setError('Facebook Page reconnect failed before Facebook opened.');
@@ -134,6 +130,28 @@ export default function ClientDashboardPage() {
       await loadDashboard();
     } catch (disconnectError) {
       setError(disconnectError instanceof Error ? disconnectError.message : 'Unable to disconnect Facebook Page.');
+    } finally {
+      setConnectingChannel(null);
+    }
+  }
+
+  async function connectWhatsAppChannel(existingContact?: string) {
+    const prompt = existingContact !== undefined && existingContact.trim() !== ''
+      ? `Update the WhatsApp support number customers should reach (include country code, e.g. +8801XXXXXXXXX):`
+      : `Enter the WhatsApp support number customers should reach (include country code, e.g. +8801XXXXXXXXX):`;
+    const contact = window.prompt(prompt, existingContact ?? '')?.trim();
+    if (contact === undefined || contact === '') return;
+    if (contact.length < 5) {
+      setError('Enter a valid WhatsApp number with country code.');
+      return;
+    }
+    setConnectingChannel('whatsapp-connect');
+    setError(null);
+    try {
+      await updateClientOnboarding(clientId, { whatsappPoc: contact, onboardingProfile: { whatsappSetup: 'self' } });
+      await loadDashboard();
+    } catch (connectError) {
+      setError(connectError instanceof Error ? connectError.message : 'Unable to connect WhatsApp.');
     } finally {
       setConnectingChannel(null);
     }
@@ -287,8 +305,13 @@ export default function ClientDashboardPage() {
                     </button>
                   ) : (
                     <>
-                      <button className="mini-button" disabled={connectingChannel === 'messenger'} type="button" onClick={() => void connectFacebookPage()}>
-                        {connectingChannel === 'messenger' ? 'Opening Facebook...' : 'Reconnect Page'}
+                      <button
+                        className="mini-button"
+                        disabled
+                        type="button"
+                        title="Your Facebook Page is connected. Disconnect first if you need to link a different Page."
+                      >
+                        Reconnect Page
                       </button>
                       <button
                         className="mini-button"
@@ -300,15 +323,36 @@ export default function ClientDashboardPage() {
                       </button>
                     </>
                   )
-                ) : channel.channel === 'whatsapp' && channel.status !== 'needs_setup' ? (
-                  <button
-                    className="mini-button"
-                    disabled={connectingChannel === 'whatsapp-disconnect'}
-                    type="button"
-                    onClick={() => void disconnectWhatsAppChannel()}
-                  >
-                    {connectingChannel === 'whatsapp-disconnect' ? 'Disconnecting...' : 'Disconnect WhatsApp'}
-                  </button>
+                ) : channel.channel === 'whatsapp' ? (
+                  channel.status === 'needs_setup' ? (
+                    <button
+                      className="mini-button"
+                      disabled={connectingChannel === 'whatsapp-connect'}
+                      type="button"
+                      onClick={() => void connectWhatsAppChannel()}
+                    >
+                      {connectingChannel === 'whatsapp-connect' ? 'Connecting...' : 'Connect WhatsApp'}
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="mini-button"
+                        disabled={connectingChannel === 'whatsapp-connect'}
+                        type="button"
+                        onClick={() => void connectWhatsAppChannel(dashboard?.client.whatsappPoc)}
+                      >
+                        {connectingChannel === 'whatsapp-connect' ? 'Saving...' : 'Update number'}
+                      </button>
+                      <button
+                        className="mini-button"
+                        disabled={connectingChannel === 'whatsapp-disconnect'}
+                        type="button"
+                        onClick={() => void disconnectWhatsAppChannel()}
+                      >
+                        {connectingChannel === 'whatsapp-disconnect' ? 'Disconnecting...' : 'Disconnect WhatsApp'}
+                      </button>
+                    </>
+                  )
                 ) : (
                   <span>{channel.actionLabel}</span>
                 )}
