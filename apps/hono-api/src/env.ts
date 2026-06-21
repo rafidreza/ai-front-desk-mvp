@@ -31,6 +31,13 @@ export interface Env {
   ASR_OPENAI_API_KEY?: string;
   ASR_TRANSCRIPTION_MODEL?: string;
   ASR_TRANSCRIPTION_PROMPT?: string;
+  AI_PROVIDER?: string;
+  AI_MODEL?: string;
+  OPENROUTER_API_KEY?: string;
+  OPENROUTER_MODEL?: string;
+  OPENROUTER_BASE_URL?: string;
+  OPENROUTER_SITE_URL?: string;
+  OPENROUTER_APP_NAME?: string;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_MODEL?: string;
   INTERNAL_CONSOLE_PASSWORD?: string;

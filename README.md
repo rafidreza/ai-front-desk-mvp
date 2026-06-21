@@ -103,7 +103,11 @@ Copy `.env.example` to `.env` when credentials are available.
 - `EMAIL_FROM_ADDRESS`, `POSTMARK_SERVER_TOKEN`, and `POSTMARK_MESSAGE_STREAM` enable Postmark delivery for client auth codes and daily/weekly digests. Without Postmark credentials, delivery endpoints return dry-run mode.
 - `GOOGLE_CLOUD_VISION_API_KEY` enables OCR for image uploads in the KB importer. Text, CSV, Markdown, JSON, PDF, and Excel extraction work without it.
 - `OPENAI_API_KEY`, `ASR_TRANSCRIPTION_MODEL`, and `ASR_TRANSCRIPTION_PROMPT` enable optional voice-note transcription before AI reply generation. When unset, voice notes remain visible to operators as "transcript pending".
-- `ANTHROPIC_API_KEY` enables Claude responses.
+- `AI_PROVIDER` chooses the reply provider: `openrouter`, `anthropic`, or `local`. Leave blank to auto-detect `OPENROUTER_API_KEY` first, then `ANTHROPIC_API_KEY`, then local fallback.
+- `OPENROUTER_API_KEY` enables OpenRouter model routing through `https://openrouter.ai/api/v1/chat/completions`.
+- `OPENROUTER_MODEL` sets the default OpenRouter model slug, e.g. `anthropic/claude-3.5-haiku`. Prompt profiles can override provider/model per client.
+- `OPENROUTER_SITE_URL` and `OPENROUTER_APP_NAME` set the optional OpenRouter ranking headers.
+- `ANTHROPIC_API_KEY` enables direct Anthropic Claude responses when `AI_PROVIDER=anthropic` or no OpenRouter key is configured.
 - `INTERNAL_CONSOLE_PASSWORD` and `INTERNAL_CONSOLE_SESSION_SECRET` gate `/internal` and the backend proxy. In production the password must be at least 12 characters.
 - `WEB_APP_URL` is the allowlisted origin for API CORS.
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` enable shared rate
@@ -177,7 +181,9 @@ counters are shared. Add Meta, Postmark, Vision, and Anthropic keys when those
 integrations should run in staging.
 Add `OPENAI_API_KEY` and optional `ASR_TRANSCRIPTION_MODEL` /
 `ASR_TRANSCRIPTION_PROMPT` when voice notes should be automatically
-transcribed. Add `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, and `APP_VERSION` when backend errors
+transcribed. Add `OPENROUTER_API_KEY` plus `AI_PROVIDER=openrouter` and
+`OPENROUTER_MODEL` when AI replies should route through OpenRouter instead of a
+direct model vendor. Add `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, and `APP_VERSION` when backend errors
 should be reported to Sentry.
 
 The web Worker needs `API_BASE_URL`, the same `INTERNAL_API_TOKEN`, and the web
@@ -205,6 +211,11 @@ npx wrangler secret put META_APP_SECRET --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_URL --env staging
 npx wrangler secret put UPSTASH_REDIS_REST_TOKEN --env staging
 npx wrangler secret put OPENAI_API_KEY --env staging
+npx wrangler secret put AI_PROVIDER --env staging
+npx wrangler secret put OPENROUTER_API_KEY --env staging
+npx wrangler secret put OPENROUTER_MODEL --env staging
+npx wrangler secret put OPENROUTER_SITE_URL --env staging
+npx wrangler secret put OPENROUTER_APP_NAME --env staging
 npx wrangler secret put ASR_TRANSCRIPTION_MODEL --env staging
 npx wrangler secret put ASR_TRANSCRIPTION_PROMPT --env staging
 npx wrangler secret put SENTRY_DSN --env staging

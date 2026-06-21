@@ -26,10 +26,21 @@ const sampleEntry: KnowledgeEntry = {
 
 describe('AiService (fallback path, no Anthropic key)', () => {
   let originalKey: string | undefined;
+  let originalOpenRouterKey: string | undefined;
+  let originalProvider: string | undefined;
+  let originalModel: string | undefined;
+  let originalFetch: typeof globalThis.fetch;
 
   beforeEach(() => {
     originalKey = process.env.ANTHROPIC_API_KEY;
+    originalOpenRouterKey = process.env.OPENROUTER_API_KEY;
+    originalProvider = process.env.AI_PROVIDER;
+    originalModel = process.env.OPENROUTER_MODEL;
+    originalFetch = globalThis.fetch;
     delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
+    delete process.env.AI_PROVIDER;
+    delete process.env.OPENROUTER_MODEL;
   });
 
   afterEach(() => {
@@ -38,6 +49,22 @@ describe('AiService (fallback path, no Anthropic key)', () => {
     } else {
       process.env.ANTHROPIC_API_KEY = originalKey;
     }
+    if (originalOpenRouterKey === undefined) {
+      delete process.env.OPENROUTER_API_KEY;
+    } else {
+      process.env.OPENROUTER_API_KEY = originalOpenRouterKey;
+    }
+    if (originalProvider === undefined) {
+      delete process.env.AI_PROVIDER;
+    } else {
+      process.env.AI_PROVIDER = originalProvider;
+    }
+    if (originalModel === undefined) {
+      delete process.env.OPENROUTER_MODEL;
+    } else {
+      process.env.OPENROUTER_MODEL = originalModel;
+    }
+    globalThis.fetch = originalFetch;
   });
 
   it('uses the first knowledge entry as the fallback reply when no key is set', async () => {
@@ -77,5 +104,33 @@ describe('AiService (fallback path, no Anthropic key)', () => {
 
     expect(reply.shouldEscalate).toBe(true);
     expect(reply.escalationReason).toMatch(/confidence/i);
+  });
+
+  it('uses OpenRouter chat completions when an OpenRouter key is configured', async () => {
+    process.env.OPENROUTER_API_KEY = 'openrouter-key';
+    process.env.OPENROUTER_MODEL = 'anthropic/claude-3.5-haiku';
+    let requestedBody: { model?: string; messages?: Array<{ role: string; content: string }> } | undefined;
+    globalThis.fetch = (async (_url, init) => {
+      requestedBody = JSON.parse(String(init?.body));
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { content: 'OpenRouter says Dhaka delivery is BDT 80.' } }],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }) as typeof globalThis.fetch;
+
+    const service = new AiService();
+    const reply = await service.generateReply({
+      client: baseClient,
+      customerText: 'delivery charge?',
+      knowledgeEntries: [sampleEntry],
+      retrievalConfidence: 0.9,
+    });
+
+    expect(requestedBody?.model).toBe('anthropic/claude-3.5-haiku');
+    expect(requestedBody?.messages?.[0]?.role).toBe('system');
+    expect(reply.text).toContain('OpenRouter');
+    expect(reply.shouldEscalate).toBe(false);
   });
 });

@@ -409,6 +409,8 @@ model PromptProfile {
   escalationRules    String
   forbiddenClaims    String
   fallbackBehavior   String
+  aiProvider         String?
+  aiModel            String?
   status             String                 @default("draft")
   experimentEnabled  Boolean                @default(false)
   experimentKey      String?
@@ -435,6 +437,8 @@ model PromptProfileVersion {
   escalationRules    String
   forbiddenClaims    String
   fallbackBehavior   String
+  aiProvider         String?
+  aiModel            String?
   status             String
   experimentEnabled  Boolean       @default(false)
   experimentKey      String?

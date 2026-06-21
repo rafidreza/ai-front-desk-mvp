@@ -41,6 +41,8 @@ import { IndustryTemplateService } from './knowledge/industry-template.service';
 import { KnowledgeImportService } from './knowledge/knowledge-import.service';
 import { KnowledgeChangeRequestController } from './knowledge/knowledge-change-request.controller';
 import { KnowledgeChangeRequestService } from './knowledge/knowledge-change-request.service';
+import { MetaOAuthController } from './meta/meta-oauth.controller';
+import { MetaOAuthService } from './meta/meta-oauth.service';
 import { AuthCodeDeliveryService } from './notifications/auth-code-delivery.service';
 import { EmailDeliveryService } from './notifications/email-delivery.service';
 import { UrgentTicketNotificationService } from './notifications/urgent-ticket-notification.service';
@@ -74,6 +76,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     InternalUsersController,
     KnowledgeChangeRequestController,
     KnowledgeController,
+    MetaOAuthController,
     MessengerController,
     WebChatController,
     WhatsAppController,
@@ -107,6 +110,7 @@ import { RateLimitGuard } from './security/rate-limit.guard';
     KnowledgeChangeRequestService,
     KnowledgeImportService,
     KnowledgeService,
+    MetaOAuthService,
     MessengerSendService,
     MessengerSignatureService,
     WhatsAppSignatureService,

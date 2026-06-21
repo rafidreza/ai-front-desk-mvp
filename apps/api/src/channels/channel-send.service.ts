@@ -9,6 +9,7 @@ export interface ChannelSendTextInput {
   recipientId: string;
   text: string;
   purpose?: string;
+  accessToken?: string;
 }
 
 export interface ChannelSendResult {
@@ -68,7 +69,7 @@ export class ChannelSendService {
   }
 
   private async sendMessengerText(input: ChannelSendTextInput): Promise<ChannelSendResult> {
-    const token = process.env.MESSENGER_PAGE_ACCESS_TOKEN;
+    const token = input.accessToken ?? process.env.MESSENGER_PAGE_ACCESS_TOKEN;
     if (token === undefined || token === '') {
       return { mode: 'dry-run', channel: 'messenger', recipientId: input.recipientId, text: input.text };
     }

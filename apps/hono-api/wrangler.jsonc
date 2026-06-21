@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ai-front-desk-hono-api",
+  "account_id": "637d1f18381f36341614d22b989d6d25",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-19",
   "compatibility_flags": ["nodejs_compat"],
@@ -11,12 +12,10 @@
     "PORT": "8787",
     "NODE_ENV": "development",
     "MESSENGER_GRAPH_VERSION": "v20.0",
-    "MESSENGER_VERIFY_TOKEN": "daemion_dev_verify_token",
     "META_APP_ID": "2238102173658208",
     "META_OAUTH_REDIRECT_URI": "https://dev.daemion.io/api/meta/callback",
     "META_OAUTH_SCOPES": "pages_show_list,pages_manage_metadata,pages_messaging",
     "WHATSAPP_GRAPH_VERSION": "v20.0",
-    "WHATSAPP_VERIFY_TOKEN": "daemion_dev_verify_token",
     "ENABLE_MESSENGER": "false",
     "ENABLE_WHATSAPP": "false",
     "ENABLE_P1_WHATSAPP_PINGS": "true",
@@ -28,6 +27,7 @@
   "env": {
     "staging": {
       "name": "ai-front-desk-hono-api-staging",
+      "account_id": "637d1f18381f36341614d22b989d6d25",
       "workers_dev": true,
       "routes": [
         {
@@ -39,12 +39,10 @@
         "PORT": "8787",
         "NODE_ENV": "production",
         "MESSENGER_GRAPH_VERSION": "v20.0",
-        "MESSENGER_VERIFY_TOKEN": "daemion_dev_verify_token",
         "META_APP_ID": "2238102173658208",
         "META_OAUTH_REDIRECT_URI": "https://dev.daemion.io/api/meta/callback",
         "META_OAUTH_SCOPES": "pages_show_list,pages_manage_metadata,pages_messaging",
         "WHATSAPP_GRAPH_VERSION": "v20.0",
-        "WHATSAPP_VERIFY_TOKEN": "daemion_dev_verify_token",
         "ENABLE_MESSENGER": "false",
         "ENABLE_WHATSAPP": "false",
         "ENABLE_P1_WHATSAPP_PINGS": "true",
@@ -52,8 +50,7 @@
         "ANTHROPIC_MODEL": "claude-3-5-haiku-latest",
         "ENABLE_DEV_INTERNAL_USERS": "true",
         "DAEMION_ENV": "preview",
-        "DEV_RETURN_AUTH_CODE": "true",
-        "DEV_CLIENT_AUTH_CODE": "123456"
+        "DEV_RETURN_AUTH_CODE": "true"
       }
     }
   }

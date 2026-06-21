@@ -490,6 +490,8 @@ export interface PromptProfile {
   escalationRules: string;
   forbiddenClaims: string;
   fallbackBehavior: string;
+  aiProvider?: 'anthropic' | 'openrouter' | 'local';
+  aiModel?: string;
   status: 'draft' | 'active' | 'archived';
   experimentEnabled?: boolean;
   experimentKey?: string;
@@ -511,6 +513,8 @@ export interface PromptProfileVersion {
   escalationRules: string;
   forbiddenClaims: string;
   fallbackBehavior: string;
+  aiProvider?: PromptProfile['aiProvider'];
+  aiModel?: string;
   status: PromptProfile['status'];
   experimentEnabled?: boolean;
   experimentKey?: string;

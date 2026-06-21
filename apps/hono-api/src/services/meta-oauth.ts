@@ -41,8 +41,8 @@ function appId(env: Env) {
 }
 
 function appSecret(env: Env) {
-  const value = envString(env, 'META_APP_SECRET');
-  if (value === undefined) throw new Error('META_APP_SECRET is required for Meta OAuth.');
+  const value = envString(env, 'META_APP_SECRET') ?? envString(env, 'MESSENGER_APP_SECRET');
+  if (value === undefined) throw new Error('META_APP_SECRET or MESSENGER_APP_SECRET is required for Meta OAuth.');
   return value;
 }
 
@@ -268,6 +268,8 @@ export class MetaOAuthService {
       .set({ status: 'completed', selectedPageId: selected.id, completedAt: now, updatedAt: now })
       .where(eq(metaOAuthSessions.id, input.sessionId));
 
+    await this.subscribePage(selected.id, await decryptSecret(appSecret(this.env), selected.pageAccessTokenEncrypted));
+
     return {
       page: { id: selected.id, name: selected.name },
     };
@@ -334,5 +336,16 @@ export class MetaOAuthService {
         pageAccessToken: page.access_token?.trim() ?? '',
       }))
       .filter((page) => page.id !== '' && page.name !== '' && page.pageAccessToken !== '');
+  }
+
+  private async subscribePage(pageId: string, pageAccessToken: string) {
+    const url = new URL(`https://graph.facebook.com/${graphVersion(this.env)}/${pageId}/subscribed_apps`);
+    url.searchParams.set('subscribed_fields', 'messages,messaging_postbacks');
+    url.searchParams.set('access_token', pageAccessToken);
+    const response = await this.fetchImpl(url, { method: 'POST' });
+    const data = (await response.json().catch(() => null)) as { success?: boolean; error?: { message?: string } } | null;
+    if (!response.ok || data?.success !== true) {
+      throw new Error(`Meta Page subscription failed: ${data?.error?.message ?? response.status}`);
+    }
   }
 }

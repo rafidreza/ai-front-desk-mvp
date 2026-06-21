@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ai-front-desk-web",
+  "account_id": "637d1f18381f36341614d22b989d6d25",
   "compatibility_date": "2026-05-22",
   "compatibility_flags": [
     "nodejs_compat",
@@ -18,6 +19,7 @@
   "env": {
     "staging": {
       "name": "ai-front-desk-web-staging",
+      "account_id": "637d1f18381f36341614d22b989d6d25",
       "workers_dev": true,
       "routes": [
         {

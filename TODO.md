@@ -20,9 +20,9 @@
 | Tier | Done | Pending | Total |
 |---|---|---|---|
 | 0 — Foundations | 22 | 0 | 22 |
-| 1 — Phase 0 kernel close | 2 | 6 | 8 |
+| 1 — Phase 0 kernel close | 3 | 5 | 8 |
 | 2 — Phase 0 hardening | 5 | 1 | 6 |
-| 3 — Phase 1 multi-tenant | 7 | 2 | 9 |
+| 3 — Phase 1 multi-tenant | 8 | 1 | 9 |
 | 4 — Client-facing features | 7 | 0 | 7 |
 | 5 — Channels | 3 | 0 | 3 |
 | 6 — KB build pipeline | 6 | 0 | 6 |
@@ -33,7 +33,7 @@
 | 11 — UX Audit P1 | 10 | 0 | 10 |
 | 12 — Use case backlog | 35 | 3 | 38 |
 | 13 — UX Audit follow-up | 15 | 2 | 17 |
-| **TOTAL** | **145** | **19** | **164** |
+| **TOTAL** | **147** | **17** | **164** |
 
 ---
 
@@ -87,7 +87,7 @@
 - [x] **T1** Lightweight internal auth gate on `/internal` (per `DEVELOPMENT_STATUS.md` next-step list) — **DONE (2026-05-15)**
 - [ ] **T2** Replace pilot KB with alpha seller's real 30–50 Q&A entries — **BLOCKED (2026-05-15): needs alpha seller Q&A/source material**
 - [ ] **T3** Set `ANTHROPIC_API_KEY` in `.env` (currently empty → fallback path only) — **BLOCKED (2026-05-15): needs Anthropic API key**
-- [ ] **T4** Set `MESSENGER_PAGE_ACCESS_TOKEN` for alpha seller's Page (currently dry-run only) — **BLOCKED (2026-05-15): needs Page access token**
+- [x] **T4** Set `MESSENGER_PAGE_ACCESS_TOKEN` for alpha seller's Page (currently dry-run only) — **DONE (2026-06-21): Page token configured for Euros Belle, Page ID `798216860038238` mapped to the Euros Belle client, and the Page subscribed to Messenger `messages` + `messaging_postbacks` webhook fields.**
 - [ ] **T5** Deploy API + Web to public HTTPS (Vercel for web, Fly.io / Railway for API) — **BLOCKED (2026-05-15): needs deployment account/project access**
 - [ ] **T6** Create Meta App in dev mode; add alpha seller as test user — **BLOCKED (2026-05-15): needs Meta developer/business access**
 - [ ] **T7** Wire alpha seller's Facebook Page → webhook → live customer traffic — **BLOCKED (2026-05-15): depends on T4/T5/T6**
@@ -110,7 +110,7 @@
 
 - [x] **T15** Remove hardcoded `pilot-client`; route every request by `Client` row — **DONE (2026-05-15): DB-backed client lookup/signup is now the source for client profiles; pilot data remains only as seed/demo content**
 - [x] **T16** Client sign-up page (`/signup`, per PRD 01) — **DONE (2026-05-15)**
-- [ ] **T17** Meta OAuth flow for `pages_messaging` (replace manual token) — **BLOCKED (2026-05-15): needs Meta app/business access and OAuth decisions**
+- [x] **T17** Meta OAuth flow for `pages_messaging` (replace manual token) — **DONE (2026-06-21): seller-facing Facebook Page OAuth is wired through Nest + Hono APIs, stores encrypted Page tokens on `ClientChannel`, lets sellers select a returned Page, subscribes the selected Page to Messenger webhook events, and uses the connected Page token for outbound Messenger replies. Requires Meta app domain/redirect URL configuration for each deployed environment.**
 - [x] **T18** Magic-link + WhatsApp OTP auth (PRD 01 §8.4) — **DONE (2026-05-16): client session, OTP challenge table, request/verify endpoints, protected client pages, email/WhatsApp code delivery, dry-run mode, and provider-ready Postmark/WhatsApp Cloud API wiring shipped**
 - [ ] **T19** Conversational onboarding bot via Messenger (PRD 03 §8.1) — **BLOCKED (2026-05-15): depends on Meta live channel access**
 - [x] **T20** Internal KB editor UI (per-client tree + entry panel) — **DONE (2026-05-15): entry list, detail editor, draft creation, publish/archive actions, filters, and version panel shipped**

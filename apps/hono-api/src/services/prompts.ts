@@ -73,6 +73,8 @@ export class PromptProfileService {
     escalationRules: string;
     forbiddenClaims: string;
     fallbackBehavior: string;
+    aiProvider?: PromptProfile['aiProvider'];
+    aiModel?: string;
     experimentEnabled?: boolean;
     experimentKey?: string;
     trafficWeight?: number;
@@ -98,6 +100,8 @@ export class PromptProfileService {
         escalationRules: input.escalationRules,
         forbiddenClaims: input.forbiddenClaims,
         fallbackBehavior: input.fallbackBehavior,
+        aiProvider: input.aiProvider,
+        aiModel: input.aiModel,
         experimentEnabled: input.experimentEnabled ?? false,
         experimentKey: input.experimentKey,
         trafficWeight: input.trafficWeight ?? 100,
@@ -112,7 +116,7 @@ export class PromptProfileService {
     return toPromptProfile(profile!);
   }
 
-  async update(clientId: string, profileId: string, input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior' | 'experimentEnabled' | 'experimentKey' | 'trafficWeight'>> & { actorId?: string }) {
+  async update(clientId: string, profileId: string, input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior' | 'aiProvider' | 'aiModel' | 'experimentEnabled' | 'experimentKey' | 'trafficWeight'>> & { actorId?: string }) {
     const [existing] = await this.db.select().from(promptProfiles).where(and(eq(promptProfiles.id, profileId), eq(promptProfiles.clientId, clientId))).limit(1);
     if (existing === undefined) throw new NotFoundError(`Prompt profile not found: ${profileId}`);
     const { actorId, ...changes } = input;
@@ -175,6 +179,8 @@ export class PromptProfileService {
         escalationRules: snapshot.escalationRules,
         forbiddenClaims: snapshot.forbiddenClaims,
         fallbackBehavior: snapshot.fallbackBehavior,
+        aiProvider: snapshot.aiProvider,
+        aiModel: snapshot.aiModel,
         experimentEnabled: snapshot.experimentEnabled,
         experimentKey: snapshot.experimentKey,
         trafficWeight: snapshot.trafficWeight,
@@ -200,6 +206,8 @@ export class PromptProfileService {
       escalationRules: string;
       forbiddenClaims: string;
       fallbackBehavior: string;
+      aiProvider?: string | null;
+      aiModel?: string | null;
       experimentEnabled?: boolean;
       experimentKey?: string | null;
       trafficWeight?: number;
@@ -219,6 +227,8 @@ export class PromptProfileService {
       escalationRules: profile.escalationRules,
       forbiddenClaims: profile.forbiddenClaims,
       fallbackBehavior: profile.fallbackBehavior,
+      aiProvider: profile.aiProvider,
+      aiModel: profile.aiModel,
       experimentEnabled: profile.experimentEnabled ?? false,
       experimentKey: profile.experimentKey,
       trafficWeight: profile.trafficWeight ?? 100,

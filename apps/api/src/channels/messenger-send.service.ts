@@ -4,6 +4,7 @@ import { ChannelSendService } from './channel-send.service';
 interface SendTextInput {
   recipientId: string;
   text: string;
+  accessToken?: string;
 }
 
 interface SendTextResult {
@@ -22,6 +23,7 @@ export class MessengerSendService {
       recipientId: input.recipientId,
       text: input.text,
       purpose: 'messenger.reply',
+      accessToken: input.accessToken,
     });
     return {
       mode: result?.mode ?? 'dry-run',

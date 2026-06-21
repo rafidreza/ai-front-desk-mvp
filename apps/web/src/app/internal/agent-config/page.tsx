@@ -30,11 +30,14 @@ const CREATE_REQUIRED_RULES = Object.entries(CREATE_FIELD_LABELS).map(([name, la
   label,
 }));
 
-function profileFromForm(form: FormData) {
+function profileFromForm(form: FormData): Omit<PromptProfile, 'id' | 'clientId' | 'status' | 'version' | 'archivedAt' | 'createdAt' | 'updatedAt'> & {
+  actorId: string;
+} {
   const parsedTrafficWeight = Number(form.get('trafficWeight') ?? 100);
   const trafficWeight = Number.isFinite(parsedTrafficWeight)
     ? Math.max(0, Math.min(100, parsedTrafficWeight))
     : 100;
+  const aiProvider = String(form.get('aiProvider') ?? '').trim();
 
   return {
     name: String(form.get('name') ?? ''),
@@ -43,6 +46,11 @@ function profileFromForm(form: FormData) {
     escalationRules: String(form.get('escalationRules') ?? ''),
     forbiddenClaims: String(form.get('forbiddenClaims') ?? ''),
     fallbackBehavior: String(form.get('fallbackBehavior') ?? ''),
+    aiProvider:
+      aiProvider === 'openrouter' || aiProvider === 'anthropic' || aiProvider === 'local'
+        ? aiProvider
+        : undefined,
+    aiModel: String(form.get('aiModel') ?? '').trim() || undefined,
     experimentEnabled: form.get('experimentEnabled') === 'on',
     experimentKey: String(form.get('experimentKey') ?? '').trim() || undefined,
     trafficWeight,
@@ -246,6 +254,9 @@ export default function AgentConfigPage() {
           <span>Prompt profiles</span>
           <strong>{profiles.length}</strong>
           <small>{activeProfile?.name ?? 'No active profile'}</small>
+          {activeProfile?.aiProvider !== undefined && (
+            <small>{activeProfile.aiProvider}{activeProfile.aiModel !== undefined ? ` | ${activeProfile.aiModel}` : ''}</small>
+          )}
         </div>
         <div>
           <span>Status</span>
@@ -334,6 +345,21 @@ export default function AgentConfigPage() {
                 Fallback and review request
                 <textarea name="fallbackBehavior" required rows={4} defaultValue={selectedProfile.fallbackBehavior} />
                 <span className="form-hint">Tell the agent what to do when unsure, and how it should ask for a short review after a resolved conversation.</span>
+              </label>
+              <label>
+                AI provider
+                <UiSelect name="aiProvider" defaultValue={selectedProfile.aiProvider ?? ''}>
+                  <option value="">Use environment default</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="anthropic">Anthropic direct</option>
+                  <option value="local">Local fallback only</option>
+                </UiSelect>
+                <span className="form-hint">OpenRouter lets one API key route to Anthropic, OpenAI, Google, Meta, and other model providers.</span>
+              </label>
+              <label>
+                AI model
+                <input name="aiModel" defaultValue={selectedProfile.aiModel ?? ''} placeholder="anthropic/claude-3.5-haiku" />
+                <span className="form-hint">Leave blank for env default, or paste any OpenRouter model slug such as anthropic/claude-3.5-haiku.</span>
               </label>
               <label className="checkbox-row">
                 <input name="experimentEnabled" type="checkbox" defaultChecked={selectedProfile.experimentEnabled === true} />
@@ -506,6 +532,24 @@ export default function AgentConfigPage() {
               rows={3}
             />
           </FormField>
+
+          <label>
+            AI provider
+            <UiSelect name="aiProvider" defaultValue={activeProfile?.aiProvider ?? ''}>
+              <option value="">Use environment default</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="anthropic">Anthropic direct</option>
+              <option value="local">Local fallback only</option>
+            </UiSelect>
+          </label>
+          <label>
+            AI model
+            <input
+              name="aiModel"
+              defaultValue={activeProfile?.aiModel ?? ''}
+              placeholder="anthropic/claude-3.5-haiku"
+            />
+          </label>
 
           <label className="checkbox-row">
             <input name="experimentEnabled" type="checkbox" defaultChecked={activeProfile?.experimentEnabled === true} />

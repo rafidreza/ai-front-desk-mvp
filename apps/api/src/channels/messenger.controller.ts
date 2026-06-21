@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { PilotClientService } from '../clients/pilot-client.service';
 import { ConversationService } from '../conversations/conversation.service';
 import { StructuredLoggerService } from '../observability/structured-logger.service';
+import { MetaOAuthService } from '../meta/meta-oauth.service';
 import { IncomingMessage } from '../types/domain';
 import { MessengerSendService } from './messenger-send.service';
 import { MessengerSignatureService } from './messenger-signature.service';
@@ -61,6 +62,7 @@ export class MessengerController {
     private readonly messengerSend: MessengerSendService,
     private readonly signatures: MessengerSignatureService,
     private readonly logger: StructuredLoggerService,
+    private readonly metaOAuth: MetaOAuthService,
   ) {}
 
   @Get()
@@ -102,6 +104,7 @@ export class MessengerController {
 
     for (const entry of parsed.entry) {
       const client = await this.clients.findByPageId(entry.id);
+      const pageAccessToken = await this.metaOAuth.getConnectedPageAccessToken({ clientId: client.id, pageId: entry.id });
 
       for (const event of entry.messaging) {
         const csatScore = parseCsatScore(event.message?.quick_reply?.payload ?? event.postback?.payload, event.message?.text ?? event.postback?.title);
@@ -150,9 +153,10 @@ export class MessengerController {
         const sendResult = result.alreadyProcessed
           ? { mode: 'skipped' as const, recipientId: event.sender.id, text: result.reply.text }
           : await this.messengerSend.sendText({
-              recipientId: event.sender.id,
-              text: result.reply.text,
-            });
+            recipientId: event.sender.id,
+            text: result.reply.text,
+            accessToken: pageAccessToken,
+          });
 
         this.logger.event('messenger.message.processed', {
           clientId: incoming.clientId,

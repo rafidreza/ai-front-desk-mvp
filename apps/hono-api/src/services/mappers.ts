@@ -357,6 +357,8 @@ export function toPromptProfile(profile: {
   escalationRules: string;
   forbiddenClaims: string;
   fallbackBehavior: string;
+  aiProvider?: string | null;
+  aiModel?: string | null;
   status: string;
   experimentEnabled?: boolean;
   experimentKey?: string | null;
@@ -375,6 +377,8 @@ export function toPromptProfile(profile: {
     escalationRules: profile.escalationRules,
     forbiddenClaims: profile.forbiddenClaims,
     fallbackBehavior: profile.fallbackBehavior,
+    aiProvider: normalizeAiProvider(profile.aiProvider),
+    aiModel: profile.aiModel ?? undefined,
     status: profile.status as PromptProfile['status'],
     experimentEnabled: profile.experimentEnabled ?? false,
     experimentKey: profile.experimentKey ?? undefined,
@@ -397,6 +401,8 @@ export function toPromptVersion(version: {
   escalationRules: string;
   forbiddenClaims: string;
   fallbackBehavior: string;
+  aiProvider?: string | null;
+  aiModel?: string | null;
   status: string;
   experimentEnabled?: boolean;
   experimentKey?: string | null;
@@ -416,6 +422,8 @@ export function toPromptVersion(version: {
     escalationRules: version.escalationRules,
     forbiddenClaims: version.forbiddenClaims,
     fallbackBehavior: version.fallbackBehavior,
+    aiProvider: normalizeAiProvider(version.aiProvider),
+    aiModel: version.aiModel ?? undefined,
     status: version.status as PromptProfileVersion['status'],
     experimentEnabled: version.experimentEnabled ?? false,
     experimentKey: version.experimentKey ?? undefined,
@@ -424,6 +432,11 @@ export function toPromptVersion(version: {
     actorId: version.actorId,
     createdAt: version.createdAt.toISOString(),
   };
+}
+
+function normalizeAiProvider(value?: string | null): PromptProfile['aiProvider'] {
+  if (value === 'anthropic' || value === 'openrouter' || value === 'local') return value;
+  return undefined;
 }
 
 export function toKnowledgeRequest(request: {

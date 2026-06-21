@@ -95,10 +95,10 @@ function parseWhatsAppCsat(text?: string) {
 }
 
 async function verifyMessengerSignature(env: AppBindings['Bindings'], signature: string | undefined, rawBody: string) {
-  const appSecret = envString(env, 'MESSENGER_APP_SECRET');
+  const appSecret = envString(env, 'MESSENGER_APP_SECRET') ?? envString(env, 'META_APP_SECRET');
   const shouldEnforce = isProduction(env) || env.ENABLE_MESSENGER === 'true' || envString(env, 'MESSENGER_PAGE_ACCESS_TOKEN') !== undefined;
   if (appSecret === undefined) {
-    if (shouldEnforce) throw new UnauthorizedError('Messenger app secret is required for signature verification.');
+    if (shouldEnforce) throw new UnauthorizedError('Messenger or Meta app secret is required for signature verification.');
     return { mode: 'skipped' as const };
   }
   if (signature === undefined) throw new UnauthorizedError('Missing Messenger signature.');

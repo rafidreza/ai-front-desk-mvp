@@ -15,6 +15,8 @@ function mapProfile(profile: {
   escalationRules: string;
   forbiddenClaims: string;
   fallbackBehavior: string;
+  aiProvider?: string | null;
+  aiModel?: string | null;
   status: string;
   experimentEnabled?: boolean;
   experimentKey?: string | null;
@@ -33,6 +35,8 @@ function mapProfile(profile: {
     escalationRules: profile.escalationRules,
     forbiddenClaims: profile.forbiddenClaims,
     fallbackBehavior: profile.fallbackBehavior,
+    aiProvider: normalizeAiProvider(profile.aiProvider),
+    aiModel: profile.aiModel ?? undefined,
     status: profile.status as PromptProfile['status'],
     experimentEnabled: profile.experimentEnabled ?? false,
     experimentKey: profile.experimentKey ?? undefined,
@@ -55,6 +59,8 @@ function mapVersion(version: {
   escalationRules: string;
   forbiddenClaims: string;
   fallbackBehavior: string;
+  aiProvider?: string | null;
+  aiModel?: string | null;
   status: string;
   experimentEnabled?: boolean;
   experimentKey?: string | null;
@@ -74,6 +80,8 @@ function mapVersion(version: {
     escalationRules: version.escalationRules,
     forbiddenClaims: version.forbiddenClaims,
     fallbackBehavior: version.fallbackBehavior,
+    aiProvider: normalizeAiProvider(version.aiProvider),
+    aiModel: version.aiModel ?? undefined,
     status: version.status as PromptProfile['status'],
     experimentEnabled: version.experimentEnabled ?? false,
     experimentKey: version.experimentKey ?? undefined,
@@ -93,9 +101,33 @@ export function createDefaultPromptProfile(client: ClientProfile): Omit<PromptPr
     escalationRules: `Escalate when the customer asks for a human, refund, cancellation, complaint handling, or when knowledge confidence is low. Escalation keywords: ${client.escalationKeywords.join(', ')}`,
     forbiddenClaims: 'Do not invent prices, delivery commitments, stock availability, discounts, refunds, or policy details that are not in the approved knowledge base.',
     fallbackBehavior: 'If the answer is missing, politely say a team member will check and get back shortly.',
+    aiProvider: defaultAiProvider(),
+    aiModel: defaultAiModel(),
     experimentEnabled: false,
     trafficWeight: 100,
   };
+}
+
+function normalizeAiProvider(value?: string | null): PromptProfile['aiProvider'] {
+  if (value === 'anthropic' || value === 'openrouter' || value === 'local') return value;
+  return undefined;
+}
+
+function defaultAiProvider(): PromptProfile['aiProvider'] {
+  const provider = process.env.AI_PROVIDER;
+  if (provider === 'anthropic' || provider === 'openrouter' || provider === 'local') return provider;
+  if ((process.env.OPENROUTER_API_KEY ?? '') !== '') return 'openrouter';
+  if ((process.env.ANTHROPIC_API_KEY ?? '') !== '') return 'anthropic';
+  return undefined;
+}
+
+function defaultAiModel() {
+  return (
+    process.env.AI_MODEL ??
+    process.env.OPENROUTER_MODEL ??
+    process.env.ANTHROPIC_MODEL ??
+    undefined
+  );
 }
 
 function stableBucket(value: string) {
@@ -175,6 +207,8 @@ export class PromptProfileService {
     escalationRules: string;
     forbiddenClaims: string;
     fallbackBehavior: string;
+    aiProvider?: PromptProfile['aiProvider'];
+    aiModel?: string;
     experimentEnabled?: boolean;
     experimentKey?: string;
     trafficWeight?: number;
@@ -201,6 +235,8 @@ export class PromptProfileService {
           escalationRules: input.escalationRules,
           forbiddenClaims: input.forbiddenClaims,
           fallbackBehavior: input.fallbackBehavior,
+          aiProvider: input.aiProvider,
+          aiModel: input.aiModel,
           experimentEnabled: input.experimentEnabled ?? false,
           experimentKey: input.experimentKey,
           trafficWeight: input.trafficWeight ?? 100,
@@ -218,7 +254,7 @@ export class PromptProfileService {
   async update(
     clientId: string,
     profileId: string,
-    input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior' | 'experimentEnabled' | 'experimentKey' | 'trafficWeight'>> & {
+    input: Partial<Pick<PromptProfile, 'name' | 'systemInstructions' | 'toneRules' | 'escalationRules' | 'forbiddenClaims' | 'fallbackBehavior' | 'aiProvider' | 'aiModel' | 'experimentEnabled' | 'experimentKey' | 'trafficWeight'>> & {
       actorId?: string;
     },
   ): Promise<PromptProfile> {
@@ -301,6 +337,8 @@ export class PromptProfileService {
           escalationRules: snapshot.escalationRules,
           forbiddenClaims: snapshot.forbiddenClaims,
           fallbackBehavior: snapshot.fallbackBehavior,
+          aiProvider: snapshot.aiProvider,
+          aiModel: snapshot.aiModel,
           experimentEnabled: snapshot.experimentEnabled,
           experimentKey: snapshot.experimentKey,
           trafficWeight: snapshot.trafficWeight,
@@ -327,6 +365,8 @@ export class PromptProfileService {
       escalationRules: string;
       forbiddenClaims: string;
       fallbackBehavior: string;
+      aiProvider?: string | null;
+      aiModel?: string | null;
       experimentEnabled?: boolean;
       experimentKey?: string | null;
       trafficWeight?: number;
@@ -346,11 +386,13 @@ export class PromptProfileService {
         toneRules: profile.toneRules,
         escalationRules: profile.escalationRules,
         forbiddenClaims: profile.forbiddenClaims,
-      fallbackBehavior: profile.fallbackBehavior,
-      experimentEnabled: profile.experimentEnabled ?? false,
-      experimentKey: profile.experimentKey,
-      trafficWeight: profile.trafficWeight ?? 100,
-      status: profile.status,
+        fallbackBehavior: profile.fallbackBehavior,
+        aiProvider: profile.aiProvider,
+        aiModel: profile.aiModel,
+        experimentEnabled: profile.experimentEnabled ?? false,
+        experimentKey: profile.experimentKey,
+        trafficWeight: profile.trafficWeight ?? 100,
+        status: profile.status,
         action,
         actorId,
       },

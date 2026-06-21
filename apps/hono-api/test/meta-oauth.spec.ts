@@ -129,6 +129,9 @@ describe('Meta OAuth flow', () => {
           ],
         });
       }
+      if (url.pathname.endsWith('/page-1/subscribed_apps')) {
+        return Response.json({ success: true });
+      }
       return Response.json({ error: { message: 'unexpected' } }, { status: 500 });
     });
     const service = new MetaOAuthService(db, env, fetchMock as unknown as typeof fetch);
@@ -150,6 +153,7 @@ describe('Meta OAuth flow', () => {
 
     const selected = await service.selectPage({ clientId: 'client-1', sessionId: callback.sessionId, pageId: 'page-1' });
     expect(selected.page).toEqual({ id: 'page-1', name: 'Demo Page' });
+    expect(fetchMock).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/v20.0/page-1/subscribed_apps' }), { method: 'POST' });
     expect(state.client.pageId).toBe('page-1');
     expect(state.channel?.externalId).toBe('page-1');
     expect(JSON.stringify(state.channel)).not.toContain('page-token-secret');
