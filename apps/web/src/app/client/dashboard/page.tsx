@@ -46,7 +46,9 @@ export default function ClientDashboardPage() {
   }, []);
 
   const channels = dashboard?.channels ?? [];
-  const connectedChannelCount = channels.filter((channel) => channel.status !== 'needs_setup').length;
+  const connectedChannelCount = channels.filter(
+    (channel) => channel.status === 'connected' || channel.status === 'available',
+  ).length;
   const language = dashboard?.client.defaultLanguage;
   const copy = getClientPortalCopy(language);
   const selectedConversation = dashboard?.recentConversations.find((conversation) => conversation.id === selectedConversationId);
@@ -278,7 +280,11 @@ export default function ClientDashboardPage() {
                   </div>
                 </div>
                 <span className="status-pill" data-status={channel.status}>
-                  {channel.status === 'needs_setup' ? <TriangleAlert size={13} /> : <CheckCircle2 size={13} />}
+                  {channel.status === 'connected' || channel.status === 'available' ? (
+                    <CheckCircle2 size={13} />
+                  ) : (
+                    <TriangleAlert size={13} />
+                  )}
                   {copy.channelStatus(channel.status)}
                 </span>
               </div>

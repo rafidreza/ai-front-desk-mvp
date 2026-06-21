@@ -359,11 +359,13 @@ export class DashboardService {
       {
         channel: 'whatsapp',
         label: 'WhatsApp',
-        status: whatsappConnected ? 'connected' : 'needs_setup',
+        status: whatsappConnected ? 'contact_only' : 'needs_setup',
         conversations: conversationsByChannel.get('whatsapp') ?? 0,
-        setupLabel: whatsappConnected ? 'Business contact set' : 'Business contact needed',
-        detail: whatsappConnected ? `Support contact: ${whatsappContact}` : 'Add a WhatsApp POC or owner phone number for handoff routing.',
-        actionLabel: whatsappConnected ? 'Ready for WhatsApp support' : 'Add WhatsApp contact',
+        setupLabel: whatsappConnected ? 'Contact set (handoff only)' : 'Business contact needed',
+        detail: whatsappConnected
+          ? `Handoff contact: ${whatsappContact}. No WhatsApp API connected, so AI does not reply here yet.`
+          : 'Add a WhatsApp POC or owner phone number for handoff routing.',
+        actionLabel: whatsappConnected ? 'Used for human handoff' : 'Add WhatsApp contact',
       },
       {
         channel: 'web',

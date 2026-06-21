@@ -184,7 +184,7 @@ export interface ClientOnboardingProfile {
   facebookSetup?: ClientFacebookSetupPreference;
 }
 
-export type ClientChannelStatus = 'connected' | 'available' | 'needs_setup';
+export type ClientChannelStatus = 'connected' | 'available' | 'contact_only' | 'needs_setup';
 
 export interface ClientChannelSummary {
   channel: Channel;

@@ -255,6 +255,7 @@ function baseCopy(language: ClientLanguage) {
       channelStatus: (status: ClientChannelSummary['status']) => {
         if (status === 'connected') return 'সংযুক্ত';
         if (status === 'available') return 'ব্যবহারযোগ্য';
+        if (status === 'contact_only') return 'শুধু কন্টাক্ট';
         return 'সেটআপ দরকার';
       },
       eventTitle: (eventType: string) => {
@@ -460,6 +461,7 @@ function baseCopy(language: ClientLanguage) {
       channelStatus: (status: ClientChannelSummary['status']) => {
         if (status === 'connected') return 'Connected';
         if (status === 'available') return 'Available';
+        if (status === 'contact_only') return 'Contact only';
         return 'Needs setup';
       },
       eventTitle: (eventType: string) => {
@@ -664,6 +666,7 @@ function baseCopy(language: ClientLanguage) {
     channelStatus: (status: ClientChannelSummary['status']) => {
       if (status === 'connected') return 'Connected';
       if (status === 'available') return 'Available';
+      if (status === 'contact_only') return 'Contact only';
       return 'Setup needed';
     },
     eventTitle: (eventType: string) => {

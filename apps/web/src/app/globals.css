@@ -3332,6 +3332,10 @@ button {
   border-color: #b8cfe1;
 }
 
+.channel-card[data-status="contact_only"] {
+  border-color: #cdd3d0;
+}
+
 .channel-card[data-status="needs_setup"] {
   border-color: #e6c59c;
 }
@@ -3405,6 +3409,11 @@ button {
 .status-pill[data-status="available"] {
   background: var(--blue-soft);
   color: var(--blue);
+}
+
+.status-pill[data-status="contact_only"] {
+  background: rgba(120, 130, 126, 0.16);
+  color: var(--muted);
 }
 
 .status-pill[data-status="needs_setup"] {
@@ -8330,6 +8339,7 @@ body {
 
 .channel-card[data-status="connected"],
 .channel-card[data-status="available"],
+.channel-card[data-status="contact_only"],
 .channel-card[data-status="needs_setup"],
 .client-row:hover {
   border-color: rgba(84, 227, 249, 0.2);
