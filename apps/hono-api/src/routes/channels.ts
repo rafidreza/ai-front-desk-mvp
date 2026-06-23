@@ -109,7 +109,7 @@ async function verifyMessengerSignature(env: AppBindings['Bindings'], signature:
 }
 
 async function verifyWhatsAppSignature(env: AppBindings['Bindings'], signature: string | undefined, rawBody: string) {
-  const appSecret = envString(env, 'WHATSAPP_APP_SECRET') ?? envString(env, 'MESSENGER_APP_SECRET');
+  const appSecret = envString(env, 'WHATSAPP_APP_SECRET') ?? envString(env, 'MESSENGER_APP_SECRET') ?? envString(env, 'META_APP_SECRET');
   const shouldEnforce = isProduction(env) || env.ENABLE_WHATSAPP === 'true' || envString(env, 'WHATSAPP_ACCESS_TOKEN') !== undefined;
   if (appSecret === undefined) {
     if (shouldEnforce) throw new UnauthorizedError('WhatsApp app secret is required for signature verification.');

@@ -153,7 +153,8 @@ export class ClientService {
       .where(or(eq(clients.pageId, identifier), eq(clients.id, identifier)))
       .limit(1);
     if (client !== undefined) return toClientProfile(client);
-    if (identifier === this.env.WHATSAPP_PHONE_NUMBER_ID && pilotClientFallback.pageId === identifier) return pilotClientFallback;
+    // Single-number MVP: inbound on the configured WhatsApp Cloud API number routes to the pilot client.
+    if (identifier === this.env.WHATSAPP_PHONE_NUMBER_ID) return pilotClientFallback;
     throw new NotFoundError(`Client not found for WhatsApp identifier: ${identifier}`);
   }
 }
