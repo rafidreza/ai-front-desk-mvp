@@ -17,6 +17,12 @@ await mkdir(join(dist, 'assets'), { recursive: true });
 
 await cp(join(root, 'public'), dist, { recursive: true });
 await cp(join(root, 'src', 'styles.css'), join(dist, 'assets', 'styles.css'));
+// Canonical Daemion design tokens — styles.css @imports this. Single source
+// of truth; the website never re-declares palette values of its own.
+await cp(
+  join(root, '..', 'ai-front-desk-mvp', 'daemion-ui', 'packages', 'tokens', 'tokens.css'),
+  join(dist, 'assets', 'tokens.css'),
+);
 await cp(join(root, 'src', 'site-client.js'), join(dist, 'assets', 'site.js'));
 
 for (const [slug, render] of pages) {

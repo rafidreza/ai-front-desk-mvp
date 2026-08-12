@@ -1,21 +1,29 @@
+/* Canonical Daemion tokens (single source of truth). Copied into dist/assets
+   by scripts/build.mjs from @daemion/tokens. The website's own var names below
+   are sourced FROM these so the palette can never drift from the design system. */
+@import "./tokens.css";
+
 :root {
   color-scheme: dark;
-  --void: #000000;
-  --carbon: #0a0c0d;
-  --carbon-2: #101315;
-  --slate: #1c2123;
+  /* core palette — sourced from canonical raw tokens */
+  --void: var(--d-void);
+  --carbon: var(--d-carbon);
+  --carbon-2: var(--d-carbon-2);
+  --slate: var(--d-slate);
+  --bone: var(--d-bone);
+  --ash: var(--d-ash);
+  --ash-dim: var(--d-ash-dim);
+  --signal: var(--d-signal);
+  --signal-soft: var(--accent-soft);
+  /* website-specific tints / layout (not part of the shared token set) */
   --line: rgba(235, 235, 235, 0.12);
   --line-strong: rgba(84, 227, 249, 0.26);
-  --bone: #ebebeb;
-  --ash: #8a9499;
-  --ash-dim: #5a6166;
-  --signal: #54e3f9;
-  --signal-soft: rgba(84, 227, 249, 0.12);
   --signal-faint: rgba(84, 227, 249, 0.055);
   --max: 1180px;
-  --display: "Space Grotesk", "Sora", "Avenir Next", system-ui, sans-serif;
-  --body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  /* type families — sourced from canonical tokens, with website fallbacks */
+  --display: var(--font-display), "Sora", "Avenir Next", system-ui, sans-serif;
+  --body: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: var(--font-mono), "SFMono-Regular", Consolas, monospace;
 }
 
 * {
