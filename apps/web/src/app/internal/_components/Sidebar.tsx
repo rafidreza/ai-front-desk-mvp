@@ -31,7 +31,8 @@ type ActiveView =
   | 'kb-review'
   | 'audit-log'
   | 'data-sources'
-  | 'agent-config';
+  | 'agent-config'
+  | 'voice-console';
 
 interface SidebarProps {
   activeView: ActiveView;
@@ -133,6 +134,15 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
         >
           <Settings2 size={17} />
           Agent Config
+        </Link>
+        <Link
+          aria-current={activeView === 'voice-console' ? 'page' : undefined}
+          className="side-link"
+          data-active={activeView === 'voice-console'}
+          href="/internal/voice-console"
+        >
+          <Settings2 size={17} />
+          Voice Console
         </Link>
       </nav>
 

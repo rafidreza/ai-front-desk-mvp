@@ -6,7 +6,16 @@ import { RateLimitError, UnauthorizedError } from '../errors';
 import { timingSafeStringEqual } from '../utils/crypto';
 import type { AppBindings } from '../db/client';
 
-const publicPrefixes = ['/health', '/webhooks/messenger', '/webhooks/whatsapp', '/web-chat', '/oauth/meta/callback'];
+// '/widget-voice' is reachable by an anonymous visitor's browser: it mints a short-lived,
+// tenant-scoped voice session token and nothing else. See routes/widget-voice.ts.
+const publicPrefixes = [
+  '/health',
+  '/webhooks/messenger',
+  '/webhooks/whatsapp',
+  '/web-chat',
+  '/widget-voice',
+  '/oauth/meta/callback',
+];
 const buckets: RateLimitBuckets = new Map();
 
 export function corsMiddleware() {
@@ -96,7 +105,10 @@ export const rateLimitMiddleware: MiddlewareHandler<AppBindings> = async (c, nex
   const tenantScope = clientId === undefined ? webhookScope(path, body) : `client:${clientId}`;
   const ip = c.req.header('cf-connecting-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
   const isWebhook = path.startsWith('/webhooks/messenger') || path.startsWith('/webhooks/whatsapp');
-  const limit = isWebhook ? 300 : 120;
+  // Minting a voice session is expensive downstream (an anonymous visitor's call spends real
+  // STT/LLM/TTS money), and a human never needs more than a few starts a minute. Keep it tight.
+  const isWidgetVoice = path.startsWith('/widget-voice');
+  const limit = isWebhook ? 300 : isWidgetVoice ? 6 : 120;
   const key = tenantScope === undefined ? `${ip}:${path}` : `${ip}:${path}:${tenantScope}`;
   const result = await checkFixedWindowRateLimit(
     {

@@ -1,0 +1,13 @@
+# Pipecat voice agent.
+# The extras pull in Deepgram STT, ElevenLabs TTS, the OpenAI-compatible LLM client (OpenRouter),
+# Silero VAD (endpointing + barge-in) and the WebRTC transport.
+# 'webrtc' = browser transport, used by BOTH runners (widget_server.py and web.py).
+# 'twilio' is kept only so the parked phone path in bot.py/server.py still resolves if revived.
+# Unpinned to get the current layout (services as subpackages, e.g. pipecat.services.deepgram.stt).
+pipecat-ai[openai,elevenlabs,deepgram,silero,twilio,webrtc]
+pipecat-ai-small-webrtc-prebuilt
+fastapi==0.115.6
+uvicorn==0.34.0
+python-dotenv==1.0.1
+websockets==13.1
+httpx==0.28.1

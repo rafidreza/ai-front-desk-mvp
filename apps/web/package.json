@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@ai-front-desk/shared": "*",
+    "@pipecat-ai/client-js": "^1.13.0",
+    "@pipecat-ai/small-webrtc-transport": "^1.10.6",
     "@swc/helpers": "^0.5.15",
     "lucide-react": "^0.475.0",
     "next": "^15.5.18",

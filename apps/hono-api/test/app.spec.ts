@@ -37,7 +37,7 @@ describe('Hono API mirror', () => {
   });
 
   it('keeps protected Nest routes behind bearer auth', async () => {
-    for (const path of ['/clients', '/conversations', '/tickets', '/internal/users', '/industry-templates']) {
+    for (const path of ['/clients', '/conversations', '/tickets', '/internal/users', '/industry-templates', '/voice/resolve', '/voice/clients/abc/context']) {
       const response = await app.request(path, {}, env);
       expect(response.status, path).toBe(401);
     }

@@ -1,0 +1,83 @@
+# coturn config for web-widget voice calling.
+#
+# Why you need this. WebRTC tries a direct browser <-> server path first. That works for most
+# home networks, but roughly 15-20% of visitors sit behind symmetric NAT or a corporate firewall
+# where it cannot. Those calls need a relay. Without TURN they fail silently: the button spins,
+# nothing errors server-side, and the visitor just leaves. Self-hosting coturn keeps the whole
+# calling path free of external vendors — no carrier, no number, no SFU subscription.
+#
+# Install (Debian/Ubuntu):
+#   sudo apt-get install -y coturn
+#   sudo sed -i 's/^#TURNSERVER_ENABLED=1/TURNSERVER_ENABLED=1/' /etc/default/coturn
+#   sudo cp turnserver.conf.example /etc/turnserver.conf   # then edit the marked values
+#   sudo systemctl enable --now coturn
+#
+# Firewall: open 3478/tcp+udp, 5349/tcp+udp (TLS), and the relay range below (49160-49200/udp).
+# On a cloud VM open these in the security group too, not just in ufw/iptables.
+
+# --- Identity -----------------------------------------------------------------------------------
+# EDIT: the server's public IP. If the VM sees a private IP on its NIC (most cloud VMs do), set
+# both — coturn advertises external-ip but binds the internal one.
+listening-ip=0.0.0.0
+# external-ip=<PUBLIC_IP>/<PRIVATE_IP>
+external-ip=CHANGE_ME_PUBLIC_IP
+
+# EDIT: the domain this TURN server answers on. Must match the cert below.
+realm=turn.example.com
+server-name=turn.example.com
+
+# --- Ports ---------------------------------------------------------------------------------------
+listening-port=3478
+tls-listening-port=5349
+
+# Relay port range. Keep it bounded so the firewall rule stays small; ~40 ports is plenty for the
+# concurrency VOICE_MAX_CONCURRENT_CALLS allows.
+min-port=49160
+max-port=49200
+
+# --- Auth ----------------------------------------------------------------------------------------
+# Long-term credentials. Simple and fine at this scale: the widget never sees them directly —
+# the API hands them to the browser inside the ICE config for one call.
+#
+# EDIT both, then set the same pair as WEBRTC_TURN_USERNAME / WEBRTC_TURN_PASSWORD in the voice
+# runtime's env and inside WEBRTC_ICE_SERVERS in the API's env.
+lt-cred-mech
+user=CHANGE_ME_USERNAME:CHANGE_ME_STRONG_PASSWORD
+
+# When you outgrow static credentials, switch to time-limited ones (`use-auth-secret` +
+# `static-auth-secret`) and have the API mint a username/password pair per session, expiring with
+# the voice token. Static creds leaked from one browser work until you rotate them.
+
+# --- TLS -----------------------------------------------------------------------------------------
+# EDIT: point at a real certificate (Let's Encrypt works). Plain 3478 still functions without TLS,
+# but some corporate networks only allow 5349/tcp, which is exactly the population that needs TURN.
+cert=/etc/letsencrypt/live/turn.example.com/fullchain.pem
+pkey=/etc/letsencrypt/live/turn.example.com/privkey.pem
+
+# --- Hardening -----------------------------------------------------------------------------------
+# An open relay gets found and abused within days. These keep it usable only for our calls.
+fingerprint
+no-multicast-peers
+no-cli
+no-tlsv1
+no-tlsv1_1
+
+# Block relaying to private ranges — stops a malicious peer using the TURN server to reach
+# anything else inside your network.
+denied-peer-ip=0.0.0.0-0.255.255.255
+denied-peer-ip=10.0.0.0-10.255.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+denied-peer-ip=169.254.0.0-169.254.255.255
+denied-peer-ip=172.16.0.0-172.31.255.255
+denied-peer-ip=192.168.0.0-192.168.255.255
+denied-peer-ip=::1
+denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+
+# Per-user caps. Bounds what a single leaked credential can cost you in bandwidth.
+user-quota=12
+total-quota=100
+
+# --- Verify ------------------------------------------------------------------------------------
+# Paste the same URL/user/pass into https://icetest.info or webrtc.github.io/samples/src/content/
+# peerconnection/trickle-ice/ and confirm you get a candidate of type "relay". If only "srflx"
+# and "host" appear, TURN is NOT working and restricted-network visitors still cannot call.

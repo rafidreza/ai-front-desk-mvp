@@ -4167,12 +4167,20 @@ button {
   background: #f5f7f8;
 }
 
+/* Flex column, not a fixed grid-template-rows list: the widget's children are conditional (call
+   panel, error, consent, composer all come and go), and a positional row list silently reassigns
+   the 1fr to whichever child happens to land in slot 2. Here only the message list flexes, no
+   matter how many siblings are present. */
 .widget-frame {
   min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   color: var(--ink);
+}
+
+.widget-frame > * {
+  flex: 0 0 auto;
 }
 
 .widget-header {
@@ -4209,6 +4217,107 @@ button {
   margin-top: 2px;
   color: #b6c3cf;
   font-size: 12px;
+}
+
+/* --- Voice calling ------------------------------------------------------------------------- */
+
+/* Call / End sit at the far end of the header, opposite the brand block. */
+.widget-call-start,
+.widget-call-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.widget-call-start {
+  background: var(--green);
+}
+
+.widget-call-end {
+  background: #b4342a;
+}
+
+.widget-call-start:hover,
+.widget-call-end:hover {
+  filter: brightness(1.08);
+}
+
+.widget-call-start:focus-visible,
+.widget-call-end:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.widget-call-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  background: #eef4f2;
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.widget-call-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* The dot is the only "is anything happening?" signal during silence, so it pulses while the
+   agent talks and holds steady while it listens. */
+.widget-call-state::after {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7f8c99;
+  content: '';
+}
+
+.widget-call-state[data-speaking='true']::after {
+  background: var(--green);
+  animation: widget-call-pulse 1s ease-in-out infinite;
+}
+
+.widget-call-timer {
+  font-variant-numeric: tabular-nums;
+  color: #55646f;
+}
+
+@keyframes widget-call-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-call-state[data-speaking='true']::after {
+    animation: none;
+  }
+}
+
+/* Voice turns share the chat bubble styling but read as spoken, not typed. */
+.widget-message[data-voice='true'] {
+  border-style: dashed;
+}
+
+/* The only child that grows. min-height:0 lets it actually scroll inside the flex column. */
+.widget-frame > .widget-messages {
+  flex: 1 1 auto;
 }
 
 .widget-messages {
@@ -8131,6 +8240,27 @@ body {
 .widget-header span,
 .widget-consent p {
   color: rgba(235, 235, 235, 0.72);
+}
+
+/* Voice call panel — the base rule above is light-themed, and this widget renders dark
+   unconditionally, so without this the in-call strip is a bright block with unreadable text. */
+.widget-call-panel {
+  border-color: rgba(235, 235, 235, 0.12);
+  background: rgba(84, 227, 249, 0.08);
+  color: #ebebeb;
+}
+
+.widget-call-state {
+  color: #ebebeb;
+}
+
+.widget-call-timer {
+  color: rgba(235, 235, 235, 0.72);
+}
+
+.widget-call-start {
+  background: var(--brand);
+  color: #000000;
 }
 
 .widget-message[data-role="agent"] {

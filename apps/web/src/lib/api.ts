@@ -847,3 +847,80 @@ export async function updateConversationMessageTranscript(
   );
   return data.message;
 }
+
+// --- Voice: anchor console + onboarding (T10/T12) --------------------------------------------
+export interface VoiceEscalation {
+  id: string;
+  clientId: string;
+  threadId: string | null;
+  callId: string | null;
+  reason: string;
+  mode: string;
+  status: string;
+  assignedTo: string | null;
+  createdAt: string;
+}
+
+export async function getVoiceQueue(clientId: string): Promise<VoiceEscalation[]> {
+  return (await apiFetch<{ queue: VoiceEscalation[] }>(`/console/${clientId}/queue`)).queue;
+}
+
+export async function getVoiceApprovals(clientId: string): Promise<unknown[]> {
+  return (await apiFetch<{ approvals: unknown[] }>(`/console/${clientId}/approvals`)).approvals;
+}
+
+export async function decideVoiceApproval(clientId: string, actionId: string, decision: 'approve' | 'reject'): Promise<unknown> {
+  return (await apiFetch<{ outcome: unknown }>(`/console/${clientId}/approvals/${actionId}`, {
+    method: 'POST',
+    body: JSON.stringify({ decision }),
+  })).outcome;
+}
+
+export async function takeVoiceEscalation(clientId: string, escalationId: string): Promise<VoiceEscalation> {
+  return (await apiFetch<{ escalation: VoiceEscalation }>(`/console/${clientId}/escalations/${escalationId}/take`, { method: 'POST' })).escalation;
+}
+
+export async function resolveVoiceEscalation(clientId: string, escalationId: string): Promise<VoiceEscalation> {
+  return (await apiFetch<{ escalation: VoiceEscalation }>(`/console/${clientId}/escalations/${escalationId}/resolve`, { method: 'POST' })).escalation;
+}
+
+export async function getVoiceCallDetail(clientId: string, callId: string): Promise<unknown> {
+  return (await apiFetch<{ detail: unknown }>(`/console/${clientId}/calls/${callId}`)).detail;
+}
+
+export async function getFlaggedVoiceCalls(clientId: string): Promise<unknown[]> {
+  return (await apiFetch<{ flagged: unknown[] }>(`/console/${clientId}/flagged`)).flagged;
+}
+
+export interface VoiceConfig {
+  languagePosture?: string;
+  greeting?: string;
+  ttsVoice?: string;
+  recordingConsent?: boolean;
+}
+
+export async function getVoiceOnboardingConfig(clientId: string): Promise<VoiceConfig | null> {
+  return (await apiFetch<{ voiceConfig: VoiceConfig | null }>(`/onboarding/${clientId}/voice-config`)).voiceConfig;
+}
+
+export async function setVoiceOnboardingConfig(clientId: string, config: VoiceConfig): Promise<void> {
+  await apiFetch(`/onboarding/${clientId}/voice-config`, { method: 'PUT', body: JSON.stringify(config) });
+}
+
+export async function registerVoiceNumber(clientId: string, e164Number: string, label?: string): Promise<unknown> {
+  return (await apiFetch<{ number: unknown }>(`/onboarding/${clientId}/numbers`, {
+    method: 'POST',
+    body: JSON.stringify({ e164Number, label }),
+  })).number;
+}
+
+export interface VoiceReadiness {
+  numberReady: boolean;
+  kbReady: boolean;
+  voiceReady: boolean;
+  ready: boolean;
+}
+
+export async function getVoiceReadiness(clientId: string): Promise<VoiceReadiness> {
+  return (await apiFetch<{ readiness: VoiceReadiness }>(`/onboarding/${clientId}/readiness`)).readiness;
+}

@@ -6,12 +6,15 @@ import { normalizeError } from './errors';
 import { authMiddleware, bodyLimitMiddleware, corsMiddleware, rateLimitMiddleware } from './middleware/security';
 import { channelRoutes } from './routes/channels';
 import { clientRoutes } from './routes/clients';
+import { consoleRoutes } from './routes/console';
 import { conversationRoutes } from './routes/conversations';
 import { healthRoutes } from './routes/health';
 import { internalRoutes } from './routes/internal';
 import { knowledgeRoutes } from './routes/knowledge';
 import { metaOAuthRoutes } from './routes/meta-oauth';
 import { promptRoutes } from './routes/prompts';
+import { voiceRoutes } from './routes/voice';
+import { widgetVoiceRoutes } from './routes/widget-voice';
 
 export function createApp() {
   const app = new Hono<AppBindings>();
@@ -49,6 +52,9 @@ export function createApp() {
   app.route('/', knowledgeRoutes());
   app.route('/', metaOAuthRoutes());
   app.route('/', promptRoutes());
+  app.route('/', voiceRoutes());
+  app.route('/', widgetVoiceRoutes());
+  app.route('/', consoleRoutes());
 
   app.notFound((c) => c.json({ statusCode: 404, message: 'Not Found' }, 404));
 

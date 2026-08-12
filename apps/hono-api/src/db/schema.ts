@@ -565,6 +565,423 @@ export const ticketComments = pgTable(
   }),
 );
 
+// --- Multitenancy foundation (T26) ---------------------------------------------------------
+// Maps an internal operator (anchor) to the client(s) they are authorised to serve, with a
+// per-mapping role. This is what turns the previously-global InternalUser into a tenant-scoped
+// one: an operator can only ever see/act on clients they appear here for. Admins are handled by
+// policy above the table (all-access) — see OperatorAccessService.
+export const operatorClientAccess = pgTable(
+  'OperatorClientAccess',
+  {
+    id: text('id').primaryKey(),
+    operatorId: text('operatorId').notNull(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    role: text('role').notNull().default('operator'),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    operatorClientUnique: uniqueIndex('OperatorClientAccess_operatorId_clientId_key').on(table.operatorId, table.clientId),
+    operatorIdIdx: index('OperatorClientAccess_operatorId_idx').on(table.operatorId),
+    clientIdIdx: index('OperatorClientAccess_clientId_idx').on(table.clientId),
+  }),
+);
+
+// Per-tenant secrets (connector credentials, SIP creds, etc.), encrypted at rest with the
+// TENANT_SECRET_ENCRYPTION_KEY via utils/encryption. Never readable across tenants — every read
+// is keyed by (clientId, key). Backs T24 connectors and T1 telephony creds.
+export const tenantSecrets = pgTable(
+  'TenantSecret',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    key: text('key').notNull(),
+    encryptedValue: text('encryptedValue').notNull(),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientKeyUnique: uniqueIndex('TenantSecret_clientId_key_key').on(table.clientId, table.key),
+    clientIdIdx: index('TenantSecret_clientId_idx').on(table.clientId),
+  }),
+);
+
+// --- Client voice config (T12) ----------------------------------------------------------------
+// Per-tenant voice-agent configuration set during self-serve onboarding: language posture,
+// greeting, TTS voice, recording consent. Consumed by T1/T2/T5 at call time.
+export const clientVoiceConfigs = pgTable(
+  'ClientVoiceConfig',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientUnique: uniqueIndex('ClientVoiceConfig_clientId_key').on(table.clientId),
+  }),
+);
+
+// --- Connector framework (T24) ---------------------------------------------------------------
+// A connector is how the workspace talks to a client's external system (CRM, network, billing) as
+// a side effect — never the system of record. Config is per-tenant; credentials live in
+// TenantSecret (T26), referenced by key from config (we do NOT duplicate a secrets table here).
+export const connectors = pgTable(
+  'Connector',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
+    status: text('status').notNull().default('active'),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientTypeUnique: uniqueIndex('Connector_clientId_type_key').on(table.clientId, table.type),
+    clientIdIdx: index('Connector_clientId_idx').on(table.clientId),
+  }),
+);
+
+// When a client's external system is down, writes are queued here and replayed on recovery, so a
+// call never halts (vision doc Step 10). Partitioned by clientId; idempotent per (connector, key).
+export const connectorWriteQueue = pgTable(
+  'ConnectorWriteQueue',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    connectorId: text('connectorId').notNull().references(() => connectors.id, { onDelete: 'cascade' }),
+    idempotencyKey: text('idempotencyKey').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    status: text('status').notNull().default('pending'), // 'pending' | 'replayed' | 'failed'
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('lastError'),
+    nextAttemptAt: timestamp('nextAttemptAt', { mode: 'date' }),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    connectorIdemUnique: uniqueIndex('ConnectorWriteQueue_connectorId_idempotencyKey_key').on(
+      table.connectorId,
+      table.idempotencyKey,
+    ),
+    clientStatusIdx: index('ConnectorWriteQueue_clientId_status_idx').on(table.clientId, table.status),
+  }),
+);
+
+// --- Voice / telephony (T1) -----------------------------------------------------------------
+// Maps a dialled phone number (E.164) to exactly one client. This is the SINGLE point where an
+// inbound call becomes tenant-scoped: the voice runtime resolves the dialled number here before
+// any AI runs. One client may own several numbers; a number maps to at most one client. There is
+// deliberately NO default/fallback tenant — an unmapped number is rejected (contrast the old
+// pilotClientFallback, which must never exist on the voice path).
+export const tenantPhoneNumbers = pgTable(
+  'TenantPhoneNumber',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    e164Number: text('e164Number').notNull(),
+    label: text('label'),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    e164Unique: uniqueIndex('TenantPhoneNumber_e164Number_key').on(table.e164Number),
+    clientIdIdx: index('TenantPhoneNumber_clientId_idx').on(table.clientId),
+    activeIdx: index('TenantPhoneNumber_active_idx').on(table.active),
+  }),
+);
+
+// One inbound (later: outbound) voice call. Created by T1 the moment a call is answered, tagged
+// with the resolved clientId. T2 drives the conversation; T4 extends this with transcript linkage
+// and finalisation metadata. Recording is stored as a reference (R2) honouring tenant policy.
+export const calls = pgTable(
+  'Call',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    phoneNumberId: text('phoneNumberId').references(() => tenantPhoneNumbers.id, { onDelete: 'set null' }),
+    threadId: text('threadId'),
+    dialledNumber: text('dialledNumber').notNull(),
+    callerIdMasked: text('callerIdMasked'),
+    direction: text('direction').notNull().default('inbound'),
+    status: text('status').notNull().default('ringing'),
+    languagePosture: text('languagePosture'),
+    recordingUrl: text('recordingUrl'),
+    endReason: text('endReason'),
+    durationS: integer('durationS'),
+    outcome: text('outcome'),
+    // Set by T13 interaction scoring once the call is scored. Nullable until then.
+    scoreId: text('scoreId'),
+    startedAt: timestamp('startedAt', { mode: 'date' }).notNull().defaultNow(),
+    endedAt: timestamp('endedAt', { mode: 'date' }),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('Call_clientId_idx').on(table.clientId),
+    clientStatusIdx: index('Call_clientId_status_idx').on(table.clientId, table.status),
+    phoneNumberIdIdx: index('Call_phoneNumberId_idx').on(table.phoneNumberId),
+    threadIdIdx: index('Call_threadId_idx').on(table.threadId),
+    startedAtIdx: index('Call_startedAt_idx').on(table.startedAt),
+  }),
+);
+
+// --- Thread + structured thread state (T3) ---------------------------------------------------
+// A thread is the single continuous record of one customer for one client, across calls. Identity
+// for MVP is the caller's phone number; a thread is (clientId, identity). Repeat callers reload
+// the same thread so context carries over.
+export const threads = pgTable(
+  'Thread',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    identity: text('identity').notNull(),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    lastSeenAt: timestamp('lastSeenAt', { mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdentityUnique: uniqueIndex('Thread_clientId_identity_key').on(table.clientId, table.identity),
+    clientIdIdx: index('Thread_clientId_idx').on(table.clientId),
+  }),
+);
+
+// The structured state extracted onto a thread: a map of field -> { value, confidence?, source? }.
+// Per-tenant field schema (below) defines which fields matter. Uncertainty is preserved via
+// per-field confidence so downstream treats low-confidence values as flags, not facts.
+export const threadStates = pgTable(
+  'ThreadState',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    threadId: text('threadId').notNull().references(() => threads.id, { onDelete: 'cascade' }),
+    fields: jsonb('fields').$type<Record<string, unknown>>().notNull().default({}),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    threadUnique: uniqueIndex('ThreadState_threadId_key').on(table.threadId),
+    clientIdIdx: index('ThreadState_clientId_idx').on(table.clientId),
+  }),
+);
+
+// Per-tenant definition of which structured fields a client captures (an ISP captures coverage
+// address; a clinic captures appointment type). MVP ships a default in code when none is set.
+export const threadStateFieldSchemas = pgTable(
+  'ThreadStateFieldSchema',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    schema: jsonb('schema').$type<Record<string, unknown>[]>().notNull().default(sql`'[]'::jsonb`),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientUnique: uniqueIndex('ThreadStateFieldSchema_clientId_key').on(table.clientId),
+  }),
+);
+
+// --- Lead qualification (T7) ------------------------------------------------------------------
+// Per-tenant ICP (ideal customer profile) rules and the qualification verdicts they produce.
+export const icpRules = pgTable(
+  'IcpRules',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientUnique: uniqueIndex('IcpRules_clientId_key').on(table.clientId),
+  }),
+);
+
+export const leadQualifications = pgTable(
+  'LeadQualification',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    threadId: text('threadId').notNull().references(() => threads.id, { onDelete: 'cascade' }),
+    callId: text('callId'),
+    qualified: boolean('qualified').notNull(),
+    reason: text('reason'),
+    confidence: doublePrecision('confidence').notNull().default(0),
+    scoredAt: timestamp('scoredAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('LeadQualification_clientId_idx').on(table.clientId),
+    threadIdIdx: index('LeadQualification_threadId_idx').on(table.threadId),
+  }),
+);
+
+// --- Interaction scoring (T13) ----------------------------------------------------------------
+// Per-call rubric score (the MVP slice of Assurance): scores every call, not a 2% sample.
+export const callScores = pgTable(
+  'CallScore',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    callId: text('callId').notNull().references(() => calls.id, { onDelete: 'cascade' }),
+    score: doublePrecision('score').notNull(),
+    breakdown: jsonb('breakdown').$type<Record<string, unknown>>().notNull().default({}),
+    flagged: boolean('flagged').notNull().default(false),
+    scoredAt: timestamp('scoredAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('CallScore_clientId_idx').on(table.clientId),
+    callIdIdx: index('CallScore_callId_idx').on(table.callId),
+    flaggedIdx: index('CallScore_clientId_flagged_idx').on(table.clientId, table.flagged),
+  }),
+);
+
+export const scoringRubrics = pgTable(
+  'ScoringRubric',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientUnique: uniqueIndex('ScoringRubric_clientId_key').on(table.clientId),
+  }),
+);
+
+// --- Governance / audit log (T27) --------------------------------------------------------------
+// Append-only "who did what, when, and why" trail across the voice product. Every audit entry is
+// tenant-scoped. Written by nearly everything (calls, actions, approvals, escalations, config).
+export const auditEvents = pgTable(
+  'AuditEvent',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    actorType: text('actorType').notNull(), // 'system' | 'ai' | 'operator'
+    actorId: text('actorId'),
+    eventType: text('eventType').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('AuditEvent_clientId_idx').on(table.clientId),
+    clientCreatedIdx: index('AuditEvent_clientId_createdAt_idx').on(table.clientId, table.createdAt),
+    eventTypeIdx: index('AuditEvent_eventType_idx').on(table.eventType),
+  }),
+);
+
+// --- Escalation to human anchor (T8) ----------------------------------------------------------
+// One escalation = a call/thread handed to a human, with the reason and full context payload.
+// Feeds the Anchor Console queue (T10). MVP hand-off modes: async callback / queued pickup.
+export const escalations = pgTable(
+  'Escalation',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    threadId: text('threadId'),
+    callId: text('callId'),
+    reason: text('reason').notNull(),
+    mode: text('mode').notNull().default('async'), // 'async' | 'queued'
+    status: text('status').notNull().default('open'), // 'open' | 'taken' | 'resolved'
+    assignedTo: text('assignedTo'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    resolvedAt: timestamp('resolvedAt', { mode: 'date' }),
+  },
+  (table) => ({
+    clientStatusIdx: index('Escalation_clientId_status_idx').on(table.clientId, table.status),
+    clientIdIdx: index('Escalation_clientId_idx').on(table.clientId),
+  }),
+);
+
+// --- Call persistence: transcript + actions (T4) ---------------------------------------------
+// A diarized transcript segment: one turn of speech labelled by speaker. Fed by T2 during the
+// call; the durable record used by the console (T10), scoring (T13), and groundedness (T14).
+// Idempotent by (callId, turnIndex) so a retried write refines rather than duplicates.
+export const transcriptSegments = pgTable(
+  'TranscriptSegment',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    callId: text('callId').notNull().references(() => calls.id, { onDelete: 'cascade' }),
+    turnIndex: integer('turnIndex').notNull(),
+    speaker: text('speaker').notNull(), // 'caller' | 'ai' | 'human'
+    text: text('text').notNull(),
+    language: text('language'),
+    latencyMs: integer('latencyMs'),
+    startedAt: timestamp('startedAt', { mode: 'date' }),
+    endedAt: timestamp('endedAt', { mode: 'date' }),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    callTurnUnique: uniqueIndex('TranscriptSegment_callId_turnIndex_key').on(table.callId, table.turnIndex),
+    clientIdIdx: index('TranscriptSegment_clientId_idx').on(table.clientId),
+    callIdIdx: index('TranscriptSegment_callId_idx').on(table.callId),
+  }),
+);
+
+// A single action invoked during a call (lookup, write, escalation). Records its action class
+// (read / reversible_write / irreversible_financial — see T9) and approval, for traceability.
+export const callActions = pgTable(
+  'CallAction',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    callId: text('callId').notNull().references(() => calls.id, { onDelete: 'cascade' }),
+    turnIndex: integer('turnIndex'),
+    type: text('type').notNull(),
+    actionClass: text('actionClass').notNull(),
+    // 'auto_executed' | 'pending_approval' | 'approved' | 'rejected' | 'expired' | 'failed' (T9)
+    status: text('status').notNull().default('auto_executed'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    result: jsonb('result').$type<Record<string, unknown> | null>(),
+    approvedBy: text('approvedBy'),
+    decidedAt: timestamp('decidedAt', { mode: 'date' }),
+    at: timestamp('at', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('CallAction_clientId_idx').on(table.clientId),
+    callIdIdx: index('CallAction_callId_idx').on(table.callId),
+    actionClassIdx: index('CallAction_actionClass_idx').on(table.actionClass),
+    clientStatusIdx: index('CallAction_clientId_status_idx').on(table.clientId, table.status),
+  }),
+);
+
+// Groundedness verdicts (T14): per-turn judgement of whether an answer is supported by its KB
+// evidence. Feeds scoring (T13) and audit (T27). The safety record for why the AI did/didn't say
+// something on a call.
+export const groundednessVerdicts = pgTable(
+  'GroundednessVerdict',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    callId: text('callId').notNull().references(() => calls.id, { onDelete: 'cascade' }),
+    turnIndex: integer('turnIndex'),
+    score: doublePrecision('score').notNull(),
+    verdict: text('verdict').notNull(), // 'grounded' | 'weak' | 'ungrounded'
+    reason: text('reason'),
+    at: timestamp('at', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientIdIdx: index('GroundednessVerdict_clientId_idx').on(table.clientId),
+    callIdIdx: index('GroundednessVerdict_callId_idx').on(table.callId),
+    verdictIdx: index('GroundednessVerdict_verdict_idx').on(table.verdict),
+  }),
+);
+
+// Per-tenant governance policy (T9): approval thresholds + per-class rules. Drives whether an
+// irreversible/financial action auto-clears or routes to a human. One row per client.
+export const actionPolicies = pgTable(
+  'ActionPolicy',
+  {
+    id: text('id').primaryKey(),
+    clientId: text('clientId').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+    config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
+    updatedAt: timestamp('updatedAt', { mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientUnique: uniqueIndex('ActionPolicy_clientId_key').on(table.clientId),
+  }),
+);
+
 export const clientRelations = relations(clients, ({ many }) => ({
   conversations: many(conversations),
   tickets: many(tickets),
@@ -573,6 +990,98 @@ export const clientRelations = relations(clients, ({ many }) => ({
   externalDataSources: many(externalDataSources),
   productRecords: many(productRecords),
   orderRecords: many(orderRecords),
+  operatorAccess: many(operatorClientAccess),
+  secrets: many(tenantSecrets),
+  phoneNumbers: many(tenantPhoneNumbers),
+  calls: many(calls),
+  threads: many(threads),
+  connectors: many(connectors),
+}));
+
+export const clientVoiceConfigRelations = relations(clientVoiceConfigs, ({ one }) => ({
+  client: one(clients, { fields: [clientVoiceConfigs.clientId], references: [clients.id] }),
+}));
+
+export const connectorRelations = relations(connectors, ({ one, many }) => ({
+  client: one(clients, { fields: [connectors.clientId], references: [clients.id] }),
+  writeQueue: many(connectorWriteQueue),
+}));
+
+export const connectorWriteQueueRelations = relations(connectorWriteQueue, ({ one }) => ({
+  client: one(clients, { fields: [connectorWriteQueue.clientId], references: [clients.id] }),
+  connector: one(connectors, { fields: [connectorWriteQueue.connectorId], references: [connectors.id] }),
+}));
+
+export const threadRelations = relations(threads, ({ one, many }) => ({
+  client: one(clients, { fields: [threads.clientId], references: [clients.id] }),
+  state: one(threadStates, { fields: [threads.id], references: [threadStates.threadId] }),
+  calls: many(calls),
+}));
+
+export const threadStateRelations = relations(threadStates, ({ one }) => ({
+  client: one(clients, { fields: [threadStates.clientId], references: [clients.id] }),
+  thread: one(threads, { fields: [threadStates.threadId], references: [threads.id] }),
+}));
+
+export const operatorClientAccessRelations = relations(operatorClientAccess, ({ one }) => ({
+  client: one(clients, { fields: [operatorClientAccess.clientId], references: [clients.id] }),
+}));
+
+export const tenantSecretRelations = relations(tenantSecrets, ({ one }) => ({
+  client: one(clients, { fields: [tenantSecrets.clientId], references: [clients.id] }),
+}));
+
+export const tenantPhoneNumberRelations = relations(tenantPhoneNumbers, ({ one, many }) => ({
+  client: one(clients, { fields: [tenantPhoneNumbers.clientId], references: [clients.id] }),
+  calls: many(calls),
+}));
+
+export const callRelations = relations(calls, ({ one, many }) => ({
+  client: one(clients, { fields: [calls.clientId], references: [clients.id] }),
+  phoneNumber: one(tenantPhoneNumbers, { fields: [calls.phoneNumberId], references: [tenantPhoneNumbers.id] }),
+  transcriptSegments: many(transcriptSegments),
+  actions: many(callActions),
+}));
+
+export const transcriptSegmentRelations = relations(transcriptSegments, ({ one }) => ({
+  client: one(clients, { fields: [transcriptSegments.clientId], references: [clients.id] }),
+  call: one(calls, { fields: [transcriptSegments.callId], references: [calls.id] }),
+}));
+
+export const callActionRelations = relations(callActions, ({ one }) => ({
+  client: one(clients, { fields: [callActions.clientId], references: [clients.id] }),
+  call: one(calls, { fields: [callActions.callId], references: [calls.id] }),
+}));
+
+export const actionPolicyRelations = relations(actionPolicies, ({ one }) => ({
+  client: one(clients, { fields: [actionPolicies.clientId], references: [clients.id] }),
+}));
+
+export const groundednessVerdictRelations = relations(groundednessVerdicts, ({ one }) => ({
+  client: one(clients, { fields: [groundednessVerdicts.clientId], references: [clients.id] }),
+  call: one(calls, { fields: [groundednessVerdicts.callId], references: [calls.id] }),
+}));
+
+export const icpRulesRelations = relations(icpRules, ({ one }) => ({
+  client: one(clients, { fields: [icpRules.clientId], references: [clients.id] }),
+}));
+
+export const leadQualificationRelations = relations(leadQualifications, ({ one }) => ({
+  client: one(clients, { fields: [leadQualifications.clientId], references: [clients.id] }),
+  thread: one(threads, { fields: [leadQualifications.threadId], references: [threads.id] }),
+}));
+
+export const escalationRelations = relations(escalations, ({ one }) => ({
+  client: one(clients, { fields: [escalations.clientId], references: [clients.id] }),
+}));
+
+export const callScoreRelations = relations(callScores, ({ one }) => ({
+  client: one(clients, { fields: [callScores.clientId], references: [clients.id] }),
+  call: one(calls, { fields: [callScores.callId], references: [calls.id] }),
+}));
+
+export const auditEventRelations = relations(auditEvents, ({ one }) => ({
+  client: one(clients, { fields: [auditEvents.clientId], references: [clients.id] }),
 }));
 
 export const clientChannelRelations = relations(clientChannels, ({ one }) => ({
@@ -628,6 +1137,26 @@ export const ticketCommentRelations = relations(ticketComments, ({ one }) => ({
 
 export const schema = {
   clients,
+  operatorClientAccess,
+  tenantSecrets,
+  connectors,
+  connectorWriteQueue,
+  clientVoiceConfigs,
+  tenantPhoneNumbers,
+  calls,
+  threads,
+  threadStates,
+  threadStateFieldSchemas,
+  transcriptSegments,
+  callActions,
+  actionPolicies,
+  groundednessVerdicts,
+  icpRules,
+  leadQualifications,
+  escalations,
+  callScores,
+  scoringRubrics,
+  auditEvents,
   clientAuthChallenges,
   clientChannels,
   metaOAuthSessions,

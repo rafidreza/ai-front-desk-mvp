@@ -4,15 +4,40 @@ import { requireDb } from '../db/client';
 import { AiService } from './ai';
 import { ClientAuthService } from './auth';
 import { ChannelAdminService } from './channel-admin';
+import { ActionGovernanceService, ConnectorActionExecutor } from './action-governance';
+import { AnchorConsoleService } from './anchor-console';
+import { AuditService } from './audit';
+import { CallPersistenceService } from './call-persistence';
 import { ClientService, DashboardService } from './clients';
+import { ConnectorFrameworkService } from './connectors';
+import { EscalationService } from './escalation';
+import { GroundednessService } from './groundedness';
+import { InteractionScoringService } from './interaction-scoring';
 import { ConversationRepository, ConversationService, TicketService } from './conversations';
 import { AuthCodeDeliveryService, ChannelSendService, EmailDeliveryService, UrgentTicketNotificationService } from './delivery';
 import { InternalUsersService } from './internal-users';
 import { KnowledgeChangeRequestService, KnowledgeImportService, KnowledgeService } from './knowledge';
 import { LoggerService } from './logger';
 import { MetaOAuthService } from './meta-oauth';
+import { OnboardingService } from './onboarding';
+import { OperatorAccessService } from './operator-access';
 import { PromptProfileService } from './prompts';
+import { QualificationService } from './qualification';
+import { ReadLookupService } from './read-lookup';
 import { IndustryTemplateService } from './templates';
+import { CallService, TenantPhoneNumberService } from './telephony';
+import { ThreadStateService } from './thread-state';
+import { TenantSecretsService } from './tenant-secrets';
+import { WidgetVoiceService } from './widget-voice';
+import {
+  tenantSecretEncryptionKey,
+  voiceRuntimeUrl,
+  webrtcIceServers,
+  widgetVoiceEnabled,
+  widgetVoiceMaxDurationS,
+  widgetVoiceTokenSecret,
+  widgetVoiceTokenTtlS,
+} from '../env';
 
 export function createServices(c: Context<AppBindings>) {
   const db = requireDb(c);
@@ -46,22 +71,79 @@ export function createServices(c: Context<AppBindings>) {
   const templates = new IndustryTemplateService(knowledge);
   const internalUsers = new InternalUsersService(db);
   const channelAdmin = new ChannelAdminService(db, c.env);
+  const operatorAccess = new OperatorAccessService(db);
+  const tenantSecrets = new TenantSecretsService(db, tenantSecretEncryptionKey(c.env));
+  const connectorFramework = new ConnectorFrameworkService(db, tenantSecrets);
+  const actionGovernance = new ActionGovernanceService(db, new ConnectorActionExecutor(connectorFramework));
+  const audit = new AuditService(db);
+  const phoneNumbers = new TenantPhoneNumberService(db);
+  // Call lifecycle events (started/ended/failed) flow straight into the audit trail (T27).
+  const calls = new CallService(db, phoneNumbers, (event) =>
+    audit.record(
+      { clientId: event.clientId },
+      { actorType: 'system', actorId: 'voice-runtime', eventType: event.type, payload: { callId: event.callId } },
+    ),
+  );
+  const callPersistence = new CallPersistenceService(db);
+  const threadState = new ThreadStateService(db);
+  const readLookup = new ReadLookupService(actionGovernance, threadState);
+  const groundedness = new GroundednessService(db);
+  const qualification = new QualificationService(db);
+  const escalation = new EscalationService(db, (event) =>
+    audit.record(
+      { clientId: event.clientId },
+      { actorType: 'system', actorId: 'voice-runtime', eventType: event.type, payload: { escalationId: event.escalationId, reason: event.reason } },
+    ),
+  );
+  const interactionScoring = new InteractionScoringService(db);
+  const anchorConsole = new AnchorConsoleService(operatorAccess, escalation, actionGovernance, callPersistence, interactionScoring);
+  const onboarding = new OnboardingService(db, phoneNumbers, qualification);
+  // Web-widget voice. `findById` throws NotFoundError; the mint wants a null so it can answer 404
+  // without leaking whether the clientId exists.
+  const widgetVoice = new WidgetVoiceService(
+    {
+      enabled: widgetVoiceEnabled(c.env),
+      secret: widgetVoiceTokenSecret(c.env),
+      runtimeUrl: voiceRuntimeUrl(c.env),
+      iceServers: webrtcIceServers(c.env),
+      tokenTtlS: widgetVoiceTokenTtlS(c.env),
+      maxDurationS: widgetVoiceMaxDurationS(c.env),
+    },
+    { get: async (clientId) => clients.findById(clientId).catch(() => null) },
+  );
 
   return {
+    actionGovernance,
+    anchorConsole,
+    audit,
     auth,
+    callPersistence,
+    calls,
     channelAdmin,
+    connectorFramework,
     channelSend,
     clients,
     conversations,
     dashboard,
+    escalation,
+    groundedness,
     imports,
+    interactionScoring,
     internalUsers,
     knowledge,
     knowledgeRequests,
     metaOAuth,
+    onboarding,
+    operatorAccess,
+    phoneNumbers,
     prompts,
+    qualification,
+    readLookup,
     repository,
     templates,
+    tenantSecrets,
+    threadState,
     tickets: ticketService,
+    widgetVoice,
   };
 }

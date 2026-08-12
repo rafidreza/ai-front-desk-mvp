@@ -1,0 +1,30 @@
+{
+  "clientId": "pilot-abc",
+  "greeting": "আসসালামু আলাইকুম, [ব্যবসার নাম] এ কল করার জন্য ধন্যবাদ। কীভাবে সাহায্য করতে পারি?",
+  "entries": [
+    {
+      "title": "Package prices",
+      "answer": "পাঁচশো এমবিপিএস প্যাকেজ — মাসিক পনেরোশো টাকা। এক জিবিপিএস প্যাকেজ — মাসিক পঁচিশশো টাকা।",
+      "keywords": ["price", "dam", "koto", "package", "প্যাকেজ", "দাম"],
+      "category": "pricing"
+    },
+    {
+      "title": "Installation charge",
+      "answer": "এই মাসে ইনস্টলেশন সম্পূর্ণ ফ্রি।",
+      "keywords": ["installation", "setup", "ইনস্টলেশন", "free"],
+      "category": "pricing"
+    },
+    {
+      "title": "Coverage area",
+      "answer": "ঢাকা এবং চট্টগ্রাম সিটি এলাকায় সেবা পাওয়া যাচ্ছে।",
+      "keywords": ["coverage", "area", "elaka", "dhaka", "এলাকা"],
+      "category": "service"
+    },
+    {
+      "title": "Support hours",
+      "answer": "সকাল নয়টা থেকে রাত নয়টা পর্যন্ত, সপ্তাহে সাত দিন।",
+      "keywords": ["hours", "time", "somoy", "support", "সময়"],
+      "category": "service"
+    }
+  ]
+}

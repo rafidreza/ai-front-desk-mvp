@@ -1,7 +1,8 @@
 'use client';
 
-import { MessageCircle, Send } from 'lucide-react';
+import { Mic, MessageCircle, PhoneCall, PhoneOff, Send } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useVoiceCall } from './_lib/use-voice-call';
 
 type ChatMessage = {
   id: string;
@@ -9,7 +10,15 @@ type ChatMessage = {
   text: string;
 };
 
-const consentVersion = 'pdpa-widget-v1';
+function formatCountdown(totalSeconds: number) {
+  const safe = Math.max(0, totalSeconds);
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`;
+}
+
+// Bumped to v2 when voice calling was added: the v1 copy covered text only, so anyone who agreed
+// to it never consented to sharing their voice. The bump forces a re-prompt rather than silently
+// reusing text consent for audio.
+const consentVersion = 'pdpa-widget-v2';
 
 function createVisitorId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -35,6 +44,9 @@ export default function WebChatWidgetPage() {
     if (typeof window === 'undefined') return 'pilot-client';
     return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
   }, []);
+
+  const call = useVoiceCall(clientId, visitorId);
+  const isCallActive = call.status !== 'idle' && call.status !== 'error';
 
   useEffect(() => {
     const storageKey = `afd_widget_visitor_${clientId}`;
@@ -109,14 +121,46 @@ export default function WebChatWidgetPage() {
           </div>
           <div>
             <strong>Daemion</strong>
-            <span>Usually replies instantly</span>
+            <span>{isCallActive ? 'Voice call in progress' : 'Usually replies instantly'}</span>
           </div>
+          {hasConsent && !isCallActive && (
+            <button className="widget-call-start" onClick={call.startCall} type="button">
+              <PhoneCall size={15} aria-hidden="true" />
+              Call
+            </button>
+          )}
+          {isCallActive && (
+            <button className="widget-call-end" onClick={call.endCall} type="button">
+              <PhoneOff size={15} aria-hidden="true" />
+              End
+            </button>
+          )}
         </header>
+
+        {isCallActive && (
+          <div className="widget-call-panel" aria-live="polite">
+            <span className="widget-call-state" data-speaking={call.isAgentSpeaking}>
+              <Mic size={14} aria-hidden="true" />
+              {call.status === 'requesting-mic' && 'Waiting for microphone access…'}
+              {call.status === 'connecting' && 'Connecting…'}
+              {call.status === 'ending' && 'Ending call…'}
+              {call.status === 'live' && (call.isAgentSpeaking ? 'Agent speaking…' : 'Listening…')}
+            </span>
+            {call.status === 'live' && call.secondsLeft !== null && (
+              <span className="widget-call-timer">{formatCountdown(call.secondsLeft)}</span>
+            )}
+          </div>
+        )}
 
         <div className="widget-messages">
           {messages.map((message) => (
             <div className="widget-message" data-role={message.role} key={message.id}>
               {message.text}
+            </div>
+          ))}
+          {call.transcript.map((line) => (
+            <div className="widget-message" data-role={line.role} data-voice="true" key={line.id}>
+              {line.text}
             </div>
           ))}
           {isSending && (
@@ -127,14 +171,16 @@ export default function WebChatWidgetPage() {
         </div>
 
         {error !== null && <div className="widget-error">{error}</div>}
+        {call.error !== null && <div className="widget-error">{call.error}</div>}
 
         {!hasConsent && (
           <div className="widget-consent" role="region" aria-label="Privacy consent">
             <p>
-              By starting this chat, you agree to share your message and any contact details with this business so they can respond.
+              By starting this chat or a voice call, you agree to share your message, your voice, and any contact
+              details with this business so they can respond.
             </p>
             <button type="button" onClick={acceptConsent}>
-              Agree and start chat
+              Agree and start
             </button>
           </div>
         )}

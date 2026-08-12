@@ -32,7 +32,8 @@ interface InternalShellProps {
     | 'kb-review'
     | 'audit-log'
     | 'data-sources'
-    | 'agent-config';
+    | 'agent-config'
+    | 'voice-console';
   eyebrow: string;
   title: string;
   action?: ReactNode;

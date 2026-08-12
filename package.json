@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev:api": "npm run dev -w @ai-front-desk/api",
+    "dev:hono": "npm run dev -w @ai-front-desk/hono-api -- --port 4000",
     "dev:web": "npm run dev -w @ai-front-desk/web -- --port 3002",
     "build": "npm run build -w @ai-front-desk/api",
     "build:hono": "npm run build -w @ai-front-desk/hono-api",

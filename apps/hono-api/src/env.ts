@@ -47,6 +47,14 @@ export interface Env {
   DEV_RETURN_AUTH_CODE?: string;
   DEV_CLIENT_AUTH_CODE?: string;
   CLIENT_SESSION_SECRET?: string;
+  TENANT_SECRET_ENCRYPTION_KEY?: string;
+  // Web-widget voice calling (browser WebRTC -> Pipecat runtime).
+  WIDGET_VOICE_TOKEN_SECRET?: string;
+  VOICE_RUNTIME_URL?: string;
+  WIDGET_VOICE_MAX_DURATION_S?: string;
+  WIDGET_VOICE_TOKEN_TTL_S?: string;
+  WEBRTC_ICE_SERVERS?: string;
+  ENABLE_WIDGET_VOICE?: string;
   UPSTASH_REDIS_REST_URL?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   SENTRY_DSN?: string;
@@ -97,6 +105,64 @@ export function authCodeSecret(env: Env) {
     throw new Error('CLIENT_AUTH_CODE_SECRET must be set to at least 32 characters in production.');
   }
   return secret ?? 'dev-client-auth-code-secret-only-for-local-work';
+}
+
+// Key used to encrypt per-tenant secrets (connector/SIP credentials) at rest — see T26.
+// Fail closed in real production: a weak/missing key must never silently protect tenant data.
+export function tenantSecretEncryptionKey(env: Env) {
+  const key = envString(env, 'TENANT_SECRET_ENCRYPTION_KEY');
+  if (isProduction(env) && !isPreviewEnv(env) && (key === undefined || key.length < 32)) {
+    throw new Error('TENANT_SECRET_ENCRYPTION_KEY must be set to at least 32 characters in production.');
+  }
+  return key ?? 'dev-tenant-secret-encryption-key-only-for-local-work';
+}
+
+// Shared secret between this API (mints widget voice session tokens) and the Pipecat voice
+// runtime (verifies them). The visitor's browser carries the token but can never forge one, so
+// this must be a real secret in production — a weak key lets anyone open a call on any tenant.
+export function widgetVoiceTokenSecret(env: Env) {
+  const secret = envString(env, 'WIDGET_VOICE_TOKEN_SECRET');
+  if (isProduction(env) && (secret === undefined || secret.length < 32)) {
+    throw new Error('WIDGET_VOICE_TOKEN_SECRET must be set to at least 32 characters in production.');
+  }
+  return secret ?? 'dev-widget-voice-token-secret-only-for-local-work';
+}
+
+/** Where the browser sends its WebRTC offer — the Pipecat runtime, not this Worker. */
+export function voiceRuntimeUrl(env: Env) {
+  return envString(env, 'VOICE_RUNTIME_URL', 'http://localhost:7860') ?? 'http://localhost:7860';
+}
+
+/** Hard cap on a single widget call. Bounds LLM/TTS spend per anonymous visitor. */
+export function widgetVoiceMaxDurationS(env: Env) {
+  const parsed = Number(envString(env, 'WIDGET_VOICE_MAX_DURATION_S', '300'));
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 300;
+}
+
+/** How long a minted session token stays usable. Short: it only has to survive one connect. */
+export function widgetVoiceTokenTtlS(env: Env) {
+  const parsed = Number(envString(env, 'WIDGET_VOICE_TOKEN_TTL_S', '120'));
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 120;
+}
+
+export function widgetVoiceEnabled(env: Env) {
+  return envString(env, 'ENABLE_WIDGET_VOICE', 'true') !== 'false';
+}
+
+/**
+ * ICE servers handed to the browser, as JSON. STUN alone fails for the ~15-20% of visitors behind
+ * symmetric NAT or a corporate firewall — set a TURN entry here in production (self-hosted coturn
+ * or a rented relay), otherwise those calls silently never connect.
+ */
+export function webrtcIceServers(env: Env): Array<{ urls: string | string[]; username?: string; credential?: string }> {
+  const raw = envString(env, 'WEBRTC_ICE_SERVERS');
+  if (raw === undefined) return [{ urls: 'stun:stun.l.google.com:19302' }];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [{ urls: 'stun:stun.l.google.com:19302' }];
+  } catch {
+    return [{ urls: 'stun:stun.l.google.com:19302' }];
+  }
 }
 
 export function shouldReturnDevCode(env: Env) {
