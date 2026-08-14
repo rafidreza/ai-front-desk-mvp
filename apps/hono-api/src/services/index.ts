@@ -98,12 +98,13 @@ export function createServices(c: Context<AppBindings>) {
   const interactionScoring = new InteractionScoringService(db);
   const anchorConsole = new AnchorConsoleService(operatorAccess, escalation, actionGovernance, callPersistence, interactionScoring);
   const onboarding = new OnboardingService(db, phoneNumbers, qualification);
-  // Web-widget voice. `findById` throws NotFoundError; the mint wants a null so it can answer 404
-  // without leaking whether the clientId exists.
+  // Web-widget voice is optional. Keep it disabled without requiring its production secret so
+  // unrelated internal/admin API requests do not fail when voice calling is not being launched.
+  const isWidgetVoiceEnabled = widgetVoiceEnabled(c.env);
   const widgetVoice = new WidgetVoiceService(
     {
-      enabled: widgetVoiceEnabled(c.env),
-      secret: widgetVoiceTokenSecret(c.env),
+      enabled: isWidgetVoiceEnabled,
+      secret: isWidgetVoiceEnabled ? widgetVoiceTokenSecret(c.env) : 'disabled-widget-voice-token-secret',
       runtimeUrl: voiceRuntimeUrl(c.env),
       iceServers: webrtcIceServers(c.env),
       tokenTtlS: widgetVoiceTokenTtlS(c.env),

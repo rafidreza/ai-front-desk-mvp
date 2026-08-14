@@ -9,7 +9,7 @@ interface ChallengeResponse {
   challenge: {
     sent: true;
     challengeId: string;
-    channel: 'email' | 'whatsapp';
+    channel: 'email';
     destination: string;
     expiresAt: string;
     deliveryMode?: 'dry-run' | 'sent' | 'skipped';
@@ -19,28 +19,24 @@ interface ChallengeResponse {
 
 type CodeRequest = {
   identifier: string;
-  channel: 'email' | 'whatsapp';
+  channel: 'email';
 };
 
-const identifierExamples = 'Examples: client ID pilot-client, owner email owner@example.com, or WhatsApp +8801XXXXXXXXX.';
+const identifierExamples = 'Examples: client ID pilot-client or owner email owner@example.com.';
 
 function channelLabel(channel: CodeRequest['channel']) {
-  return channel === 'email' ? 'email' : 'WhatsApp';
-}
-
-function fallbackChannelLabelFor(channel: CodeRequest['channel']) {
-  return channel === 'email' ? 'WhatsApp' : 'email';
+  return channel;
 }
 
 function deliveryIssueMessage(input: CodeRequest) {
-  return `No live login code was sent for that ${channelLabel(input.channel)} request. Check that the client ID, owner email, or WhatsApp number matches the workspace, then try again. ${identifierExamples}`;
+  return `No live login code was sent for that ${channelLabel(input.channel)} request. Check that the client ID or owner email matches the workspace, then try again. ${identifierExamples}`;
 }
 
 function requestFailureMessage(message: string, input: CodeRequest) {
   if (message.includes(identifierExamples)) return message;
 
   if (/does not have an? (email|whatsapp) destination configured/i.test(message)) {
-    return `${channelLabel(input.channel)} login is not configured for this workspace yet. Try ${fallbackChannelLabelFor(input.channel)} instead, or ask the team to add a ${channelLabel(input.channel)} destination to the client profile.`;
+    return `${channelLabel(input.channel)} login is not configured for this workspace yet. Ask the team to add an email destination to the client profile.`;
   }
 
   if (/inactive/i.test(message)) {
@@ -70,7 +66,6 @@ export default function ClientLoginPage() {
   const [challenge, setChallenge] = useState<ChallengeResponse['challenge'] | null>(null);
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [lastRequest, setLastRequest] = useState<CodeRequest | null>(null);
-  const [failedRequest, setFailedRequest] = useState<CodeRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,9 +90,6 @@ export default function ClientLoginPage() {
   const resendLabel = challenge === null
     ? 'Send code'
     : `Send a new code to ${challenge.destination}`;
-  const fallbackRequest = lastRequest ?? failedRequest;
-  const fallbackChannel = fallbackRequest?.channel === 'email' ? 'whatsapp' : 'email';
-  const fallbackChannelLabel = fallbackChannel === 'email' ? 'email' : 'WhatsApp';
 
   useEffect(() => {
     if (challenge === null) return;
@@ -127,18 +119,16 @@ export default function ClientLoginPage() {
         throw new Error(deliveryIssueMessage(input));
       }
       setLastRequest(input);
-      setFailedRequest(null);
       setChallenge(data.challenge);
       setNotice(
         data.challenge.deliveryMode === 'skipped'
-          ? `Code created for ${data.challenge.destination}, but ${channelLabel(data.challenge.channel)} delivery is not fully configured. Try ${fallbackChannelLabelFor(data.challenge.channel)} if you do not receive it.`
+          ? `Code created for ${data.challenge.destination}, but ${channelLabel(data.challenge.channel)} delivery is not fully configured. Ask the team to check email delivery if you do not receive it.`
           : data.challenge.deliveryMode === 'dry-run'
             ? `Code created for ${data.challenge.destination} in local/dev delivery mode. Use the dev code shown below.`
             : `New code sent to ${data.challenge.destination}.`,
       );
       setNow(Date.now());
     } catch (requestError) {
-      setFailedRequest(input);
       setError(
         requestError instanceof Error
           ? requestFailureMessage(requestError.message, input)
@@ -152,10 +142,9 @@ export default function ClientLoginPage() {
   async function requestCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const channel = form.get('channel') === 'whatsapp' ? 'whatsapp' : 'email';
     await requestCodeFor({
       identifier: String(form.get('identifier') ?? '').trim(),
-      channel,
+      channel: 'email',
     });
   }
 
@@ -167,14 +156,6 @@ export default function ClientLoginPage() {
       return;
     }
     await requestCodeFor(lastRequest);
-  }
-
-  async function requestFallbackCode() {
-    if (fallbackRequest === null) return;
-    await requestCodeFor({
-      ...fallbackRequest,
-      channel: fallbackChannel,
-    });
   }
 
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
@@ -225,7 +206,7 @@ export default function ClientLoginPage() {
         <div className="client-auth-copy">
           <p className="eyebrow">Client login</p>
           <h1>Return to your Daemion operating workspace.</h1>
-          <p>Use a verified email or WhatsApp code to open tickets, knowledge, and channel status.</p>
+          <p>Use a verified email code to open tickets, knowledge, and workspace status.</p>
         </div>
         <div className="client-auth-rail" aria-label="Login access">
           <span data-active="true">
@@ -262,7 +243,7 @@ export default function ClientLoginPage() {
                 Request code
               </div>
               <label>
-                Email, phone, or client ID
+                Email or client ID
                 <input name="identifier" required placeholder="owner@example.com or client-id" />
                 <span className="auth-field-hint">{identifierExamples}</span>
               </label>
@@ -270,7 +251,6 @@ export default function ClientLoginPage() {
                 Delivery channel
                 <select name="channel" defaultValue="email">
                   <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
                 </select>
               </label>
               {error !== null && <div className="inline-alert">{error}</div>}
@@ -278,11 +258,6 @@ export default function ClientLoginPage() {
               <button className="icon-button" disabled={isSubmitting} type="submit">
                 {isSubmitting ? 'Sending...' : 'Send code'}
               </button>
-              {error !== null && failedRequest !== null && (
-                <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestFallbackCode()}>
-                  {isSubmitting ? 'Sending...' : `Try ${fallbackChannelLabel} instead`}
-                </button>
-              )}
               <p className="auth-switch-copy">
                 No workspace yet? <a href="/signup">Create client account</a>
               </p>
@@ -314,11 +289,6 @@ export default function ClientLoginPage() {
               {(error !== null || challengeExpired) && (
                 <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestNewCode()}>
                   {isSubmitting ? 'Sending...' : resendLabel}
-                </button>
-              )}
-              {(error !== null || challengeExpired || challenge.deliveryMode === 'skipped') && fallbackRequest !== null && (
-                <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void requestFallbackCode()}>
-                  {isSubmitting ? 'Sending...' : `Try ${fallbackChannelLabel} instead`}
                 </button>
               )}
               <p className="auth-switch-copy">

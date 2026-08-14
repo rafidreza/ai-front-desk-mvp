@@ -86,7 +86,7 @@ function describeMutation(method: string, path: string) {
     return { ...fallback, action: method === 'DELETE' ? 'auto_reply.deleted' : 'auto_reply.changed', entityType: 'auto_reply', entityId: segments.at(-1), summary: 'Changed auto-reply rule' };
   }
   if (/^\/clients\/[^/]+\/whatsapp\/templates(?:\/|$)/.test(path)) {
-    return { ...fallback, action: method === 'DELETE' ? 'whatsapp_template.deleted' : 'whatsapp_template.changed', entityType: 'whatsapp_template', entityId: segments.at(-1), summary: 'Changed WhatsApp template' };
+    return { ...fallback, action: method === 'DELETE' ? 'legacy_template.deleted' : 'legacy_template.changed', entityType: 'legacy_template', entityId: segments.at(-1), summary: 'Changed retired channel template' };
   }
   if (/^\/clients\/[^/]+\/tags(?:\/|$)/.test(path) || /^\/tickets\/[^/]+\/tags(?:\/|$)/.test(path)) {
     return { ...fallback, action: method === 'DELETE' ? 'tag.deleted' : 'tag.changed', entityType: 'tag', entityId: segments.at(-1), summary: 'Changed ticket tags' };

@@ -49,7 +49,6 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
     { view: 'clients' as const, label: 'Clients', icon: <Building2 size={17} />, href: '/internal/clients' },
     { view: 'improvement' as const, label: 'Improvement', icon: <ListChecks size={17} />, href: '/internal/improvement' },
     { view: 'pipeline' as const, label: 'Pipeline', icon: <Kanban size={17} />, href: '/internal/pipeline' },
-    { view: 'channels' as const, label: 'Channels', icon: <Settings2 size={17} />, href: '/internal/channels' },
     { view: 'team' as const, label: 'Team', icon: <Users size={17} />, href: '/internal/team' },
     { view: 'tickets' as const, label: 'Tickets', icon: <TicketCheck size={17} />, href: '/internal/tickets' },
     { view: 'conversations' as const, label: 'Conversations', icon: <MessagesSquare size={17} />, href: '/internal/conversations' },

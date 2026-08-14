@@ -6,7 +6,7 @@ import { DaemionLockup } from '../_components/DaemionBrand';
 import { signupClient } from '@/lib/api';
 import { ClientProfile } from '@/types/domain';
 
-type AuthChannel = 'email' | 'whatsapp';
+type AuthChannel = 'email';
 
 interface Challenge {
   sent: true;
@@ -64,7 +64,7 @@ export default function SignupPage() {
       setClient(created);
       await requestCode(created.id, deliveryChannel);
     } catch (submitError) {
-      setError(signupErrorMessage(submitError, 'Workspace was not created. Fix: verify business name, owner email, and WhatsApp number, then try again.'));
+      setError(signupErrorMessage(submitError, 'Workspace was not created. Fix: verify business name, owner email, and phone number, then try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -160,14 +160,13 @@ export default function SignupPage() {
                 <input name="ownerEmail" required type="email" placeholder="owner@example.com" />
               </label>
               <label>
-                WhatsApp number
+                Phone number
                 <input name="ownerPhone" required placeholder="+8801..." />
               </label>
               <label>
                 Verification code delivery
                 <select value={deliveryChannel} onChange={(event) => setDeliveryChannel(event.target.value as AuthChannel)}>
                   <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
                 </select>
               </label>
               {error !== null && <div className="inline-alert">{error}</div>}
@@ -198,7 +197,6 @@ export default function SignupPage() {
                 Resend to
                 <select value={deliveryChannel} onChange={(event) => setDeliveryChannel(event.target.value as AuthChannel)}>
                   <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
                 </select>
               </label>
               {error !== null && <div className="inline-alert">{error}</div>}

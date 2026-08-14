@@ -146,7 +146,7 @@ export function widgetVoiceTokenTtlS(env: Env) {
 }
 
 export function widgetVoiceEnabled(env: Env) {
-  return envString(env, 'ENABLE_WIDGET_VOICE', 'true') !== 'false';
+  return envString(env, 'ENABLE_WIDGET_VOICE', isProduction(env) ? 'false' : 'true') === 'true';
 }
 
 /**

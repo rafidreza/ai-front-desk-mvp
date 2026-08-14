@@ -9,17 +9,7 @@ import { InternalShell } from '../_components/InternalShell';
 import { UiSelect } from '../_components/UiSelect';
 import { getErrorMessage } from '../_lib/helpers';
 
-const FOCUS_CHANNELS = ['whatsapp', 'facebook', 'website'] as const;
-const WHATSAPP_OPTIONS: Array<{ value: 'self' | 'assisted' | 'skip'; label: string }> = [
-  { value: 'self', label: 'Seller will self-onboard WhatsApp' },
-  { value: 'assisted', label: 'seeed.ing team will assist setup' },
-  { value: 'skip', label: 'Skip WhatsApp for now' },
-];
-const FACEBOOK_OPTIONS: Array<{ value: 'oauth' | 'assisted' | 'skip'; label: string }> = [
-  { value: 'oauth', label: 'Self OAuth via Meta' },
-  { value: 'assisted', label: 'seeed.ing team will assist setup' },
-  { value: 'skip', label: 'Skip Facebook for now' },
-];
+const FOCUS_CHANNELS = ['website'] as const;
 
 type FormState = {
   businessCategory: string;
@@ -211,25 +201,6 @@ export default function OnboardingReviewPage() {
             </div>
 
             <div className="form-field">
-              <label>Facebook Page ID</label>
-              <input
-                onChange={(event) => setForm({ ...form, pageId: event.target.value })}
-                type="text"
-                value={form.pageId}
-              />
-            </div>
-
-            <div className="form-field">
-              <label>WhatsApp POC</label>
-              <input
-                onChange={(event) => setForm({ ...form, whatsappPoc: event.target.value })}
-                placeholder="+880…"
-                type="text"
-                value={form.whatsappPoc}
-              />
-            </div>
-
-            <div className="form-field">
               <label>Focus channels</label>
               <div className="focus-channels-row">
                 {FOCUS_CHANNELS.map((channel) => (
@@ -253,50 +224,6 @@ export default function OnboardingReviewPage() {
                 type="url"
                 value={form.websiteUrl}
               />
-            </div>
-
-            <div className="form-field">
-              <label>Facebook Page URL</label>
-              <input
-                onChange={(event) => setForm({ ...form, facebookPageUrl: event.target.value })}
-                placeholder="https://facebook.com/…"
-                type="url"
-                value={form.facebookPageUrl}
-              />
-            </div>
-
-            <div className="form-field">
-              <label>WhatsApp setup preference</label>
-              <UiSelect
-                onChange={(event) =>
-                  setForm({ ...form, whatsappSetup: event.target.value as FormState['whatsappSetup'] })
-                }
-                value={form.whatsappSetup}
-              >
-                <option value="">— not chosen —</option>
-                {WHATSAPP_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </UiSelect>
-            </div>
-
-            <div className="form-field">
-              <label>Facebook setup preference</label>
-              <UiSelect
-                onChange={(event) =>
-                  setForm({ ...form, facebookSetup: event.target.value as FormState['facebookSetup'] })
-                }
-                value={form.facebookSetup}
-              >
-                <option value="">— not chosen —</option>
-                {FACEBOOK_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </UiSelect>
             </div>
 
             <div className="onboarding-review-actions">

@@ -4,14 +4,9 @@ import { BookOpenText, Building2, Link2, MessageCircle } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { getClientDashboard, startMetaOAuth, submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
+import { getClientDashboard, submitClientKnowledgeRequest, updateClientOnboarding } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
-import {
-  ClientFacebookSetupPreference,
-  ClientFocusChannel,
-  ClientProfile,
-  ClientWhatsAppSetupPreference,
-} from '@/types/domain';
+import { ClientFocusChannel, ClientProfile } from '@/types/domain';
 
 type Step = 'profile' | 'channels' | 'knowledge';
 
@@ -30,15 +25,12 @@ function parseKeywords(value: string) {
 
 export default function ClientOnboardingPage() {
   const [step, setStep] = useState<Step>('profile');
-  const [focusChannels, setFocusChannels] = useState<ClientFocusChannel[]>(['whatsapp']);
-  const [whatsappSetup, setWhatsappSetup] = useState<ClientWhatsAppSetupPreference>('assisted');
-  const [facebookSetup, setFacebookSetup] = useState<ClientFacebookSetupPreference>('oauth');
+  const [focusChannels] = useState<ClientFocusChannel[]>(['website']);
   const [businessCategory, setBusinessCategory] = useState('');
   const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isConnectingFacebook, setIsConnectingFacebook] = useState(false);
 
   const clientId = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -53,12 +45,6 @@ export default function ClientOnboardingPage() {
       .then((dashboard) => setLanguage(dashboard.client.defaultLanguage))
       .catch(() => undefined);
   }, [clientId]);
-
-  function toggleFocus(channel: ClientFocusChannel) {
-    setFocusChannels((current) =>
-      current.includes(channel) ? current.filter((item) => item !== channel) : [...current, channel],
-    );
-  }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,7 +69,6 @@ export default function ClientOnboardingPage() {
         onboardingProfile: {
           focusChannels,
           websiteUrl: optionalValue(form.get('websiteUrl')),
-          facebookPageUrl: optionalValue(form.get('facebookPageUrl')),
         },
       });
       setBusinessCategory(category);
@@ -97,19 +82,12 @@ export default function ClientOnboardingPage() {
 
   async function saveChannels(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
     setIsSubmitting(true);
     setError(null);
     setNotice(null);
     try {
       await updateClientOnboarding(clientId, {
-        pageId: optionalValue(form.get('pageId')),
-        whatsappPoc: optionalValue(form.get('whatsappPoc')),
         onboardingStatus: 'channels_complete',
-        onboardingProfile: {
-          ...(focusChannels.includes('whatsapp') ? { whatsappSetup } : {}),
-          ...(focusChannels.includes('facebook') ? { facebookSetup } : {}),
-        },
       });
       setStep('knowledge');
     } catch (channelError) {
@@ -126,32 +104,12 @@ export default function ClientOnboardingPage() {
     try {
       await updateClientOnboarding(clientId, {
         onboardingStatus: 'channels_complete',
-        onboardingProfile: {
-          ...(focusChannels.includes('whatsapp') ? { whatsappSetup: 'skip' } : {}),
-          ...(focusChannels.includes('facebook') ? { facebookSetup: 'skip' } : {}),
-        },
       });
-      setWhatsappSetup('skip');
-      setFacebookSetup('skip');
       setStep('knowledge');
     } catch (channelError) {
       setError(channelError instanceof Error ? channelError.message : onboardingCopy.skipError);
     } finally {
       setIsSubmitting(false);
-    }
-  }
-
-  async function connectFacebookPage() {
-    setIsConnectingFacebook(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const returnTo = `/client/onboarding?clientId=${encodeURIComponent(clientId)}`;
-      const result = await startMetaOAuth(clientId, returnTo);
-      window.location.href = result.authorizationUrl;
-    } catch (connectError) {
-      setError(connectError instanceof Error ? connectError.message : onboardingCopy.channelError);
-      setIsConnectingFacebook(false);
     }
   }
 
@@ -224,15 +182,7 @@ export default function ClientOnboardingPage() {
               <legend>{onboardingCopy.customerChannels}</legend>
               <div className="choice-grid">
                 <label className="choice-control">
-                  <input checked={focusChannels.includes('whatsapp')} type="checkbox" onChange={() => toggleFocus('whatsapp')} />
-                  WhatsApp
-                </label>
-                <label className="choice-control">
-                  <input checked={focusChannels.includes('facebook')} type="checkbox" onChange={() => toggleFocus('facebook')} />
-                  Facebook
-                </label>
-                <label className="choice-control">
-                  <input checked={focusChannels.includes('website')} type="checkbox" onChange={() => toggleFocus('website')} />
+                  <input checked readOnly type="checkbox" />
                   Website
                 </label>
               </div>
@@ -240,10 +190,6 @@ export default function ClientOnboardingPage() {
             <label>
               {onboardingCopy.websiteUrl}
               <input name="websiteUrl" placeholder="https://example.com" type="url" />
-            </label>
-            <label>
-              {onboardingCopy.facebookPageUrl}
-              <input name="facebookPageUrl" placeholder="https://facebook.com/your-page" type="url" />
             </label>
             <button className="icon-button" disabled={isSubmitting} type="submit">
               {isSubmitting ? onboardingCopy.saving : onboardingCopy.continueChannels}
@@ -257,57 +203,10 @@ export default function ClientOnboardingPage() {
               <MessageCircle size={15} />
               {onboardingCopy.channelSetup}
             </div>
-            {focusChannels.includes('whatsapp') && (
-              <>
-                <label>
-                  {onboardingCopy.whatsappSetupPath}
-                  <select value={whatsappSetup} onChange={(event) => setWhatsappSetup(event.target.value as ClientWhatsAppSetupPreference)}>
-                    <option value="self">{onboardingCopy.whatsappSelf}</option>
-                    <option value="assisted">{onboardingCopy.assisted}</option>
-                    <option value="skip">{onboardingCopy.skipNow}</option>
-                  </select>
-                </label>
-                {whatsappSetup === 'self' && (
-                  <label>
-                    {onboardingCopy.whatsappSupportNumber}
-                    <input name="whatsappPoc" placeholder="+8801..." />
-                  </label>
-                )}
-              </>
-            )}
-            {focusChannels.includes('facebook') && (
-              <>
-                <label>
-                  {onboardingCopy.facebookSetupPath}
-                  <select value={facebookSetup} onChange={(event) => setFacebookSetup(event.target.value as ClientFacebookSetupPreference)}>
-                    <option value="oauth">{onboardingCopy.facebookOauth}</option>
-                    <option value="assisted">{onboardingCopy.assisted}</option>
-                    <option value="skip">{onboardingCopy.skipNow}</option>
-                  </select>
-                </label>
-                {facebookSetup === 'oauth' && (
-                  <div className="inline-success">
-                    <Link2 size={14} />
-                    <span>{onboardingCopy.facebookOauthRequested}</span>
-                    <button className="mini-button" disabled={isConnectingFacebook} type="button" onClick={() => void connectFacebookPage()}>
-                      {isConnectingFacebook ? 'Opening Facebook...' : 'Connect Facebook Page'}
-                    </button>
-                  </div>
-                )}
-                {facebookSetup !== 'skip' && (
-                  <label>
-                    {onboardingCopy.facebookPageId}
-                    <input name="pageId" placeholder="Optional until the page connection is ready" />
-                  </label>
-                )}
-              </>
-            )}
-            {!focusChannels.includes('whatsapp') && !focusChannels.includes('facebook') && (
-              <div className="inline-success">
-                <Link2 size={14} />
-                {onboardingCopy.websiteNoted}
-              </div>
-            )}
+            <div className="inline-success">
+              <Link2 size={14} />
+              {onboardingCopy.websiteNoted}
+            </div>
             <div className="form-actions">
               <button className="icon-button" disabled={isSubmitting} type="submit">
                 {isSubmitting ? onboardingCopy.saving : onboardingCopy.continueKnowledge}

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: '%s · Daemion',
   },
   description:
-    'We answer your Facebook and WhatsApp customer messages with AI, and only send you the tickets that need your decision.',
+    'Daemion helps teams run AI-assisted support operations and surface only the customer tickets that need a decision.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

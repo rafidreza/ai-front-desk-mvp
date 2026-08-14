@@ -5,23 +5,9 @@ API_BASE_URL=http://localhost:8787
 INTERNAL_API_TOKEN=change-this-long-random-api-token
 DATABASE_URL=postgresql://user:password@host/database?sslmode=require
 
-MESSENGER_VERIFY_TOKEN=replace-with-meta-webhook-token
 ENABLE_MESSENGER=false
-MESSENGER_GRAPH_VERSION=v20.0
-MESSENGER_APP_SECRET=
-MESSENGER_PAGE_ACCESS_TOKEN=
-META_APP_ID=2238102173658208
-META_APP_SECRET=
-META_OAUTH_REDIRECT_URI=https://dev.daemion.io/api/meta/callback
-META_OAUTH_SCOPES=pages_show_list,pages_manage_metadata,pages_messaging
-
-ENABLE_P1_WHATSAPP_PINGS=true
+ENABLE_P1_WHATSAPP_PINGS=false
 ENABLE_WHATSAPP=false
-WHATSAPP_VERIFY_TOKEN=replace-with-meta-whatsapp-webhook-token
-WHATSAPP_APP_SECRET=
-WHATSAPP_GRAPH_VERSION=v20.0
-WHATSAPP_PHONE_NUMBER_ID=
-WHATSAPP_ACCESS_TOKEN=
 
 EMAIL_FROM_ADDRESS=Daemion <support@example.com>
 POSTMARK_SERVER_TOKEN=
@@ -62,3 +48,8 @@ UPSTASH_REDIS_REST_TOKEN=
 SENTRY_DSN=
 SENTRY_ENVIRONMENT=development
 APP_VERSION=
+
+# Optional: browser voice calling. Keep disabled unless a voice runtime and strong token secret are configured.
+ENABLE_WIDGET_VOICE=false
+WIDGET_VOICE_TOKEN_SECRET=
+VOICE_RUNTIME_URL=

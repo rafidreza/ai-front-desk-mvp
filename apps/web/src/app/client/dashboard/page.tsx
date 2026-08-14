@@ -1,42 +1,29 @@
 'use client';
 
-import { CheckCircle2, Code2, Copy, MessageCircle, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert, X } from 'lucide-react';
+import { CheckCircle2, Code2, Copy, MessageSquareText, RefreshCw, TicketCheck, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { DaemionMark } from '../../_components/DaemionBrand';
 import { ClientPortalNav } from '../_components/ClientPortalNav';
-import { captureCsat, disconnectMetaPage, disconnectWhatsApp, getClientDashboard, startMetaOAuth, updateClientOnboarding } from '@/lib/api';
+import { captureCsat, getClientDashboard } from '@/lib/api';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { formatBdt, formatLocalizedDateTime, formatLocalizedNumber, formatLocalizedPercent } from '@/lib/localized-format';
 import type { ClientDashboardSummary, ConversationLog } from '@/types/domain';
 
 const channelIcons = {
   messenger: MessageSquareText,
-  whatsapp: MessageCircle,
+  whatsapp: MessageSquareText,
   web: Code2,
 };
 
-type FacebookConnectDiagnostic = {
-  step: string;
-  message: string;
-};
-
 function conversationLabel(conversation: ConversationLog) {
-  if (conversation.channel === 'messenger') return 'Facebook Messenger';
-  if (conversation.channel === 'whatsapp') return 'WhatsApp';
+  if (conversation.channel === 'messenger' || conversation.channel === 'whatsapp') return 'Archived messaging';
   return 'Web chat';
-}
-
-function errorMessage(error: unknown, fallback: string) {
-  return error instanceof Error && error.message.trim() !== '' ? error.message : fallback;
 }
 
 export default function ClientDashboardPage() {
   const [dashboard, setDashboard] = useState<ClientDashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [connectingChannel, setConnectingChannel] = useState<string | null>(null);
-  const [facebookAuthUrl, setFacebookAuthUrl] = useState<string | null>(null);
-  const [facebookDiagnostic, setFacebookDiagnostic] = useState<FacebookConnectDiagnostic | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
 
@@ -46,7 +33,8 @@ export default function ClientDashboardPage() {
   }, []);
 
   const channels = dashboard?.channels ?? [];
-  const connectedChannelCount = channels.filter(
+  const visibleChannels = channels.filter((channel) => channel.channel === 'web');
+  const connectedChannelCount = visibleChannels.filter(
     (channel) => channel.status === 'connected' || channel.status === 'available',
   ).length;
   const language = dashboard?.client.defaultLanguage;
@@ -101,80 +89,6 @@ export default function ClientDashboardPage() {
     await navigator.clipboard.writeText(`${origin}${path}`);
   }
 
-  async function connectFacebookPage() {
-    setConnectingChannel('messenger');
-    setError(null);
-    setFacebookAuthUrl(null);
-    setFacebookDiagnostic(null);
-    try {
-      const returnTo = `/client/dashboard?clientId=${encodeURIComponent(clientId)}`;
-      const result = await startMetaOAuth(clientId, returnTo);
-      setFacebookAuthUrl(result.authorizationUrl);
-      // Redirect the current tab straight to Facebook. Avoids popup blockers that kill window.open('_blank').
-      window.location.assign(result.authorizationUrl);
-    } catch (connectError) {
-      const message = errorMessage(connectError, 'Unable to start Facebook Page connection.');
-      setError('Facebook Page reconnect failed before Facebook opened.');
-      setFacebookDiagnostic({ step: 'Starting Meta OAuth session', message });
-    } finally {
-      setConnectingChannel(null);
-    }
-  }
-
-  async function disconnectFacebookPage() {
-    if (!window.confirm('Disconnect this Facebook Page from Daemion? Messenger automation will stop for this workspace until you reconnect a Page.')) {
-      return;
-    }
-    setConnectingChannel('messenger-disconnect');
-    setError(null);
-    try {
-      await disconnectMetaPage(clientId);
-      await loadDashboard();
-    } catch (disconnectError) {
-      setError(disconnectError instanceof Error ? disconnectError.message : 'Unable to disconnect Facebook Page.');
-    } finally {
-      setConnectingChannel(null);
-    }
-  }
-
-  async function connectWhatsAppChannel(existingContact?: string) {
-    const prompt = existingContact !== undefined && existingContact.trim() !== ''
-      ? `Update the WhatsApp support number customers should reach (include country code, e.g. +8801XXXXXXXXX):`
-      : `Enter the WhatsApp support number customers should reach (include country code, e.g. +8801XXXXXXXXX):`;
-    const contact = window.prompt(prompt, existingContact ?? '')?.trim();
-    if (contact === undefined || contact === '') return;
-    if (contact.length < 5) {
-      setError('Enter a valid WhatsApp number with country code.');
-      return;
-    }
-    setConnectingChannel('whatsapp-connect');
-    setError(null);
-    try {
-      await updateClientOnboarding(clientId, { whatsappPoc: contact, onboardingProfile: { whatsappSetup: 'self' } });
-      await loadDashboard();
-    } catch (connectError) {
-      setError(connectError instanceof Error ? connectError.message : 'Unable to connect WhatsApp.');
-    } finally {
-      setConnectingChannel(null);
-    }
-  }
-
-  async function disconnectWhatsAppChannel() {
-    if (!window.confirm('Disconnect WhatsApp support for this workspace? WhatsApp handoff will stop until a support contact is added again.')) {
-      return;
-    }
-    setConnectingChannel('whatsapp-disconnect');
-    setError(null);
-    try {
-      await disconnectWhatsApp(clientId);
-      await loadDashboard();
-    } catch (disconnectError) {
-      setError(disconnectError instanceof Error ? disconnectError.message : 'Unable to disconnect WhatsApp.');
-    } finally {
-      setConnectingChannel(null);
-    }
-  }
-
   return (
     <main className="client-shell">
       <header className="client-topbar">
@@ -198,31 +112,6 @@ export default function ClientDashboardPage() {
       </header>
 
       {error !== null && <div className="inline-alert">{error}</div>}
-      {facebookDiagnostic !== null && (
-        <div className="inline-alert inline-alert--recovery">
-          <TriangleAlert size={15} />
-          <div className="inline-alert__body">
-            <strong>Facebook reconnect error details</strong>
-            <span>Step: {facebookDiagnostic.step}</span>
-            <small>{facebookDiagnostic.message}</small>
-          </div>
-        </div>
-      )}
-      {facebookAuthUrl !== null && (
-        <div className="inline-alert inline-alert--recovery">
-          <TriangleAlert size={15} />
-          <div className="inline-alert__body">
-            <strong>Facebook connection opened in a separate tab.</strong>
-            <span>
-              If Facebook still says “Can’t load URL”, add <strong>daemion.io</strong> and <strong>dev.daemion.io</strong> to Meta
-              App Domains, then add <strong>https://dev.daemion.io/api/meta/callback</strong> as a valid OAuth redirect URI.
-            </span>
-            <a className="mini-button" href={facebookAuthUrl} target="_blank" rel="noreferrer">
-              Open Facebook connection
-            </a>
-          </div>
-        </div>
-      )}
 
       <section className="client-command-card">
         <div className="client-command-main">
@@ -265,7 +154,7 @@ export default function ClientDashboardPage() {
       </section>
 
       <section className="client-channel-grid" aria-label={copy.dashboard.channelVisibility}>
-        {channels.map((channel) => {
+        {visibleChannels.map((channel) => {
           const ChannelIcon = channelIcons[channel.channel];
           return (
             <article className="channel-card" data-status={channel.status} key={channel.channel}>
@@ -304,61 +193,6 @@ export default function ClientDashboardPage() {
                       {copy.common.copy}
                     </button>
                   </>
-                ) : channel.channel === 'messenger' ? (
-                  channel.status === 'needs_setup' ? (
-                    <button className="mini-button" disabled={connectingChannel === 'messenger'} type="button" onClick={() => void connectFacebookPage()}>
-                      {connectingChannel === 'messenger' ? 'Opening Facebook...' : 'Connect Facebook Page'}
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        className="mini-button"
-                        disabled
-                        type="button"
-                        title="Your Facebook Page is connected. Disconnect first if you need to link a different Page."
-                      >
-                        Reconnect Page
-                      </button>
-                      <button
-                        className="mini-button"
-                        disabled={connectingChannel === 'messenger-disconnect'}
-                        type="button"
-                        onClick={() => void disconnectFacebookPage()}
-                      >
-                        {connectingChannel === 'messenger-disconnect' ? 'Disconnecting...' : 'Disconnect'}
-                      </button>
-                    </>
-                  )
-                ) : channel.channel === 'whatsapp' ? (
-                  channel.status === 'needs_setup' ? (
-                    <button
-                      className="mini-button"
-                      disabled={connectingChannel === 'whatsapp-connect'}
-                      type="button"
-                      onClick={() => void connectWhatsAppChannel()}
-                    >
-                      {connectingChannel === 'whatsapp-connect' ? 'Connecting...' : 'Connect WhatsApp'}
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        className="mini-button"
-                        disabled={connectingChannel === 'whatsapp-connect'}
-                        type="button"
-                        onClick={() => void connectWhatsAppChannel(dashboard?.client.whatsappPoc)}
-                      >
-                        {connectingChannel === 'whatsapp-connect' ? 'Saving...' : 'Update number'}
-                      </button>
-                      <button
-                        className="mini-button"
-                        disabled={connectingChannel === 'whatsapp-disconnect'}
-                        type="button"
-                        onClick={() => void disconnectWhatsAppChannel()}
-                      >
-                        {connectingChannel === 'whatsapp-disconnect' ? 'Disconnecting...' : 'Disconnect WhatsApp'}
-                      </button>
-                    </>
-                  )
                 ) : (
                   <span>{channel.actionLabel}</span>
                 )}

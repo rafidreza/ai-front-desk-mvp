@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Calculator, FileCheck2, Plus, Power, RefreshCw, RotateCcw, Save, Search, ShieldCheck, Star, Trash2 } from 'lucide-react';
+import { Building2, Calculator, FileCheck2, Plus, Power, RefreshCw, RotateCcw, Save, Search, ShieldCheck } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   ClientManagementInput,
@@ -88,15 +88,10 @@ const emptyClientForm: ClientFormState = {
   ownerPhone: '',
   businessCategory: '',
   defaultLanguage: 'mixed',
-  tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
+  tone: 'friendly, concise, helpful, and natural for Bangladeshi customer support',
   whatsappPoc: '',
   digestEmail: '',
   onboardingStatus: 'onboarding_complete',
-};
-
-const emptyFacebookPageForm = {
-  externalId: '',
-  label: '',
 };
 
 const emptyDpaForm: DpaFormState = {
@@ -216,7 +211,6 @@ export default function InternalClientsPage() {
   const [formMode, setFormMode] = useState<'edit' | 'create'>('edit');
   const [form, setForm] = useState<ClientFormState>(emptyClientForm);
   const [savedForm, setSavedForm] = useState<ClientFormState>(emptyClientForm);
-  const [facebookPageForm, setFacebookPageForm] = useState(emptyFacebookPageForm);
   const [dpaForm, setDpaForm] = useState<DpaFormState>(emptyDpaForm);
   const [savedDpaForm, setSavedDpaForm] = useState<DpaFormState>(emptyDpaForm);
   const [retentionForm, setRetentionForm] = useState<RetentionFormState>(emptyRetentionForm);
@@ -278,10 +272,6 @@ export default function InternalClientsPage() {
     () => clients.find((client) => client.id === selectedClientId) ?? selectedDashboard?.client,
     [clients, selectedClientId, selectedDashboard],
   );
-  const selectedFacebookPages = useMemo(
-    () => (selectedClient?.channels ?? []).filter((channel) => channel.channel === 'messenger'),
-    [selectedClient],
-  );
   const portfolio = useMemo(
     () => ({
       conversations: dashboards.reduce((sum, dashboard) => sum + dashboard.totals.conversations, 0),
@@ -326,7 +316,6 @@ export default function InternalClientsPage() {
     setSelectedClientId(null);
     setForm(emptyClientForm);
     setSavedForm(emptyClientForm);
-    setFacebookPageForm(emptyFacebookPageForm);
     setDpaForm(emptyDpaForm);
     setSavedDpaForm(emptyDpaForm);
     setRetentionForm(emptyRetentionForm);
@@ -343,7 +332,6 @@ export default function InternalClientsPage() {
     setSelectedClientId(client.id);
     setForm(nextForm);
     setSavedForm(nextForm);
-    setFacebookPageForm(emptyFacebookPageForm);
     const nextDpaForm = dpaFormFromClient(client);
     setDpaForm(nextDpaForm);
     setSavedDpaForm(nextDpaForm);
@@ -412,91 +400,6 @@ export default function InternalClientsPage() {
     }
   }
 
-  async function updateClientChannel(
-    clientId: string,
-    path: string,
-    method: 'POST' | 'PATCH',
-    body?: Record<string, unknown>,
-  ): Promise<ClientProfile> {
-    const response = await fetch(`/api/backend/clients/${clientId}/channels${path}`, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    if (!response.ok) {
-      throw new Error(`Channel update failed: ${response.status}`);
-    }
-    const data = (await response.json()) as { client: ClientProfile };
-    return data.client;
-  }
-
-  async function saveFacebookPage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (selectedClientId === null) return;
-    const externalId = facebookPageForm.externalId.trim();
-    if (externalId.length < 2) {
-      setError('Facebook Page ID is required.');
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
-    setLoadErrorDiagnostic(null);
-    setNotice(null);
-    try {
-      const saved = await updateClientChannel(selectedClientId, '', 'POST', {
-        channel: 'messenger',
-        externalId,
-        label: facebookPageForm.label.trim() || 'Facebook Page',
-        status: 'connected',
-        isPrimary: selectedFacebookPages.length === 0,
-      });
-      setNotice('Facebook page connected to this client.');
-      setFacebookPageForm(emptyFacebookPageForm);
-      setSelectedClientId(saved.id);
-      await loadClients();
-    } catch (channelError) {
-      setError(channelError instanceof Error ? channelError.message : 'Unable to add Facebook page.');
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  async function markPrimaryFacebookPage(channelId: string) {
-    if (selectedClientId === null) return;
-    setIsSaving(true);
-    setError(null);
-    setLoadErrorDiagnostic(null);
-    setNotice(null);
-    try {
-      const saved = await updateClientChannel(selectedClientId, `/${channelId}`, 'PATCH', { isPrimary: true });
-      setNotice('Primary Facebook page updated. Incoming Messenger lookup will use this page for legacy routes.');
-      setSelectedClientId(saved.id);
-      await loadClients();
-    } catch (channelError) {
-      setError(channelError instanceof Error ? channelError.message : 'Unable to update primary Facebook page.');
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  async function removeFacebookPage(channelId: string) {
-    if (selectedClientId === null) return;
-    setIsSaving(true);
-    setError(null);
-    setLoadErrorDiagnostic(null);
-    setNotice(null);
-    try {
-      const saved = await updateClientChannel(selectedClientId, `/${channelId}/delete`, 'POST');
-      setNotice('Facebook page removed from this client.');
-      setSelectedClientId(saved.id);
-      await loadClients();
-    } catch (channelError) {
-      setError(channelError instanceof Error ? channelError.message : 'Unable to remove Facebook page.');
-    } finally {
-      setIsSaving(false);
-    }
-  }
 
   async function saveDpaProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -745,7 +648,7 @@ export default function InternalClientsPage() {
                       <strong>{selectedDashboard.client.id}</strong>
                     </div>
                     <div>
-                      <span>Primary Facebook Page</span>
+                      <span>Primary page</span>
                       <strong>{selectedDashboard.client.pageId}</strong>
                     </div>
                     <div>
@@ -757,7 +660,7 @@ export default function InternalClientsPage() {
                       <strong>{selectedDashboard.client.ownerEmail ?? selectedDashboard.client.digestEmail ?? 'Not set'}</strong>
                     </div>
                     <div>
-                      <span>WhatsApp POC</span>
+                      <span>Support phone</span>
                       <strong>{selectedDashboard.client.whatsappPoc ?? selectedDashboard.client.ownerPhone ?? 'Not set'}</strong>
                     </div>
                   </section>
@@ -966,76 +869,6 @@ export default function InternalClientsPage() {
                     </div>
                   </form>
 
-                  <section className="client-channel-panel">
-                    <div className="section-label">
-                      <Building2 size={15} />
-                      Facebook pages
-                    </div>
-                    <div className="client-channel-list">
-                      {selectedFacebookPages.map((channel) => (
-                        <article className="client-channel-row" key={channel.id}>
-                          <div>
-                            <strong>{channel.label}</strong>
-                            <small>{channel.externalId}</small>
-                          </div>
-                          <div className="panel-actions">
-                            <span className="badge" data-tone={channel.status === 'connected' ? 'green' : 'amber'}>
-                              {channel.isPrimary ? 'Primary' : channel.status}
-                            </span>
-                            {!channel.isPrimary && (
-                              <button
-                                className="mini-button"
-                                disabled={isSaving}
-                                type="button"
-                                onClick={() => void markPrimaryFacebookPage(channel.id)}
-                              >
-                                <Star size={13} />
-                                Make primary
-                              </button>
-                            )}
-                            <button
-                              className="mini-button"
-                              disabled={isSaving}
-                              type="button"
-                              onClick={() => void removeFacebookPage(channel.id)}
-                            >
-                              <Trash2 size={13} />
-                              Remove
-                            </button>
-                          </div>
-                        </article>
-                      ))}
-                      {selectedFacebookPages.length === 0 && (
-                        <div className="empty">No Facebook pages connected yet. Add the first Page ID below.</div>
-                      )}
-                    </div>
-                    <form className="channel-inline-form" onSubmit={saveFacebookPage}>
-                      <label>
-                        Page ID
-                        <input
-                          value={facebookPageForm.externalId}
-                          placeholder="facebook-page-id"
-                          onChange={(event) =>
-                            setFacebookPageForm((current) => ({ ...current, externalId: event.target.value }))
-                          }
-                        />
-                      </label>
-                      <label>
-                        Label
-                        <input
-                          value={facebookPageForm.label}
-                          placeholder="Main page, outlet page, campaign page"
-                          onChange={(event) =>
-                            setFacebookPageForm((current) => ({ ...current, label: event.target.value }))
-                          }
-                        />
-                      </label>
-                      <button className="mini-button" disabled={isSaving || facebookPageForm.externalId.trim().length < 2} type="submit">
-                        <Plus size={14} />
-                        Add page
-                      </button>
-                    </form>
-                  </section>
                 </>
               )}
 
@@ -1055,7 +888,7 @@ export default function InternalClientsPage() {
                     />
                   </label>
                   <label>
-                    Facebook/Page ID
+                    Page ID
                     <input
                       value={form.pageId}
                       placeholder="page-id or pending-page-id"
@@ -1088,7 +921,7 @@ export default function InternalClientsPage() {
                     />
                   </label>
                   <label>
-                    WhatsApp POC
+                    Support phone
                     <input
                       value={form.whatsappPoc}
                       placeholder="+8801..."
