@@ -100,6 +100,9 @@ export default function WebChatWidgetPage() {
           text: replyText,
         },
       ]);
+      if (isCallActive) {
+        call.speakText(replyText);
+      }
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : 'Unable to send message.');
     } finally {

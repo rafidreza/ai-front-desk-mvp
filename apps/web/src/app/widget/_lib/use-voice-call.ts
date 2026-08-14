@@ -92,6 +92,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   const clientRef = useRef<PipecatClient | null>(null);
   const demoRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const demoActiveRef = useRef(false);
+  const demoHelpShownRef = useRef(false);
   // The bot streams a reply token by token; we append into one line until it stops speaking.
   const agentLineRef = useRef<string | null>(null);
   /**
@@ -123,6 +124,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
 
   const teardown = useCallback(async () => {
     demoActiveRef.current = false;
+    demoHelpShownRef.current = false;
     const recognition = demoRecognitionRef.current;
     demoRecognitionRef.current = null;
     if (recognition !== null) {
@@ -210,6 +212,18 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     }
   }, [clientId, speak, visitorId]);
 
+  const showDemoFallbackHelp = useCallback(() => {
+    if (demoHelpShownRef.current) return;
+    demoHelpShownRef.current = true;
+    const helpText =
+      'I am still here. If the browser does not transcribe your speech, type your message below and I will read the reply aloud.';
+    setTranscript((current) => [
+      ...current,
+      { id: `demo-fallback-help-${Date.now()}`, role: 'agent', text: helpText },
+    ]);
+    speak(helpText);
+  }, [speak]);
+
   const startBrowserVoiceDemo = useCallback(async () => {
     const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (SpeechRecognition === undefined) {
@@ -218,9 +232,11 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       return;
     }
 
-    const greeting = 'Voice demo is ready. Tell me what your customer needs help with.';
+    const greeting = 'Voice demo is ready. Speak now, or type below and I will read the answer aloud.';
     demoActiveRef.current = true;
+    demoHelpShownRef.current = false;
     setStatus('live');
+    setError(null);
     setSecondsLeft(120);
     setTranscript([{ id: `demo-agent-${Date.now()}`, role: 'agent', text: greeting }]);
     speak(greeting);
@@ -241,7 +257,14 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     };
     recognition.onerror = (event) => {
       if (event.error === 'no-speech') return;
-      setError('The browser voice demo had trouble hearing you. You can keep typing in chat.');
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        demoActiveRef.current = false;
+        setStatus('error');
+        setError('Microphone access is blocked. Allow it in your browser, then try again.');
+        return;
+      }
+      setError(null);
+      showDemoFallbackHelp();
     };
     recognition.onend = () => {
       if (!demoActiveRef.current) return;
@@ -257,7 +280,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       setStatus('error');
       setError('The browser voice demo could not start. Try refreshing the page.');
     }
-  }, [sendDemoTurn, speak]);
+  }, [sendDemoTurn, showDemoFallbackHelp, speak]);
 
   const startCall = useCallback(async () => {
     if (visitorId === null || clientRef.current !== null) return;
@@ -394,5 +417,5 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     }
   }, [clientId, startBrowserVoiceDemo, visitorId]);
 
-  return { status, error, transcript, isAgentSpeaking, secondsLeft, startCall, endCall };
+  return { status, error, transcript, isAgentSpeaking, secondsLeft, startCall, endCall, speakText: speak };
 }
