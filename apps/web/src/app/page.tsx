@@ -6,7 +6,7 @@ import { DaemionLockup } from './_components/DaemionBrand';
 export const metadata: Metadata = {
   title: 'Daemion Client Portal — Autonomous customer operations',
   description:
-    'The Daemion customer application for support tickets, knowledge, customer conversations, and channel operations.',
+    'The Daemion customer application for support tickets, knowledge, and customer conversations.',
 };
 
 export default function LandingPage() {
@@ -38,7 +38,7 @@ export default function LandingPage() {
           <h1>Autonomous support operations, held in one quiet workspace.</h1>
           <p className="landing-lede">
             Open the client portal to review escalated tickets, maintain your knowledge base, and
-            monitor the channels Daemion operates on your behalf.
+            monitor the customer conversations Daemion handles on your behalf.
           </p>
           <div className="landing-hero-ctas">
             <Link className="btn-primary" href="/login">
