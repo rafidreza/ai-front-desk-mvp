@@ -28,6 +28,27 @@ export type VoiceTranscriptLine = {
   text: string;
 };
 
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>>; resultIndex: number }) => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+};
+
+type SpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
 type SessionGrant = {
   sessionToken: string;
   voiceRuntimeUrl: string;
@@ -35,6 +56,8 @@ type SessionGrant = {
   expiresAt: number;
   maxDurationS: number;
 };
+
+const demoConsentVersion = 'pdpa-widget-v3';
 
 /** Transport states that mean audio is actually flowing. */
 const LIVE_STATES: TransportState[] = ['connected', 'ready'];
@@ -67,6 +90,8 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   const clientRef = useRef<PipecatClient | null>(null);
+  const demoRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const demoActiveRef = useRef(false);
   // The bot streams a reply token by token; we append into one line until it stops speaking.
   const agentLineRef = useRef<string | null>(null);
   /**
@@ -97,6 +122,18 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   }
 
   const teardown = useCallback(async () => {
+    demoActiveRef.current = false;
+    const recognition = demoRecognitionRef.current;
+    demoRecognitionRef.current = null;
+    if (recognition !== null) {
+      try {
+        recognition.onend = null;
+        recognition.abort();
+      } catch {
+        // Already stopped.
+      }
+    }
+    window.speechSynthesis?.cancel();
     const client = clientRef.current;
     clientRef.current = null;
     agentLineRef.current = null;
@@ -134,32 +171,108 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     setSecondsLeft(null);
   }, [teardown]);
 
+  const speak = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.98;
+    utterance.pitch = 1;
+    utterance.onstart = () => setIsAgentSpeaking(true);
+    utterance.onend = () => setIsAgentSpeaking(false);
+    utterance.onerror = () => setIsAgentSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  const sendDemoTurn = useCallback(async (text: string) => {
+    if (visitorId === null) return;
+    const messageId = `voice-demo:${visitorId}:${Date.now()}`;
+    setTranscript((current) => [
+      ...current,
+      { id: `${messageId}:customer`, role: 'customer', text },
+    ]);
+    try {
+      const response = await fetch('/api/web-chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, visitorId, text, messageId, pdpaConsent: true, consentVersion: demoConsentVersion }),
+      });
+      const data = (await response.json()) as { reply?: { text: string }; error?: string };
+      if (!response.ok || data.reply === undefined) {
+        throw new Error(data.error ?? 'Unable to answer the voice demo.');
+      }
+      setTranscript((current) => [
+        ...current,
+        { id: `${messageId}:agent`, role: 'agent', text: data.reply.text },
+      ]);
+      speak(data.reply.text);
+    } catch (demoError) {
+      setError(demoError instanceof Error ? demoError.message : 'The voice demo could not answer.');
+    }
+  }, [clientId, speak, visitorId]);
+
+  const startBrowserVoiceDemo = useCallback(async () => {
+    const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (SpeechRecognition === undefined) {
+      setStatus('error');
+      setError('This browser cannot run the instant voice demo. Try Chrome, or use the text chat below.');
+      return;
+    }
+
+    const greeting = 'Voice demo is ready. Tell me what your customer needs help with.';
+    demoActiveRef.current = true;
+    setStatus('live');
+    setSecondsLeft(120);
+    setTranscript([{ id: `demo-agent-${Date.now()}`, role: 'agent', text: greeting }]);
+    speak(greeting);
+
+    const recognition = new SpeechRecognition();
+    demoRecognitionRef.current = recognition;
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.onresult = (event) => {
+      const turns: string[] = [];
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const phrase = event.results[index]?.[0]?.transcript?.trim();
+        if (phrase !== undefined && phrase !== '') turns.push(phrase);
+      }
+      const text = turns.join(' ').trim();
+      if (text !== '') void sendDemoTurn(text);
+    };
+    recognition.onerror = (event) => {
+      if (event.error === 'no-speech') return;
+      setError('The browser voice demo had trouble hearing you. You can keep typing in chat.');
+    };
+    recognition.onend = () => {
+      if (!demoActiveRef.current) return;
+      try {
+        recognition.start();
+      } catch {
+        // Browsers can briefly reject a restart while the previous session closes.
+      }
+    };
+    try {
+      recognition.start();
+    } catch {
+      setStatus('error');
+      setError('The browser voice demo could not start. Try refreshing the page.');
+    }
+  }, [sendDemoTurn, speak]);
+
   const startCall = useCallback(async () => {
     if (visitorId === null || clientRef.current !== null) return;
     setError(null);
     setTranscript([]);
 
     // Ask for the mic first. A denial here is the most common failure and deserves its own
-    // message — "call failed" would send people hunting for a network problem. Pull the SDK down
-    // in parallel so the download hides behind the permission prompt.
+    // message — "call failed" would send people hunting for a network problem.
     setStatus('requesting-mic');
-    const sdkPromise = loadVoiceSdk();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
     } catch {
       setStatus('error');
       setError('Microphone access is needed for a voice call. Allow it in your browser, then try again.');
-      return;
-    }
-
-    let PipecatClientCtor: typeof PipecatClient;
-    let SmallWebRTCTransportCtor: Awaited<ReturnType<typeof loadVoiceSdk>>['SmallWebRTCTransport'];
-    try {
-      ({ PipecatClient: PipecatClientCtor, SmallWebRTCTransport: SmallWebRTCTransportCtor } = await sdkPromise);
-    } catch {
-      setStatus('error');
-      setError('Could not load the calling tools. Check your connection and try again.');
       return;
     }
 
@@ -173,12 +286,26 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       });
       const data = (await response.json()) as Partial<SessionGrant> & { message?: string };
       if (!response.ok || data.sessionToken === undefined) {
+        if (response.status === 503) {
+          await startBrowserVoiceDemo();
+          return;
+        }
         throw new Error(friendlyError(response.status, data.message));
       }
       grant = data as SessionGrant;
     } catch (startError) {
       setStatus('error');
       setError(startError instanceof Error ? startError.message : 'Could not start the call.');
+      return;
+    }
+
+    let PipecatClientCtor: typeof PipecatClient;
+    let SmallWebRTCTransportCtor: Awaited<ReturnType<typeof loadVoiceSdk>>['SmallWebRTCTransport'];
+    try {
+      ({ PipecatClient: PipecatClientCtor, SmallWebRTCTransport: SmallWebRTCTransportCtor } = await loadVoiceSdk());
+    } catch {
+      setStatus('error');
+      setError('Could not load the calling tools. Check your connection and try again.');
       return;
     }
 
@@ -265,7 +392,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       setError('Could not connect the call. Check your network and try again.');
       console.error('voice connect failed', connectError);
     }
-  }, [clientId, visitorId]);
+  }, [clientId, startBrowserVoiceDemo, visitorId]);
 
   return { status, error, transcript, isAgentSpeaking, secondsLeft, startCall, endCall };
 }
