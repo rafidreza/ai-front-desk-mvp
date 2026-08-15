@@ -81,7 +81,6 @@ export default function ClientLoginPage() {
     if (nextPath.startsWith('/client/dashboard')) return 'dashboard';
     if (nextPath.startsWith('/client/tickets')) return 'ticket list';
     if (nextPath.startsWith('/client/knowledge')) return 'knowledge base';
-    if (nextPath.startsWith('/client/data-sources')) return 'data sources';
     if (nextPath.startsWith('/client/')) return 'client workspace';
     return null;
   }, [nextPath]);

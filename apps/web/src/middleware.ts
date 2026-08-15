@@ -14,7 +14,6 @@ function isClientAllowedBackendPath(pathname: string) {
     /^\/api\/backend\/clients\/[^/]+\/tickets(?:\/[^/]+(?:\/status)?)?$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/whatsapp\/disconnect$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/conversations\/[^/]+\/csat$/.test(pathname) ||
-    /^\/api\/backend\/clients\/[^/]+\/external-data\/(?:sources(?:\/[^/]+\/sync)?|google-sheet|products|orders)$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/meta\/(?:disconnect|oauth(?:\/start|-sessions\/[^/]+(?:\/select)?))$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/knowledge\/client-view$/.test(pathname) ||
     /^\/api\/backend\/clients\/[^/]+\/knowledge\/requests(?:\/[^/]+)?$/.test(pathname) ||
@@ -24,6 +23,16 @@ function isClientAllowedBackendPath(pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (pathname === '/internal/data-sources') {
+    return NextResponse.redirect(new URL('/internal', request.url));
+  }
+  if (pathname === '/client/data-sources') {
+    const dashboardUrl = new URL('/client/dashboard', request.url);
+    const clientId = request.nextUrl.searchParams.get('clientId');
+    if (clientId !== null) dashboardUrl.searchParams.set('clientId', clientId);
+    return NextResponse.redirect(dashboardUrl);
+  }
+
   const isLoginPath = pathname === '/internal/login';
   const isClientLoginPath = pathname === '/client/login';
   const isClientPath = pathname.startsWith('/client/') && !isClientLoginPath;

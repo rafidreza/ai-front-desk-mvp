@@ -30,7 +30,6 @@ type ActiveView =
   | 'knowledge'
   | 'kb-review'
   | 'audit-log'
-  | 'data-sources'
   | 'agent-config'
   | 'voice-console';
 
@@ -115,15 +114,6 @@ export function Sidebar({ activeView, onChangeView, health, healthError, session
         >
           <ClipboardList size={17} />
           Audit Log
-        </Link>
-        <Link
-          aria-current={activeView === 'data-sources' ? 'page' : undefined}
-          className="side-link"
-          data-active={activeView === 'data-sources'}
-          href="/internal/data-sources"
-        >
-          <DatabaseZap size={17} />
-          Data Sources
         </Link>
         <Link
           aria-current={activeView === 'agent-config' ? 'page' : undefined}

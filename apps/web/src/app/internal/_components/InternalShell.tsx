@@ -31,7 +31,6 @@ interface InternalShellProps {
     | 'knowledge'
     | 'kb-review'
     | 'audit-log'
-    | 'data-sources'
     | 'agent-config'
     | 'voice-console';
   eyebrow: string;

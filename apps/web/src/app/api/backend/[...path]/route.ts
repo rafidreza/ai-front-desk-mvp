@@ -27,7 +27,7 @@ function getApiToken() {
 function isAdminOnlyMutation(path: string) {
   return (
     path === '/clients' ||
-    /^\/clients\/[^/]+(?:\/status|\/channels(?:\/[^/]+(?:\/delete)?)?|\/digests\/[^/]+\/send|\/external-data(?:\/|$))/.test(path) ||
+    /^\/clients\/[^/]+(?:\/status|\/channels(?:\/[^/]+(?:\/delete)?)?|\/digests\/[^/]+\/send)/.test(path) ||
     /^\/clients\/[^/]+\/(?:prompts|auto-replies|whatsapp\/templates|industry-templates)(?:\/|$)/.test(path) ||
     /^\/internal\/users(?:\/|$)/.test(path)
   );
@@ -90,9 +90,6 @@ function describeMutation(method: string, path: string) {
   }
   if (/^\/clients\/[^/]+\/tags(?:\/|$)/.test(path) || /^\/tickets\/[^/]+\/tags(?:\/|$)/.test(path)) {
     return { ...fallback, action: method === 'DELETE' ? 'tag.deleted' : 'tag.changed', entityType: 'tag', entityId: segments.at(-1), summary: 'Changed ticket tags' };
-  }
-  if (/^\/clients\/[^/]+\/external-data(?:\/|$)/.test(path)) {
-    return { ...fallback, action: 'external_data.changed', entityType: 'external_data_source', entityId: segments.at(-1), summary: 'Changed external data source' };
   }
   if (/^\/internal\/users(?:\/|$)/.test(path)) {
     return { ...fallback, action: 'internal_user.changed', entityType: 'internal_user', entityId: segments.at(-1), summary: 'Changed internal user access' };

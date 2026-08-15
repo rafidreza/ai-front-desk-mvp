@@ -1,19 +1,18 @@
-import { BookOpenText, ClipboardList, DatabaseZap, LayoutDashboard, TicketCheck } from 'lucide-react';
+import { BookOpenText, ClipboardList, LayoutDashboard, TicketCheck } from 'lucide-react';
 import { getClientPortalCopy } from '@/lib/client-portal-copy';
 import { ClientProfile } from '@/types/domain';
 
-type ClientPortalView = 'dashboard' | 'tickets' | 'knowledge' | 'data-sources' | 'onboarding';
+type ClientPortalView = 'dashboard' | 'tickets' | 'knowledge' | 'onboarding';
 
 const navItems: Array<{
   id: ClientPortalView;
-  labelKey: 'overview' | 'tickets' | 'knowledge' | 'data' | 'setup';
+  labelKey: 'overview' | 'tickets' | 'knowledge' | 'setup';
   href: string;
   icon: typeof LayoutDashboard;
 }> = [
   { id: 'dashboard', labelKey: 'overview', href: '/client/dashboard', icon: LayoutDashboard },
   { id: 'tickets', labelKey: 'tickets', href: '/client/tickets', icon: TicketCheck },
   { id: 'knowledge', labelKey: 'knowledge', href: '/client/knowledge', icon: BookOpenText },
-  { id: 'data-sources', labelKey: 'data', href: '/client/data-sources', icon: DatabaseZap },
   { id: 'onboarding', labelKey: 'setup', href: '/client/onboarding', icon: ClipboardList },
 ];
 

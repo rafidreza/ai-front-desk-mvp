@@ -12,8 +12,6 @@ import {
   ClientStatus,
   ConversationLog,
   ConversationQaGrade,
-  ExternalDataSource,
-  ExternalDataSyncRun,
   InternalUser,
   KnowledgeChangeRequest,
   KnowledgeChangeRequestReviewDetail,
@@ -23,10 +21,8 @@ import {
   KnowledgeEntryVersion,
   KnowledgeImportFileInput,
   KnowledgeImportResult,
-  OrderRecord,
   BlockedSender,
   ConversationSearchResult,
-  ProductRecord,
   TestCustomer,
   PromptProfile,
   PromptProfileVersion,
@@ -382,51 +378,6 @@ export async function captureCsat(
     body: JSON.stringify(input),
   });
   return data.conversation;
-}
-
-export async function getExternalDataSources(clientId: string): Promise<ExternalDataSource[]> {
-  const data = await apiFetch<{ sources: ExternalDataSource[] }>(`/clients/${clientId}/external-data/sources`);
-  return data.sources;
-}
-
-export async function saveGoogleSheetDataSource(
-  clientId: string,
-  input: {
-    name?: string;
-    sheetUrl: string;
-    productsTabName?: string;
-    ordersTabName?: string;
-    syncIntervalMinutes?: number;
-    productFreshnessMinutes?: number;
-    orderFreshnessMinutes?: number;
-  },
-): Promise<ExternalDataSource> {
-  const data = await apiFetch<{ source: ExternalDataSource }>(`/clients/${clientId}/external-data/google-sheet`, {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
-  return data.source;
-}
-
-export async function syncExternalDataSource(
-  clientId: string,
-  sourceId: string,
-): Promise<{ source: ExternalDataSource; syncRun: ExternalDataSyncRun }> {
-  return apiFetch<{ source: ExternalDataSource; syncRun: ExternalDataSyncRun }>(`/clients/${clientId}/external-data/sources/${sourceId}/sync`, {
-    method: 'POST',
-  });
-}
-
-export async function getExternalProducts(clientId: string, sourceId?: string): Promise<ProductRecord[]> {
-  const query = sourceId === undefined ? '' : `?sourceId=${encodeURIComponent(sourceId)}`;
-  const data = await apiFetch<{ products: ProductRecord[] }>(`/clients/${clientId}/external-data/products${query}`);
-  return data.products;
-}
-
-export async function getExternalOrders(clientId: string, sourceId?: string): Promise<OrderRecord[]> {
-  const query = sourceId === undefined ? '' : `?sourceId=${encodeURIComponent(sourceId)}`;
-  const data = await apiFetch<{ orders: OrderRecord[] }>(`/clients/${clientId}/external-data/orders${query}`);
-  return data.orders;
 }
 
 export async function getClientKnowledgeEntries(clientId: string): Promise<ClientKnowledgeEntry[]> {
