@@ -7,6 +7,25 @@ function cleanText(value: unknown) {
   return value.trim().slice(0, maxTextLength);
 }
 
+function supportsAudioTags(modelId: string) {
+  return modelId.toLowerCase().includes('v3');
+}
+
+function expressiveTextForElevenV3(text: string) {
+  if (/^\s*\[[^\]]+\]/.test(text)) return text;
+  const hasBangla = /[\u0980-\u09ff]/.test(text);
+  const isBanglaPriceAnswer = hasBangla && /[\d\u09e6-\u09ef]|mbps|gbps|bdt|\u09f3/i.test(text);
+  const isPriceAnswer = /\b(bdt|tk|taka|price|package|plan)\b/i.test(text) || isBanglaPriceAnswer;
+  const isApology = /\b(sorry|apolog|unavailable|cannot|can't|not sure)\b/i.test(text);
+  const isEscalation = /\b(ticket|human|team|check|update|escalat|handoff)\b/i.test(text);
+
+  if (isApology) return `[apologetically] ${text}`;
+  if (isEscalation) return `[reassuringly] ${text}`;
+  if (isPriceAnswer) return `[clearly] ${text}`;
+  if (hasBangla) return `[warmly] ${text}`;
+  return `[warmly] ${text}`;
+}
+
 export async function POST(request: NextRequest) {
   let text = '';
   try {
@@ -29,6 +48,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const ttsText = supportsAudioTags(modelId) ? expressiveTextForElevenV3(text) : text;
     const elevenLabsResponse = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream?output_format=mp3_22050_32`,
       {
@@ -38,7 +58,7 @@ export async function POST(request: NextRequest) {
           'xi-api-key': apiKey,
         },
         body: JSON.stringify({
-          text,
+          text: ttsText,
           model_id: modelId,
         }),
         cache: 'no-store',
