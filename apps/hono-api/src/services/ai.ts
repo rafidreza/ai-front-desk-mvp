@@ -21,6 +21,16 @@ export class AiService {
     promptProfile?: PromptProfile;
     retrievalConfidence: number;
   }): Promise<AgentReply> {
+    const conversationalReply = this.generateConversationalReply(input.client, input.customerText);
+    if (conversationalReply !== null) {
+      return {
+        text: conversationalReply,
+        confidence: Math.max(input.retrievalConfidence, 0.9),
+        matchedKnowledgeIds: [],
+        shouldEscalate: false,
+      };
+    }
+
     const escalationReason = this.detectEscalation(input.client, input.customerText, input.retrievalConfidence);
     const runtime = this.getRuntimeConfig(input.promptProfile);
 
@@ -29,9 +39,10 @@ export class AiService {
         runtime.provider === 'openrouter'
           ? await this.generateOpenRouterReply(input, runtime)
           : await this.generateClaudeReply(input, new Anthropic({ apiKey: runtime.apiKey }), runtime.model);
-      const reply = this.isGenericHandoff(generatedReply)
+      const baseReply = this.isGenericHandoff(generatedReply)
         ? this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile, input.client, input.customerText)
         : generatedReply;
+      const reply = this.addNextBestQuestion(baseReply, input.knowledgeEntries, input.customerText, input.client, escalationReason);
       return {
         text: reply,
         confidence: input.retrievalConfidence,
@@ -41,8 +52,9 @@ export class AiService {
       };
     }
 
+    const baseReply = this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile, input.client, input.customerText);
     return {
-      text: this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile, input.client, input.customerText),
+      text: this.addNextBestQuestion(baseReply, input.knowledgeEntries, input.customerText, input.client, escalationReason),
       confidence: input.retrievalConfidence,
       matchedKnowledgeIds: input.knowledgeEntries.map((entry) => entry.id),
       shouldEscalate: escalationReason !== null,
@@ -93,6 +105,8 @@ export class AiService {
       `Fallback behavior: ${input.promptProfile?.fallbackBehavior ?? 'If the answer is missing, politely say a team member will check.'}.`,
       'Only answer from the supplied knowledge. If the answer is missing, politely say a team member will check.',
       'When supplied knowledge directly answers the customer, answer it directly. Do not say the team will check.',
+      'If a direct answer is available, ask at most one natural follow-up question that moves the conversation forward.',
+      'Do not escalate or create handoff language for greetings, thanks, or conversation closings.',
       this.languageInstruction(input.client),
       'Keep replies short enough for Messenger commerce.',
     ].join('\n');
@@ -195,6 +209,100 @@ export class AiService {
     return escalationReason === null ? answer : `${answer}\n\n${forwardingLine}`;
   }
 
+  private generateConversationalReply(client: ClientProfile, customerText: string) {
+    const normalized = this.normalizeSocialText(customerText);
+    if (normalized === '') return null;
+    if (!this.isShortSocialMessage(customerText)) return null;
+
+    const wantsBangla = this.wantsBangla(client, customerText);
+    if (this.isThanks(normalized)) {
+      return wantsBangla ? 'আপনাকে স্বাগতম। আর কোনো সাহায্য লাগলে জানাবেন।' : 'You are welcome. Let me know if you need anything else.';
+    }
+    if (this.isGreeting(normalized)) {
+      return wantsBangla ? 'স্বাগতম। কীভাবে সাহায্য করতে পারি?' : 'Hi. How can I help you today?';
+    }
+    if (this.isClosing(normalized)) {
+      return wantsBangla ? 'ঠিক আছে। ভালো থাকবেন।' : 'All right. Have a good day.';
+    }
+    return null;
+  }
+
+  private normalizeSocialText(text: string) {
+    return text
+      .toLowerCase()
+      .replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private isShortSocialMessage(text: string) {
+    return this.normalizeSocialText(text).length <= 80;
+  }
+
+  private isThanks(normalized: string) {
+    return /^(thanks|thank you|thx|dhonnobad|donnobad|ধন্যবাদ|thank u|tnx)(\s+(vai|bhai|আপনাকে|apnake|bro|boss))?$/.test(normalized);
+  }
+
+  private isGreeting(normalized: string) {
+    return /^(hi|hello|hey|salam|assalamu alaikum|আসসালামু আলাইকুম|হ্যালো|হাই)$/.test(normalized);
+  }
+
+  private isClosing(normalized: string) {
+    return /^(bye|goodbye|ok bye|ঠিক আছে|আচ্ছা|accha|okay|ok)$/.test(normalized);
+  }
+
+  private addNextBestQuestion(
+    reply: string,
+    entries: KnowledgeEntry[],
+    customerText: string,
+    client: ClientProfile,
+    escalationReason: string | null,
+  ) {
+    if (entries.length === 0 || escalationReason !== null || this.alreadyAsksQuestion(reply)) return reply;
+    const question = this.nextBestQuestion(entries[0]!, customerText, client);
+    if (question === null) return reply;
+    return `${reply}\n\n${question}`;
+  }
+
+  private alreadyAsksQuestion(reply: string) {
+    return /[?？]\s*$/.test(reply.trim());
+  }
+
+  private nextBestQuestion(entry: KnowledgeEntry, customerText: string, client: ClientProfile) {
+    const intent = this.detectFollowUpIntent(entry, customerText);
+    const wantsBangla = this.wantsBangla(client, customerText);
+    if (intent === 'coverage') {
+      return wantsBangla
+        ? 'আপনি বর্তমানে কোন এলাকায় আছেন? তাহলে আরও নির্দিষ্টভাবে বলতে পারব।'
+        : 'May I know which area you are located in? Then I can be more specific.';
+    }
+    if (intent === 'pricing') {
+      return wantsBangla
+        ? 'আপনি কোন প্যাকেজে আগ্রহী, 500 Mbps নাকি 1 Gbps?'
+        : 'Which package are you interested in, 500 Mbps or 1 Gbps?';
+    }
+    if (intent === 'installation') {
+      return wantsBangla
+        ? 'আপনি কোন এলাকায় installation নিতে চান?'
+        : 'Which area would you like installation for?';
+    }
+    if (intent === 'support_hours') {
+      return wantsBangla
+        ? 'কোন issue নিয়ে সাহায্য লাগবে?'
+        : 'What issue do you need help with?';
+    }
+    return null;
+  }
+
+  private detectFollowUpIntent(entry: KnowledgeEntry, customerText: string): 'coverage' | 'pricing' | 'installation' | 'support_hours' | null {
+    const searchable = `${entry.title} ${entry.category ?? ''} ${entry.keywords.join(' ')} ${customerText}`.toLowerCase();
+    if (/\b(coverage|area|available|location|elaka|dhaka|chittagong)\b|এলাকা|ঢাকা|চট্টগ্রাম/.test(searchable)) return 'coverage';
+    if (/\b(price|package|plan|cost|bdt|taka|mbps|gbps|dam|koto)\b|দাম|টাকা|প্যাকেজ/.test(searchable)) return 'pricing';
+    if (/\b(install|installation|setup)\b|ইনস্টল/.test(searchable)) return 'installation';
+    if (/\b(support|hours|time|open|somoy)\b|সময়|সময়/.test(searchable)) return 'support_hours';
+    return null;
+  }
+
   private localizeKnownAnswer(answer: string, client?: ClientProfile, customerText?: string) {
     if (!this.wantsBangla(client, customerText)) return answer;
     const normalized = answer.trim();
@@ -217,6 +325,7 @@ export class AiService {
   }
 
   private detectEscalation(client: ClientProfile, text: string, confidence: number) {
+    if (this.generateConversationalReply(client, text) !== null) return null;
     const normalizedText = text.toLowerCase();
     const matchedKeyword = client.escalationKeywords.find((keyword) => normalizedText.includes(keyword.toLowerCase()));
     if (matchedKeyword !== undefined) return `Matched escalation keyword: ${matchedKeyword}`;
