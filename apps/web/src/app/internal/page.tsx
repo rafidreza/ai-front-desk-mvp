@@ -240,7 +240,7 @@ export default function InternalConsole() {
 
           <ConversationsPanel
             conversations={conversations}
-            activeConversationId={selectedConversation?.id}
+            activeConversationId={selectedConversationId ?? undefined}
             isConversationsLoading={isConversationsLoading}
             conversationsError={conversationsError}
             onReload={() => void loadConversationsPanel()}
