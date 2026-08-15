@@ -64,6 +64,8 @@ type TrackedCall = {
 type PersistedSpeaker = 'caller' | 'ai' | 'human';
 
 const demoConsentVersion = 'pdpa-widget-v3';
+const demoRecognitionLanguage = 'bn-BD';
+const demoTranscriptLanguage = 'bn';
 
 /** Transport states that mean audio is actually flowing. */
 const LIVE_STATES: TransportState[] = ['connected', 'ready'];
@@ -335,7 +337,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   const sendDemoTurn = useCallback(async (text: string) => {
     if (visitorId === null) return;
     const messageId = `voice-demo:${visitorId}:${Date.now()}`;
-    void persistVoiceTurn('caller', text);
+    void persistVoiceTurn('caller', text, demoTranscriptLanguage);
     setTranscript((current) => [
       ...current,
       { id: `${messageId}:customer`, role: 'customer', text },
@@ -354,7 +356,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
         ...current,
         { id: `${messageId}:agent`, role: 'agent', text: data.reply.text },
       ]);
-      void persistVoiceTurn('ai', data.reply.text);
+      void persistVoiceTurn('ai', data.reply.text, demoTranscriptLanguage);
       speak(data.reply.text);
     } catch (demoError) {
       setError(demoError instanceof Error ? demoError.message : 'The voice demo could not answer.');
@@ -401,7 +403,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     demoRecognitionRef.current = recognition;
     recognition.continuous = true;
     recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    recognition.lang = demoRecognitionLanguage;
     recognition.onresult = (event) => {
       if (demoRecognitionPausedRef.current) return;
       const turns: string[] = [];
