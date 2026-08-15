@@ -99,6 +99,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   const demoRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const demoActiveRef = useRef(false);
   const demoHelpShownRef = useRef(false);
+  const demoRecognitionPausedRef = useRef(false);
   // The bot streams a reply token by token; we append into one line until it stops speaking.
   const agentLineRef = useRef<string | null>(null);
   const botTranscriptBufferRef = useRef('');
@@ -136,6 +137,28 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     element.removeAttribute('src');
     element.srcObject = null;
     element.remove();
+  }
+
+  function pauseDemoRecognition() {
+    const recognition = demoRecognitionRef.current;
+    if (recognition === null) return;
+    demoRecognitionPausedRef.current = true;
+    try {
+      recognition.stop();
+    } catch {
+      // It may already be between recognition sessions.
+    }
+  }
+
+  function resumeDemoRecognition() {
+    const recognition = demoRecognitionRef.current;
+    if (recognition === null || !demoActiveRef.current) return;
+    demoRecognitionPausedRef.current = false;
+    try {
+      recognition.start();
+    } catch {
+      // Browsers can briefly reject a restart while the previous session closes.
+    }
   }
 
   const startTrackedCall = useCallback(async (): Promise<TrackedCall | null> => {
@@ -206,6 +229,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     await finalizeTrackedCall('ended', 'widget_closed');
     demoActiveRef.current = false;
     demoHelpShownRef.current = false;
+    demoRecognitionPausedRef.current = false;
     const recognition = demoRecognitionRef.current;
     demoRecognitionRef.current = null;
     if (recognition !== null) {
@@ -259,6 +283,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     const trimmed = text.trim();
     if (trimmed === '') return;
 
+    pauseDemoRecognition();
     const element = ensureAudioElement();
     const previousUrl = fallbackVoiceUrlRef.current;
     fallbackVoiceUrlRef.current = null;
@@ -288,6 +313,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
           fallbackVoiceUrlRef.current = null;
         }
         URL.revokeObjectURL(audioUrl);
+        resumeDemoRecognition();
       };
       element.onerror = () => {
         setIsAgentSpeaking(false);
@@ -296,11 +322,13 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
         }
         URL.revokeObjectURL(audioUrl);
         setError('ElevenLabs voice is unavailable right now.');
+        resumeDemoRecognition();
       };
       await element.play();
     } catch (voiceError) {
       setIsAgentSpeaking(false);
       setError(voiceError instanceof Error ? voiceError.message : 'ElevenLabs voice is unavailable right now.');
+      resumeDemoRecognition();
     }
   }, []);
 
@@ -368,9 +396,6 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     setStatus('live');
     setError(null);
     setSecondsLeft(120);
-    setTranscript([{ id: `demo-agent-${Date.now()}`, role: 'agent', text: greeting }]);
-    void persistVoiceTurn('ai', greeting);
-    speak(greeting);
 
     const recognition = new SpeechRecognition();
     demoRecognitionRef.current = recognition;
@@ -378,6 +403,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     recognition.interimResults = false;
     recognition.lang = 'en-US';
     recognition.onresult = (event) => {
+      if (demoRecognitionPausedRef.current) return;
       const turns: string[] = [];
       for (let index = event.resultIndex; index < event.results.length; index += 1) {
         const phrase = event.results[index]?.[0]?.transcript?.trim();
@@ -399,20 +425,17 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       showDemoFallbackHelp();
     };
     recognition.onend = () => {
-      if (!demoActiveRef.current) return;
+      if (!demoActiveRef.current || demoRecognitionPausedRef.current) return;
       try {
         recognition.start();
       } catch {
         // Browsers can briefly reject a restart while the previous session closes.
       }
     };
-    try {
-      recognition.start();
-    } catch {
-      await finalizeTrackedCall('failed', 'speech_recognition_start_failed');
-      setStatus('error');
-      setError('The browser voice demo could not start. Try refreshing the page.');
-    }
+
+    setTranscript([{ id: `demo-agent-${Date.now()}`, role: 'agent', text: greeting }]);
+    void persistVoiceTurn('ai', greeting);
+    void speak(greeting);
   }, [finalizeTrackedCall, persistVoiceTurn, sendDemoTurn, showDemoFallbackHelp, speak, startTrackedCall]);
 
   const startCall = useCallback(async () => {
