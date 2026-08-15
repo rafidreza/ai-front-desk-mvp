@@ -7,7 +7,8 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const repoEnvPath = resolve(repoRoot, '.env');
-if (existsSync(repoEnvPath)) {
+const appLocalEnvPath = resolve(dirname(fileURLToPath(import.meta.url)), '.env.local');
+if (existsSync(repoEnvPath) && !existsSync(appLocalEnvPath)) {
   loadEnvFile(repoEnvPath);
 }
 
