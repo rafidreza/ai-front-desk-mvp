@@ -64,6 +64,15 @@ export default function WebChatWidgetPage() {
     setError(null);
   }
 
+  async function startVoiceDemo() {
+    if (!hasConsent) {
+      window.localStorage.setItem(`afd_widget_pdpa_consent_${clientId}`, consentVersion);
+      setHasConsent(true);
+    }
+    setError(null);
+    await call.startCall();
+  }
+
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (visitorId === null || isSending) return;
@@ -122,8 +131,8 @@ export default function WebChatWidgetPage() {
             <strong>Daemion</strong>
             <span>{isCallActive ? 'Voice demo in progress' : 'Usually replies instantly'}</span>
           </div>
-          {hasConsent && !isCallActive && (
-            <button className="widget-call-start" onClick={call.startCall} type="button">
+          {visitorId !== null && !isCallActive && (
+            <button className="widget-call-start" onClick={() => void startVoiceDemo()} type="button">
               <PhoneCall size={15} aria-hidden="true" />
               Call
             </button>
