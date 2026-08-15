@@ -496,7 +496,7 @@ button {
 
 .triage-grid {
   display: grid;
-  grid-template-columns: minmax(300px, 0.82fr) minmax(330px, 1fr) minmax(420px, 1.25fr);
+  grid-template-columns: minmax(340px, 0.9fr) minmax(520px, 1.1fr);
   gap: 14px;
   align-items: start;
 }

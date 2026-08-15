@@ -1,17 +1,13 @@
 'use client';
 
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  addTicketComment,
   getCalibrationQueue,
   getConversations,
   getInternalUsers,
-  getTicketDetail,
   getTickets,
   gradeConversation,
-  updateTicketAssignee,
-  updateTicketStatus,
 } from '@/lib/api';
 import {
   CalibrationQueueFilter,
@@ -20,16 +16,13 @@ import {
   ConversationQaGrade,
   InternalUser,
   Ticket,
-  TicketDetail,
-  TicketStatus,
 } from '@/types/domain';
 import { ConversationsPanel } from './_components/ConversationsPanel';
 import { InternalShell } from './_components/InternalShell';
 import { MetricCards } from './_components/MetricCards';
 import { QaReview } from './_components/QaReview';
-import { TicketDetailPanel } from './_components/TicketDetailPanel';
 import { TicketsPanel } from './_components/TicketsPanel';
-import { assigneeLabel, getErrorMessage, statusLabels } from './_lib/helpers';
+import { getErrorMessage } from './_lib/helpers';
 
 export default function InternalConsole() {
   const [conversations, setConversations] = useState<ConversationLog[]>([]);
@@ -40,22 +33,14 @@ export default function InternalConsole() {
   const [assigneeFilter, setAssigneeFilter] = useState('all');
   const [qaFilter, setQaFilter] = useState<CalibrationQueueFilter>('all');
   const [queueSummary, setQueueSummary] = useState<CalibrationQueueSummary | null>(null);
-  const [commentDraft, setCommentDraft] = useState('');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isTicketsLoading, setIsTicketsLoading] = useState(true);
   const [isConversationsLoading, setIsConversationsLoading] = useState(true);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isCommenting, setIsCommenting] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [conversationsError, setConversationsError] = useState<string | null>(null);
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [updateError, setUpdateError] = useState<string | null>(null);
-  const [updateNotice, setUpdateNotice] = useState<string | null>(null);
   const [qaNotice, setQaNotice] = useState<string | null>(null);
-  const [selectedTicketDetail, setSelectedTicketDetail] = useState<TicketDetail | null>(null);
 
   async function loadConversationsPanel() {
     setIsConversationsLoading(true);
@@ -116,19 +101,6 @@ export default function InternalConsole() {
     ]);
   }
 
-  async function loadTicketDetailPanel(ticketId: string) {
-    setIsDetailLoading(true);
-    setDetailError(null);
-    setSelectedTicketDetail(null);
-    try {
-      setSelectedTicketDetail(await getTicketDetail(ticketId));
-    } catch (detailLoadError) {
-      setDetailError(getErrorMessage(detailLoadError, 'Ticket detail could not load. Fix: select the ticket again or refresh the queue.'));
-    } finally {
-      setIsDetailLoading(false);
-    }
-  }
-
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('view') === 'qa') {
       setActiveView('qa');
@@ -136,54 +108,11 @@ export default function InternalConsole() {
     void loadData();
   }, []);
 
-  useEffect(() => {
-    if (selectedTicketId === null) {
-      setSelectedTicketDetail(null);
-      setDetailError(null);
-      return;
-    }
-
-    let isActive = true;
-    setIsDetailLoading(true);
-    setDetailError(null);
-    setSelectedTicketDetail(null);
-    getTicketDetail(selectedTicketId)
-      .then((detail) => {
-        if (isActive) setSelectedTicketDetail(detail);
-      })
-      .catch((detailLoadError) => {
-        if (isActive) {
-          setDetailError(getErrorMessage(detailLoadError, 'Ticket detail could not load. Fix: select the ticket again or refresh the queue.'));
-        }
-      })
-      .finally(() => {
-        if (isActive) setIsDetailLoading(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [selectedTicketId]);
-
-  const selectedTicket = useMemo(
-    () => tickets.find((ticket) => ticket.id === selectedTicketId) ?? tickets[0],
-    [selectedTicketId, tickets],
-  );
-  const activeTicket = selectedTicketDetail?.ticket ?? selectedTicket;
   const filteredTickets = useMemo(() => {
     if (assigneeFilter === 'all') return tickets;
     if (assigneeFilter === 'unassigned') return tickets.filter((ticket) => ticket.assigneeId === undefined);
     return tickets.filter((ticket) => ticket.assigneeId === assigneeFilter);
   }, [assigneeFilter, tickets]);
-
-  const selectedConversation = useMemo(() => {
-    if (activeTicket !== undefined) {
-      return conversations.find((conversation) => conversation.id === activeTicket.conversationId);
-    }
-    return (
-      conversations.find((conversation) => conversation.id === selectedConversationId) ?? conversations[0]
-    );
-  }, [activeTicket, conversations, selectedConversationId]);
 
   const openTickets = tickets.filter((ticket) => ticket.status !== 'resolved').length;
   const p1Tickets = tickets.filter((ticket) => ticket.priority === 'P1').length;
@@ -220,64 +149,6 @@ export default function InternalConsole() {
             100,
         );
   const isLoading = isTicketsLoading || isConversationsLoading;
-
-  async function handleStatusChange(status: TicketStatus) {
-    if (activeTicket === undefined) return;
-    setIsUpdating(true);
-    setUpdateError(null);
-    setUpdateNotice(null);
-    try {
-      const updated = await updateTicketStatus(activeTicket.id, status, activeTicket.version);
-      const detail = await getTicketDetail(activeTicket.id);
-      setTickets((current) => current.map((ticket) => (ticket.id === updated.id ? updated : ticket)));
-      setSelectedTicketDetail(detail);
-      setUpdateNotice(`Status updated to ${statusLabels[status]}.`);
-    } catch (statusError) {
-      setUpdateError(getErrorMessage(statusError, 'Ticket status could not be saved. Fix: refresh to get the latest ticket version, then retry.'));
-    } finally {
-      setIsUpdating(false);
-    }
-  }
-
-  async function handleAssigneeChange(assigneeId: string) {
-    if (activeTicket === undefined) return;
-    setIsUpdating(true);
-    setUpdateError(null);
-    setUpdateNotice(null);
-    try {
-      const updated = await updateTicketAssignee(
-        activeTicket.id,
-        assigneeId === 'unassigned' ? undefined : assigneeId,
-        activeTicket.version,
-      );
-      const detail = await getTicketDetail(activeTicket.id);
-      setTickets((current) => current.map((ticket) => (ticket.id === updated.id ? updated : ticket)));
-      setSelectedTicketDetail(detail);
-      setUpdateNotice(`Assignee updated to ${assigneeLabel(assigneeOptions, updated.assigneeId)}.`);
-    } catch (assigneeError) {
-      setUpdateError(getErrorMessage(assigneeError, 'Ticket owner could not be saved. Fix: refresh owners and retry.'));
-    } finally {
-      setIsUpdating(false);
-    }
-  }
-
-  async function handleAddComment() {
-    if (activeTicket === undefined || commentDraft.trim().length === 0) return;
-    setIsCommenting(true);
-    setUpdateError(null);
-    setUpdateNotice(null);
-    try {
-      await addTicketComment(activeTicket.id, commentDraft.trim());
-      const detail = await getTicketDetail(activeTicket.id);
-      setSelectedTicketDetail(detail);
-      setCommentDraft('');
-      setUpdateNotice('Internal note added.');
-    } catch (commentError) {
-      setUpdateError(getErrorMessage(commentError, 'Internal note could not be saved. Fix: check the API connection, then retry.'));
-    } finally {
-      setIsCommenting(false);
-    }
-  }
 
   async function handleGradeConversation(
     conversation: ConversationLog,
@@ -332,13 +203,6 @@ export default function InternalConsole() {
           conversationsError={conversationsError}
       />
 
-      {updateError !== null && (
-        <div className="error-banner">
-          <AlertTriangle size={16} />
-          {updateError}
-        </div>
-      )}
-
       {activeView === 'qa' ? (
         <QaReview
           conversations={queueConversations}
@@ -363,7 +227,7 @@ export default function InternalConsole() {
             tickets={filteredTickets}
             assigneeOptions={assigneeOptions}
             assigneeFilter={assigneeFilter}
-            activeTicketId={activeTicket?.id}
+            activeTicketId={selectedTicketId ?? undefined}
             isTicketsLoading={isTicketsLoading}
             ticketsError={ticketsError}
             onChangeFilter={setAssigneeFilter}
@@ -384,24 +248,6 @@ export default function InternalConsole() {
               setSelectedConversationId(conversation.id);
               setSelectedTicketId(conversation.ticketId ?? null);
             }}
-          />
-
-          <TicketDetailPanel
-            activeTicket={activeTicket}
-            selectedConversation={selectedConversation}
-            selectedTicketDetail={selectedTicketDetail}
-            assigneeOptions={assigneeOptions}
-            isDetailLoading={isDetailLoading}
-            detailError={detailError}
-            updateNotice={updateNotice}
-            isUpdating={isUpdating}
-            isCommenting={isCommenting}
-            commentDraft={commentDraft}
-            onReloadDetail={(ticketId) => void loadTicketDetailPanel(ticketId)}
-            onChangeStatus={(status) => void handleStatusChange(status)}
-            onChangeAssignee={(assigneeId) => void handleAssigneeChange(assigneeId)}
-            onChangeCommentDraft={setCommentDraft}
-            onAddComment={() => void handleAddComment()}
           />
         </section>
       )}
