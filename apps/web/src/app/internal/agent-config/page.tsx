@@ -329,7 +329,7 @@ export default function AgentConfigPage() {
               <label>
                 Greeting and tone
                 <textarea name="toneRules" required rows={4} defaultValue={selectedProfile.toneRules} />
-                <span className="form-hint">Example: friendly, concise, Bangla-English mixed when the customer does that first.</span>
+                <span className="form-hint">Example: friendly, concise, and English-only even when the customer uses another language.</span>
               </label>
               <label>
                 Handoff rules
@@ -471,7 +471,7 @@ export default function AgentConfigPage() {
 
           <FormField
             error={createErrors.errors.toneRules}
-            hint="Example: friendly, concise, Bangla-English mixed when the customer does that first."
+            hint="Example: friendly, concise, and English-only even when the customer uses another language."
             label="Greeting and tone"
             name="toneRules"
             required

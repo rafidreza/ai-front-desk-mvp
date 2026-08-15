@@ -126,7 +126,7 @@ export default function LandingPage() {
                 <div>
                   <strong>Rahima — refund for damaged kurti</strong>
                   <div className="preview">
-                    &ldquo;Apu kurti ta chere chilo. Refund chai…&rdquo;
+                    &ldquo;The kurti arrived damaged. I want a refund…&rdquo;
                   </div>
                 </div>
                 <span className="landing-mock-pill p1">P1 · refund</span>
@@ -136,7 +136,7 @@ export default function LandingPage() {
                 <div>
                   <strong>Sazid — custom size order</strong>
                   <div className="preview">
-                    &ldquo;Bhai 42 size er saree pawa jabe?&rdquo;
+                    &ldquo;Is the saree available in size 42?&rdquo;
                   </div>
                 </div>
                 <span className="landing-mock-pill p2">P2 · custom</span>
@@ -146,7 +146,7 @@ export default function LandingPage() {
                 <div>
                   <strong>Tania — delivery to Khulna</strong>
                   <div className="preview">
-                    &ldquo;Khulna te delivery koto? COD ase?&rdquo;
+                    &ldquo;What is the delivery charge to Khulna? Is cash on delivery available?&rdquo;
                   </div>
                 </div>
                 <span className="landing-mock-pill ok">resolved by AI</span>

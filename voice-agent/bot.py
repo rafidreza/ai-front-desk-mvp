@@ -29,7 +29,7 @@
 # The voice pipeline: Twilio audio <-> Google STT -> Claude -> ElevenLabs TTS.
 
 # This is the M0 spike brain. The "knowledge base" is intentionally a tiny hardcoded block in
-# the system prompt — the point is to prove the *pipeline* (latency, Banglish, barge-in), not to
+# the system prompt. The point is to prove the pipeline behavior, not to
 # be the real product. Once M0 passes, this pipeline gets wired into the TS backend (tenant
 # resolution, persistence, grounded KB, escalation) which already exists and is tested.
 
@@ -59,13 +59,13 @@
 # connect a colleague — never invent details.
 
 # FACTS:
-# - Plans: 500 Mbps for 1500 taka/month; 1 Gbps for 2500 taka/month.
+# - Plans: 500 Mbps for BDT 1,500/month; 1 Gbps for BDT 2,500/month.
 # - Installation is FREE this month.
 # - Coverage: available in Dhaka and Chittagong city areas.
 # - Support hours: 9am to 9pm, 7 days a week.
 
-# Style: speak naturally for a phone call — short sentences, one idea at a time, no lists.
-# Reply in the caller's language: Bangla, English, or a mix (Banglish)."""
+# Style: speak naturally for a phone call: short sentences, one idea at a time, no lists.
+# Reply in clear English only, even if the caller uses another language or mixed language."""
 
 
 # async def run_bot(websocket, stream_sid: str):
@@ -107,7 +107,7 @@
 #     context = OpenAILLMContext(
 #         messages=[
 #             {"role": "system", "content": SYSTEM_PROMPT},
-#             {"role": "assistant", "content": "Assalamu alaikum, ABC Telecom e call korar jonno dhonnobad. Ki bhabe help korte pari?"},
+#             {"role": "assistant", "content": "Thank you for calling ABC Telecom. How can I help you?"},
 #         ]
 #     )
 #     context_aggregator = llm.create_context_aggregator(context)

@@ -392,7 +392,7 @@ export default function ConversationsPage() {
           <input
             aria-label="Search conversations"
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search every message — try 'refund', 'bkash', 'delivery koto'…"
+            placeholder="Search every message — try 'refund', 'payment', or 'delivery charge'…"
             type="search"
             value={searchQuery}
           />

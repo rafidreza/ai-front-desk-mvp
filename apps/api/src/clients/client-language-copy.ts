@@ -2,9 +2,8 @@ import { ClientProfile } from '../types/domain';
 
 type ClientLanguage = ClientProfile['defaultLanguage'];
 
-function normalizeLanguage(language?: ClientLanguage): ClientLanguage {
-  if (language === 'bangla' || language === 'english' || language === 'mixed') return language;
-  return 'mixed';
+function normalizeLanguage(_language?: ClientLanguage): ClientLanguage {
+  return 'english';
 }
 
 export function getClientLanguageCopy(language?: ClientLanguage) {
@@ -86,41 +85,7 @@ export function getClientLanguageCopy(language?: ClientLanguage) {
     };
   }
 
-  return {
-    digest: {
-      dailySubject: (businessName: string) => `${businessName} daily support summary`,
-      weeklySubject: (businessName: string) => `${businessName} weekly support recovery report`,
-      narrative: (summary: { conversations: number; openTickets: number; salesRecoveredEstimate: number }) =>
-        `${summary.conversations} ta conversation handled, ${summary.openTickets} ta open ticket, estimated BDT ${summary.salesRecoveredEstimate} sale protected.`,
-      conversations: 'Conversations handled',
-      tickets: 'Tickets created',
-      openTickets: 'Open tickets',
-      resolvedTickets: 'Resolved tickets',
-      p1Tickets: 'P1 tickets',
-      containment: 'Containment',
-      averageConfidence: 'Average confidence',
-      averageCsat: 'Average CSAT',
-      noCsat: 'Ekhono enough ratings nei',
-      salesProtected: 'Estimated sales protected',
-      cta: 'Pending handoff review korte Daemion dashboard open korun.',
-    },
-    channels: {
-      messengerLinked: 'Page linked',
-      messengerSetupNeeded: 'Page setup needed',
-      messengerDetail: (pageId: string) => `Page ID: ${pageId}`,
-      messengerMissing: 'Messenger traffic live korar age Facebook Page ID add korun.',
-      messengerReady: 'Inbox automation ready',
-      messengerConnect: 'Connect Facebook Page',
-      whatsappLinked: 'Business contact set',
-      whatsappSetupNeeded: 'Business contact needed',
-      whatsappDetail: (contact: string) => `Support contact: ${contact}`,
-      whatsappMissing: 'Handoff routing er jonno WhatsApp POC ba owner phone add korun.',
-      whatsappReady: 'WhatsApp support ready',
-      whatsappConnect: 'Add WhatsApp contact',
-      widgetAvailable: 'Widget available',
-      widgetCopy: 'Copy embed link',
-    },
-  };
+  return getClientLanguageCopy('english');
 }
 
 export function buildDigestSubject(input: { businessName: string; cadence: 'daily' | 'weekly'; language?: ClientLanguage }) {

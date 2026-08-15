@@ -77,10 +77,7 @@ function toClientProfile(client: {
   digestEmail: string | null;
   channels?: ClientChannelRecord[];
 }): ClientProfile {
-  const defaultLanguage: ClientLanguage =
-    client.defaultLanguage === 'bangla' || client.defaultLanguage === 'english' || client.defaultLanguage === 'mixed'
-      ? client.defaultLanguage
-      : 'mixed';
+  const defaultLanguage: ClientLanguage = 'english';
   const status: ClientStatus = client.status === 'inactive' ? 'inactive' : 'active';
 
   return {
@@ -257,9 +254,9 @@ const pilotClientFallback: ClientProfile = {
   id: 'pilot-client',
   businessName: 'Pilot F-Commerce Seller',
   pageId: 'pilot-page',
-  defaultLanguage: 'mixed',
+  defaultLanguage: 'english',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
-  escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
+  escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human'],
   status: 'active',
   onboardingStatus: 'live',
   lifecycleStage: 'live',
@@ -326,9 +323,9 @@ export class PilotClientService {
         businessCategory: input.businessCategory,
         onboardingStatus: 'signup_started',
         status: 'active',
-        defaultLanguage: input.defaultLanguage ?? 'mixed',
+        defaultLanguage: input.defaultLanguage ?? 'english',
         tone: input.tone ?? 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
-        escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
+        escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human'],
         whatsappPoc: input.whatsappPoc,
         digestEmail: input.digestEmail ?? input.ownerEmail,
         channels: input.pageId?.trim()
@@ -364,9 +361,9 @@ export class PilotClientService {
         status: 'active',
         onboardingStatus: input.onboardingStatus ?? 'onboarding_complete',
         onboardingProfile: input.onboardingProfile as Prisma.InputJsonValue | undefined,
-        defaultLanguage: input.defaultLanguage ?? 'mixed',
+        defaultLanguage: input.defaultLanguage ?? 'english',
         tone: input.tone ?? 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
-        escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
+        escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human'],
         whatsappPoc: input.whatsappPoc,
         digestEmail: input.digestEmail ?? input.ownerEmail,
         channels: input.pageId?.trim()

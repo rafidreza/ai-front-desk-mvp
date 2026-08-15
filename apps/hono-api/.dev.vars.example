@@ -18,7 +18,7 @@ GOOGLE_CLOUD_VISION_API_KEY=
 # Optional: voice note transcription through OpenAI's audio transcription API.
 OPENAI_API_KEY=
 ASR_TRANSCRIPTION_MODEL=gpt-4o-mini-transcribe
-ASR_TRANSCRIPTION_PROMPT=Bangla, Banglish, and English ecommerce customer support.
+ASR_TRANSCRIPTION_PROMPT=English customer support. Transcribe customer speech accurately and preserve proper nouns and product names.
 
 # AI agent provider. Set AI_PROVIDER=openrouter to use OpenRouter model routing,
 # AI_PROVIDER=anthropic for direct Anthropic, or leave blank to auto-detect keys.

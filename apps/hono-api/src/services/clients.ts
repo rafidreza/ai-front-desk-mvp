@@ -21,14 +21,14 @@ export const pilotClientFallback: ClientProfile = {
   pageId: 'pilot-page',
   status: 'active',
   lifecycleStage: 'live',
-  defaultLanguage: 'mixed',
+  defaultLanguage: 'english',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
-  escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'],
+  escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human'],
   onboardingStatus: 'live',
 };
 
 const defaultTone = 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce';
-const defaultEscalationKeywords = ['refund', 'complaint', 'wrong product', 'cancel', 'human', 'রিফান্ড', 'অভিযোগ'];
+const defaultEscalationKeywords = ['refund', 'complaint', 'wrong product', 'cancel', 'human'];
 
 export class ClientService {
   constructor(
@@ -66,7 +66,7 @@ export class ClientService {
         ownerPhone: input.ownerPhone,
         businessCategory: input.businessCategory,
         onboardingStatus: 'signup_started',
-        defaultLanguage: input.defaultLanguage ?? 'mixed',
+        defaultLanguage: input.defaultLanguage ?? 'english',
         tone: input.tone ?? defaultTone,
         escalationKeywords: defaultEscalationKeywords,
         whatsappPoc: input.whatsappPoc,

@@ -65,7 +65,7 @@ export default function ClientDataSourcesPage() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [lastSyncRun, setLastSyncRun] = useState<ExternalDataSyncRun | null>(null);
   const [form, setForm] = useState<SheetForm>(emptyForm);
-  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('english');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

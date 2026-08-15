@@ -21,14 +21,6 @@ const banglaStatusLabels: Record<TicketStatus, string> = {
   resolved: 'সমাধান হয়েছে',
 };
 
-const mixedStatusLabels: Record<TicketStatus, string> = {
-  open: 'Open',
-  assigned: 'Team assigned',
-  waiting_client: 'Apnar decision dorkar',
-  reopened: 'Reopened',
-  resolved: 'Resolved',
-};
-
 const englishFilterLabels: Record<TicketFilter, string> = {
   all: 'All',
   open: 'Open',
@@ -47,18 +39,8 @@ const banglaFilterLabels: Record<TicketFilter, string> = {
   resolved: 'সমাধান হয়েছে',
 };
 
-const mixedFilterLabels: Record<TicketFilter, string> = {
-  all: 'All',
-  open: 'Open',
-  assigned: 'Team assigned',
-  waiting_client: 'Decision dorkar',
-  reopened: 'Reopened',
-  resolved: 'Resolved',
-};
-
-function normalizeLanguage(language?: ClientLanguage): ClientLanguage {
-  if (language === 'bangla' || language === 'english' || language === 'mixed') return language;
-  return 'mixed';
+function normalizeLanguage(_language?: ClientLanguage): ClientLanguage {
+  return 'english';
 }
 
 function baseCopy(language: ClientLanguage) {
@@ -474,209 +456,8 @@ function baseCopy(language: ClientLanguage) {
     };
   }
 
-  return {
-    locale: 'en',
-    nav: {
-      aria: 'Client portal',
-      overview: 'Overview',
-      tickets: 'Tickets',
-      knowledge: 'Knowledge',
-      data: 'Data',
-      setup: 'Setup',
-    },
-    common: {
-      refresh: 'Refresh',
-      signOut: 'Sign out',
-      loading: 'Loading',
-      copy: 'Copy',
-      noMessages: 'No messages',
-    },
-    dashboard: {
-      eyebrow: 'Client dashboard',
-      supportCoverage: 'Support coverage',
-      coverageTitle: (connected: number) =>
-        `${formatLocalizedNumber(connected, 'mixed')} of ${formatLocalizedNumber(3, 'mixed')} customer channels with AI assistance active`,
-      coverageDescription:
-        'Web support and internal handoff readiness are tracked so live support, setup needs, and customer traffic stay clear.',
-      clientAccount: 'Client account',
-      loadingAccount: 'Account loading',
-      contactPending: 'Contact details pending',
-      channelsOnline: 'Channels online',
-      setupNeeded: 'Setup needed',
-      conversations: 'Conversations',
-      handledByAi: 'AI handled',
-      containment: 'Containment',
-      noHandoffNeeded: 'Handoff lageni',
-      openTickets: 'Open Tickets',
-      salesProtected: 'Sales Protected',
-      bdtEstimate: 'BDT estimate',
-      channelVisibility: 'Channel visibility',
-      channelConversations: 'conversations',
-      openWidget: 'Open widget',
-      recentTickets: 'Recent tickets',
-      delegate: 'Delegate',
-      noTicketsYet: 'Ekhono ticket nei',
-      recentConversations: 'Recent conversations',
-    },
-    tickets: {
-      eyebrow: 'Client delegation',
-      title: 'Tickets',
-      queueEyebrow: 'Ticket queue',
-      queueTitle: 'Customer issue jekhane client decision dorkar',
-      queueDescription: 'Delegated conversations review korun, state update korun, ar support team ke aligned rakhun.',
-      open: 'Open',
-      p1: 'P1',
-      status: 'Status',
-      delegatedTickets: 'Delegated tickets',
-      noTickets: 'Ticket nei',
-      ticketDetail: 'Ticket detail',
-      selectTicket: 'Details dekhte ekta ticket select korun',
-      raisedFromConversation: 'Customer conversation theke raised',
-      currentState: 'Current state',
-      raised: 'Raised',
-      lastUpdated: 'Last updated',
-      protectedSale: 'Protected sale',
-      raisedReason: 'Ei ticket keno raised hoyeche',
-      suggestedReply: 'Suggested reply',
-      timeline: 'Ticket timeline',
-      loadingTimeline: 'Timeline loading',
-      noTimeline: 'Ekhono timeline event nei',
-      customerConversation: 'Customer conversation',
-      transcriptPending: 'Load hole conversation transcript ekhane dekha jabe',
-      protectedEstimate: (amount: number) => `${formatBdt(amount, 'mixed')} protected estimate`,
-    },
-    dataSources: {
-      eyebrow: 'Live business data',
-      title: 'Data Sources',
-      googleSheet: 'Google Sheet',
-      connectedTitle: 'Product ar order data connected',
-      connectTitle: 'Product ar order data connect korun',
-      lastSyncLine: (lastSync: string, productMinutes: number, orderMinutes: number) =>
-        `Last sync: ${lastSync}. Products ${formatLocalizedNumber(productMinutes, 'mixed')} minutes fresh thake; orders ${formatLocalizedNumber(orderMinutes, 'mixed')} minutes fresh thake.`,
-      products: 'Products',
-      orders: 'Orders',
-      sheetLink: 'Google Sheet link',
-      sourceName: 'Source name',
-      sheetUrl: 'Google Sheet URL',
-      productsTab: 'Products tab',
-      ordersTab: 'Orders tab',
-      syncMinutes: 'Sync minutes',
-      productFreshness: 'Product freshness',
-      orderFreshness: 'Order freshness',
-      save: 'Save',
-      syncNow: 'Sync now',
-      syncStatus: 'Sync status',
-      lastResult: 'Last result',
-      productsImported: 'Products imported',
-      ordersImported: 'Orders imported',
-      notSynced: 'Not synced',
-      noSku: 'No SKU',
-      noProducts: 'Ekhono product sync hoyni',
-      noOrders: 'Ekhono order sync hoyni',
-      saved: 'Google Sheet source saved.',
-      syncComplete: (products: number, orders: number) =>
-        `Sync complete: ${formatLocalizedNumber(products, 'mixed')} products ar ${formatLocalizedNumber(orders, 'mixed')} orders imported.`,
-      loadError: 'Data sources load kora jayni.',
-      saveError: 'Google Sheet source save kora jayni.',
-      syncError: 'Google Sheet sync kora jayni.',
-    },
-    knowledge: {
-      eyebrow: 'Business knowledge',
-      title: 'Knowledge Base',
-      approvedAnswers: 'Approved answers',
-      commandTitle: (count: number) =>
-        `${formatLocalizedNumber(count, 'mixed')} published entries apnar AI support agent use korte parbe`,
-      commandDescription: 'Egulo currently approved customer-facing facts. Submitted updates operations team publish kora porjonto review e thake.',
-      published: 'Published',
-      requests: 'Requests',
-      publishedKnowledge: 'Published knowledge',
-      searchPlaceholder: 'Search entries',
-      approved: 'approved',
-      suggestEdit: 'Suggest edit',
-      emptyEntries: 'Ei view e kono published entry match koreni',
-      addRequest: 'Add knowledge request',
-      new: 'New',
-      editingRequest: (title: string) => `${title} er jonno edit request`,
-      titleLabel: 'Title',
-      answer: 'Answer',
-      keywords: 'Keywords',
-      category: 'Category',
-      urgency: 'Urgency',
-      normal: 'Normal',
-      urgent: 'Urgent',
-      businessNote: 'Business note',
-      submitRequest: 'Submit request',
-      submitEdit: 'Submit edit',
-      submitting: 'Submitting',
-      clear: 'Clear',
-      updateRequests: 'Update requests',
-      status: 'Status',
-      feedback: 'Feedback',
-      noRequests: 'Ekhono update request nei',
-      requestSubmitted: 'Knowledge request submitted.',
-      editSubmitted: 'Edit request submitted.',
-      loadError: 'Knowledge load kora jayni.',
-      submitError: 'Request submit kora jayni.',
-      titleError: 'Title at least 2 characters hote hobe.',
-      answerError: 'Answer at least 2 characters hote hobe.',
-      keywordError: 'At least ekta keyword add korun.',
-    },
-    onboarding: {
-      eyebrow: 'Client onboarding',
-      title: 'Apnar business setup korun',
-      brief: 'Workspace er jonno business context, channel setup path, ar first knowledge notes share korun.',
-      steps: { profile: 'profile', channels: 'channels', knowledge: 'knowledge' },
-      businessProfile: 'Business profile',
-      businessCategory: 'Business category',
-      businessCategoryPlaceholder: 'Fashion, dental clinic, electronics',
-      customerChannels: 'Customer channels',
-      websiteUrl: 'Website URL',
-      facebookPageUrl: 'Public page URL',
-      continueChannels: 'Continue to channels',
-      saving: 'Saving...',
-      channelSetup: 'Channel setup',
-      whatsappSetupPath: 'Support setup path',
-      whatsappSelf: 'Ami setup details provide korbo',
-      assisted: 'Amar sathe setup korun',
-      skipNow: 'Skip for now',
-      whatsappSupportNumber: 'Support phone number',
-      facebookSetupPath: 'Public page setup path',
-      facebookOauth: 'Assisted setup request korun',
-      facebookOauthRequested: 'Assisted setup requested.',
-      facebookPageId: 'Public page ID',
-      websiteNoted: 'Website channel noted. Dashboard web widget ready rakhbe.',
-      continueKnowledge: 'Continue to knowledge',
-      skipChannelSetup: 'Skip channel setup',
-      firstKnowledge: 'First knowledge notes',
-      knowledgeTitle: 'Knowledge title',
-      businessKnowledge: 'Business knowledge',
-      keywords: 'Keywords',
-      finish: 'Finish onboarding',
-      finishing: 'Finishing...',
-      skipKnowledge: 'Skip knowledge for now',
-      missingSession: 'Client session missing.',
-      selectChannel: 'At least ekta customer channel select korun.',
-      profileError: 'Business profile save kora jayni.',
-      channelError: 'Channel setup save kora jayni.',
-      skipError: 'Channel setup skip kora jayni.',
-      finishError: 'Onboarding finish kora jayni.',
-    },
-    statusLabels: mixedStatusLabels,
-    filterLabels: mixedFilterLabels,
-    channelStatus: (status: ClientChannelSummary['status']) => {
-      if (status === 'connected') return 'Connected';
-      if (status === 'available') return 'Available';
-      if (status === 'contact_only') return 'Contact only';
-      return 'Setup needed';
-    },
-    eventTitle: (eventType: string) => {
-      if (eventType === 'ticket.created') return 'Ticket raised';
-      if (eventType === 'ticket.status_updated') return 'Status updated';
-      if (eventType === 'ticket.assignee_updated') return 'Owner updated';
-      if (eventType === 'ticket.comment_added') return 'Operations note added';
-      return eventType.replaceAll('.', ' ');
-    },
-  };
+
+  return baseCopy('english');
 }
 
 export function getClientPortalCopy(language?: ClientLanguage) {

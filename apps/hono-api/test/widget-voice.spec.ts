@@ -164,6 +164,26 @@ describe('POST /widget-voice/session', () => {
     WEBRTC_ICE_SERVERS: '[{"urls":"stun:stun.l.google.com:19302"}]',
   };
   const executionCtx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  const clientRow = (id = 'pilot-client') => ({
+    id,
+    businessName: 'Pilot',
+    pageId: 'pilot-page',
+    status: 'active',
+    ownerName: null,
+    ownerEmail: null,
+    ownerPhone: null,
+    businessCategory: null,
+    onboardingStatus: 'live',
+    onboardingProfile: null,
+    lifecycleStage: 'live',
+    conversionChecklist: null,
+    complianceProfile: null,
+    defaultLanguage: 'english',
+    tone: 'friendly',
+    escalationKeywords: [],
+    whatsappPoc: null,
+    digestEmail: null,
+  });
 
   function appWithClient(rows: unknown[]) {
     const chain = { from: () => chain, where: () => chain, limit: async () => rows };
@@ -195,7 +215,7 @@ describe('POST /widget-voice/session', () => {
   }
 
   it('is public — an anonymous browser with no bearer token can mint a session', async () => {
-    const app = appWithClient([{ id: 'pilot-client', name: 'Pilot' }]);
+    const app = appWithClient([clientRow()]);
     const response = await post(app, { clientId: 'pilot-client', visitorId: 'v-1', consent: true });
     expect(response.status).toBe(200);
 
@@ -221,13 +241,13 @@ describe('POST /widget-voice/session', () => {
   });
 
   it('400s without consent', async () => {
-    const app = appWithClient([{ id: 'pilot-client' }]);
+    const app = appWithClient([clientRow()]);
     const response = await post(app, { clientId: 'pilot-client', visitorId: 'v', consent: false });
     expect(response.status).toBe(400);
   });
 
   it('400s on a malformed body', async () => {
-    const app = appWithClient([{ id: 'pilot-client' }]);
+    const app = appWithClient([clientRow()]);
     const response = await post(app, { visitorId: 'v', consent: true });
     expect(response.status).toBe(400);
   });

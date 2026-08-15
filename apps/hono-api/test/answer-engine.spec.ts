@@ -42,11 +42,11 @@ describe('GroundedAnswerEngine', () => {
     expect(llm.complete).not.toHaveBeenCalled();
   });
 
-  it('returns a Bangla fallback for a Bangla caller when unsupported', async () => {
+  it('returns an English fallback when unsupported', async () => {
     const engine = new GroundedAnswerEngine(retrieverReturning([]), llmReturning('x'));
     const result = await engine.respond(ctx, { question: 'কিছু', language: 'bn' });
     expect(result.escalate).toEqual({ reason: 'out_of_kb' });
-    expect(result.text).toContain('সহকর্মী');
+    expect(result.text).toContain('colleague');
   });
 
   it('fails closed on a blank clientId', async () => {

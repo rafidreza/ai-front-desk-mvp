@@ -203,7 +203,7 @@ export class ConversationService {
       attachmentUrl: message.attachmentUrl,
       openAiApiKey: process.env.OPENAI_API_KEY ?? process.env.ASR_OPENAI_API_KEY,
       model: process.env.ASR_TRANSCRIPTION_MODEL,
-      prompt: process.env.ASR_TRANSCRIPTION_PROMPT ?? 'Bangla, Banglish, and English ecommerce customer support.',
+      prompt: process.env.ASR_TRANSCRIPTION_PROMPT ?? 'English customer support. Transcribe customer speech accurately and preserve proper nouns and product names.',
       whatsAppAccessToken: process.env.WHATSAPP_ACCESS_TOKEN,
       graphVersion: process.env.WHATSAPP_GRAPH_VERSION ?? process.env.MESSENGER_GRAPH_VERSION,
     });

@@ -16,7 +16,7 @@ function createDefaultPromptProfile(client: ClientProfile) {
     toneRules: client.tone,
     escalationRules: `Escalate when customer mentions: ${client.escalationKeywords.join(', ')}.`,
     forbiddenClaims: 'Do not invent prices, stock, delivery promises, discounts, or policy details.',
-    fallbackBehavior: 'Thanks for your message. Ami team ke check korte dicchi, tara shortly update debe.',
+    fallbackBehavior: 'Thanks for your message. I am checking this with the team and they will update you shortly.',
     experimentEnabled: false,
     trafficWeight: 100,
   };

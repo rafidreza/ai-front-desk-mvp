@@ -87,7 +87,7 @@ const emptyClientForm: ClientFormState = {
   ownerEmail: '',
   ownerPhone: '',
   businessCategory: '',
-  defaultLanguage: 'mixed',
+  defaultLanguage: 'english',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi customer support',
   whatsappPoc: '',
   digestEmail: '',
@@ -953,8 +953,6 @@ export default function InternalClientsPage() {
                         setForm((current) => ({ ...current, defaultLanguage: event.target.value as ClientProfile['defaultLanguage'] }))
                       }
                     >
-                      <option value="mixed">Mixed</option>
-                      <option value="bangla">Bangla</option>
                       <option value="english">English</option>
                     </select>
                   </label>

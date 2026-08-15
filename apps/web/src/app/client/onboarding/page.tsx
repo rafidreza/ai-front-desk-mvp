@@ -27,7 +27,7 @@ export default function ClientOnboardingPage() {
   const [step, setStep] = useState<Step>('profile');
   const [focusChannels] = useState<ClientFocusChannel[]>(['website']);
   const [businessCategory, setBusinessCategory] = useState('');
-  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('english');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -16,7 +16,7 @@ const pilotClient = {
   ownerPhone: '+8801000000000',
   businessCategory: 'clothing',
   onboardingStatus: 'active',
-  defaultLanguage: 'mixed',
+  defaultLanguage: 'english',
   tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
   whatsappPoc: '+8801000000000',
   digestEmail: 'owner@example.com',
@@ -29,9 +29,9 @@ const pilotClient = {
     'cancel',
     'manager',
     'human',
-    'মানুষ',
-    'রিফান্ড',
-    'অভিযোগ',
+    'manager',
+    'refund request',
+    'complaint issue',
   ],
 };
 

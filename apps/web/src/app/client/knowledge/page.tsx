@@ -84,7 +84,7 @@ function parseKeywords(input: string) {
 export default function ClientKnowledgePage() {
   const [entries, setEntries] = useState<ClientKnowledgeEntry[]>([]);
   const [requests, setRequests] = useState<KnowledgeChangeRequest[]>([]);
-  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('english');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [requestStatus, setRequestStatus] = useState<KnowledgeChangeRequestStatus | 'all'>('all');

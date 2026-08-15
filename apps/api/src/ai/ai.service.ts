@@ -137,7 +137,7 @@ export class AiService {
       `Forbidden claims: ${input.promptProfile?.forbiddenClaims ?? 'Do not invent prices, stock, delivery promises, discounts, or policy details.'}.`,
       `Fallback behavior: ${input.promptProfile?.fallbackBehavior ?? 'If the answer is missing, politely say a team member will check.'}.`,
       'Only answer from the supplied knowledge. If the answer is missing, politely say a team member will check.',
-      'Reply naturally in Bangla/Banglish/English based on the customer message.',
+      'Reply in clear English only, even if the customer message uses another language or mixed language.',
       'Keep replies short enough for Messenger commerce.',
     ].join('\n');
   }
@@ -236,12 +236,12 @@ export class AiService {
     promptProfile?: PromptProfile,
   ): string {
     if (entries.length === 0) {
-      return promptProfile?.fallbackBehavior ?? 'Thanks for your message. Ami team ke check korte dicchi, tara shortly update debe.';
+      return promptProfile?.fallbackBehavior ?? 'Thanks for your message. I am checking this with the team and they will update you shortly.';
     }
 
     const answer = entries[0].answer;
     if (escalationReason !== null) {
-      return `${answer}\n\nAmi eta team er kache forward kore dicchi so they can confirm details.`;
+      return `${answer}\n\nI am forwarding this to the team so they can confirm the details.`;
     }
 
     return answer;

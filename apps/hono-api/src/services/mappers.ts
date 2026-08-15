@@ -55,12 +55,9 @@ export function toClientProfile(client: {
     lifecycleStage: toLifecycleStage(client.lifecycleStage),
     conversionChecklist: toConversionChecklist(client.conversionChecklist),
     complianceProfile: toComplianceProfile(client.complianceProfile),
-    defaultLanguage:
-      client.defaultLanguage === 'bangla' || client.defaultLanguage === 'english' || client.defaultLanguage === 'mixed'
-        ? client.defaultLanguage
-        : 'mixed',
+    defaultLanguage: 'english',
     tone: client.tone,
-    escalationKeywords: client.escalationKeywords,
+    escalationKeywords: toEnglishKeywords(client.escalationKeywords),
     whatsappPoc: client.whatsappPoc ?? undefined,
     digestEmail: client.digestEmail ?? undefined,
   };
@@ -146,6 +143,60 @@ function stringOrUndefined(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
+const displayTextReplacements: Array<[RegExp, string]> = [
+  [
+    /Thanks for your message\. Ami team ke check korte dicchi, tara shortly update debe\./gi,
+    'Thanks for your message. I am checking this with the team and they will update you shortly.',
+  ],
+  [
+    /Ami eta team er kache forward kore dicchi so they can confirm details\./gi,
+    'I am forwarding this to the team so they can confirm the details.',
+  ],
+  [/Assalamu alaikum, ABC Telecom e call korar jonno dhonnobad\. Ki bhabe help korte pari\?/gi, 'Thank you for calling ABC Telecom. How can I help you?'],
+  [/Dhakar inside delivery charge 80 taka, outside Dhaka 130 taka\./gi, 'Inside Dhaka delivery charge is BDT 80; outside Dhaka delivery charge is BDT 130.'],
+  [/Dhakar inside delivery charge 80 taka\./gi, 'Inside Dhaka delivery charge is BDT 80.'],
+  [/\bdelivery charge koto\?/gi, 'What is the delivery charge?'],
+  [/\beta blue color e ache with gift wrap\?/gi, 'Is this available in blue with gift wrap?'],
+  [/\beta gift wrap hobe\?/gi, 'Can this be gift wrapped?'],
+  [/\bgift wrap ache\?/gi, 'Is gift wrap available?'],
+  [/\bWrong size pathaise, ami refund chai\./gi, 'Wrong size was sent. I want a refund.'],
+  [/\bAmi team ke check korte dicchi\./gi, 'I am checking this with the team.'],
+  [/\b500 Mbps for 1500 taka per month; 1 Gbps for 2500 taka per month\./gi, '500 Mbps is BDT 1,500 per month; 1 Gbps is BDT 2,500 per month.'],
+];
+
+function toEnglishDisplayText(value: string) {
+  return displayTextReplacements.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), value);
+}
+
+const keywordTranslations: Record<string, string> = {
+  koto: 'cost',
+  kotodin: 'delivery time',
+  kobe: 'delivery time',
+  dam: 'price',
+  'কত': 'cost',
+  'দাম': 'price',
+  'প্যাকেজ': 'package',
+  'ডেলিভারি': 'delivery',
+  'ডেলিভারি চার্জ': 'delivery charge',
+  'ক্যাশ': 'cash',
+  'পেমেন্ট': 'payment',
+  'রিটার্ন': 'return',
+  'এক্সচেঞ্জ': 'exchange',
+  'রিফান্ড': 'refund',
+  'অভিযোগ': 'complaint',
+};
+
+function toEnglishKeywords(keywords: string[]) {
+  return Array.from(
+    new Set(
+      keywords
+        .map((keyword) => keywordTranslations[keyword.toLowerCase()] ?? keywordTranslations[keyword] ?? keyword)
+        .map((keyword) => keyword.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
 export function toTicket(ticket: {
   id: string;
   clientId: string;
@@ -169,9 +220,9 @@ export function toTicket(ticket: {
     version: ticket.version,
     priority: ticket.priority as Ticket['priority'],
     status: ticket.status as Ticket['status'],
-    reason: ticket.reason,
-    customerMessage: ticket.customerMessage,
-    suggestedReply: ticket.suggestedReply,
+    reason: toEnglishDisplayText(ticket.reason),
+    customerMessage: toEnglishDisplayText(ticket.customerMessage),
+    suggestedReply: toEnglishDisplayText(ticket.suggestedReply),
     salesRecoveredEstimate: ticket.salesRecoveredEstimate,
     createdAt: ticket.createdAt.toISOString(),
     updatedAt: ticket.updatedAt.toISOString(),
@@ -204,7 +255,7 @@ export function toTicketComment(comment: {
   return {
     id: comment.id,
     ticketId: comment.ticketId,
-    body: comment.body,
+    body: toEnglishDisplayText(comment.body),
     authorId: comment.authorId,
     createdAt: comment.createdAt.toISOString(),
   };
@@ -269,11 +320,11 @@ export function toConversation(
     messages: messageRows.map((message): ConversationMessage => ({
       id: message.id,
       direction: message.direction as ConversationMessage['direction'],
-      text: message.text,
+      text: toEnglishDisplayText(message.text),
       attachmentType: message.attachmentType as ConversationMessage['attachmentType'],
       attachmentUrl: message.attachmentUrl ?? undefined,
-      transcript: message.transcript ?? undefined,
-      extractedText: message.extractedText ?? undefined,
+      transcript: message.transcript === null || message.transcript === undefined ? undefined : toEnglishDisplayText(message.transcript),
+      extractedText: message.extractedText === null || message.extractedText === undefined ? undefined : toEnglishDisplayText(message.extractedText),
       matchedProducts: Array.isArray(message.matchedProducts)
         ? message.matchedProducts as ConversationMessage['matchedProducts']
         : undefined,
@@ -301,9 +352,9 @@ export function toKnowledgeEntry(entry: {
   return {
     id: entry.id,
     clientId: entry.clientId,
-    title: entry.title,
-    answer: entry.answer,
-    keywords: entry.keywords,
+    title: toEnglishDisplayText(entry.title),
+    answer: toEnglishDisplayText(entry.answer),
+    keywords: toEnglishKeywords(entry.keywords),
     category: entry.category ?? 'general',
     confidenceBoost: entry.confidenceBoost ?? undefined,
     status: entry.status as KnowledgeEntry['status'],
@@ -336,9 +387,9 @@ export function toKnowledgeVersion(version: {
     entryId: version.entryId,
     clientId: version.clientId,
     version: version.version,
-    title: version.title,
-    answer: version.answer,
-    keywords: version.keywords,
+    title: toEnglishDisplayText(version.title),
+    answer: toEnglishDisplayText(version.answer),
+    keywords: toEnglishKeywords(version.keywords),
     category: version.category ?? 'general',
     confidenceBoost: version.confidenceBoost ?? undefined,
     status: version.status as KnowledgeEntryVersion['status'],
@@ -376,7 +427,7 @@ export function toPromptProfile(profile: {
     toneRules: profile.toneRules,
     escalationRules: profile.escalationRules,
     forbiddenClaims: profile.forbiddenClaims,
-    fallbackBehavior: profile.fallbackBehavior,
+    fallbackBehavior: toEnglishDisplayText(profile.fallbackBehavior),
     aiProvider: normalizeAiProvider(profile.aiProvider),
     aiModel: profile.aiModel ?? undefined,
     status: profile.status as PromptProfile['status'],
@@ -421,7 +472,7 @@ export function toPromptVersion(version: {
     toneRules: version.toneRules,
     escalationRules: version.escalationRules,
     forbiddenClaims: version.forbiddenClaims,
-    fallbackBehavior: version.fallbackBehavior,
+    fallbackBehavior: toEnglishDisplayText(version.fallbackBehavior),
     aiProvider: normalizeAiProvider(version.aiProvider),
     aiModel: version.aiModel ?? undefined,
     status: version.status as PromptProfileVersion['status'],
@@ -472,14 +523,14 @@ export function toKnowledgeRequest(request: {
     requestType: request.requestType as KnowledgeChangeRequest['requestType'],
     status: request.status as KnowledgeChangeRequest['status'],
     urgency: request.urgency as KnowledgeChangeRequest['urgency'],
-    proposedTitle: request.proposedTitle,
-    proposedAnswer: request.proposedAnswer,
-    proposedKeywords: request.proposedKeywords,
+    proposedTitle: toEnglishDisplayText(request.proposedTitle),
+    proposedAnswer: toEnglishDisplayText(request.proposedAnswer),
+    proposedKeywords: toEnglishKeywords(request.proposedKeywords),
     proposedCategory: request.proposedCategory,
-    requesterNote: request.requesterNote ?? undefined,
-    reviewerNote: request.reviewerNote ?? undefined,
-    clientVisibleMessage: request.clientVisibleMessage ?? undefined,
-    internalNote: request.internalNote ?? undefined,
+    requesterNote: request.requesterNote === null || request.requesterNote === undefined ? undefined : toEnglishDisplayText(request.requesterNote),
+    reviewerNote: request.reviewerNote === null || request.reviewerNote === undefined ? undefined : toEnglishDisplayText(request.reviewerNote),
+    clientVisibleMessage: request.clientVisibleMessage === null || request.clientVisibleMessage === undefined ? undefined : toEnglishDisplayText(request.clientVisibleMessage),
+    internalNote: request.internalNote === null || request.internalNote === undefined ? undefined : toEnglishDisplayText(request.internalNote),
     submittedBy: request.submittedBy,
     reviewedBy: request.reviewedBy ?? undefined,
     publishedEntryId: request.publishedEntryId ?? undefined,
@@ -507,7 +558,7 @@ export function toKnowledgeRequestEvent(event: {
     requestId: event.requestId,
     eventType: event.eventType,
     actorId: event.actorId,
-    note: event.note ?? undefined,
+    note: event.note === null || event.note === undefined ? undefined : toEnglishDisplayText(event.note),
     payload: event.payload,
     createdAt: event.createdAt.toISOString(),
   };

@@ -51,7 +51,7 @@ export class NullRetriever implements Retriever {
 
 function safeFallback(language?: string): string {
   if (language?.toLowerCase().startsWith('bn')) {
-    return 'এটা আমি ঠিক নিশ্চিত নই — একজন সহকর্মীর সাথে সংযোগ করিয়ে দিচ্ছি।';
+    return "I'm not sure about that. Let me connect you to a colleague.";
   }
   return "I'm not sure about that — let me connect you to a colleague.";
 }
@@ -60,7 +60,7 @@ const SYSTEM_INSTRUCTIONS = [
   'You are a phone support agent. Answer ONLY using the provided knowledge-base evidence.',
   'If the evidence does not support an answer, say you are not sure — never invent facts.',
   'Keep answers short and natural for speech: one idea at a time, no lists, no markdown.',
-  'Reply in the same language the caller used (Bangla, English, or a mix).',
+  'Reply in clear English only, even if the caller used another language or a mix.',
 ].join(' ');
 
 export class GroundedAnswerEngine implements AnswerEngine {

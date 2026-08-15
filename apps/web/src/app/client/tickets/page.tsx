@@ -23,7 +23,7 @@ export default function ClientTicketsPage() {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketDetail, setTicketDetail] = useState<ClientTicketDetail | null>(null);
   const [filter, setFilter] = useState('all');
-  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('mixed');
+  const [language, setLanguage] = useState<ClientProfile['defaultLanguage']>('english');
   const [error, setError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -114,7 +114,7 @@ async def warm_tts() -> None:
             async with session.post(
                 f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream",
                 headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-                json={"text": "হ্যালো", "model_id": model},
+                json={"text": "Hello", "model_id": model},
                 params={"output_format": "mp3_22050_32"},
                 timeout=aiohttp.ClientTimeout(total=60),
             ) as response:
