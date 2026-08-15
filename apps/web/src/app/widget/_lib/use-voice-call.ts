@@ -105,6 +105,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   const callIdRef = useRef<string | null>(null);
   const turnIndexRef = useRef(0);
   const finalizedRef = useRef(false);
+  const fallbackVoiceUrlRef = useRef<string | null>(null);
   /**
    * The bot's voice needs somewhere to play. Neither PipecatClient nor SmallWebRTCTransport
    * creates an audio element or calls play() — the remote track just arrives on onTrackStarted
@@ -127,7 +128,12 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   function releaseAudioElement() {
     const element = audioRef.current;
     audioRef.current = null;
+    const fallbackVoiceUrl = fallbackVoiceUrlRef.current;
+    fallbackVoiceUrlRef.current = null;
+    if (fallbackVoiceUrl !== null) URL.revokeObjectURL(fallbackVoiceUrl);
     if (element === null) return;
+    element.pause();
+    element.removeAttribute('src');
     element.srcObject = null;
     element.remove();
   }
@@ -210,7 +216,6 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
         // Already stopped.
       }
     }
-    window.speechSynthesis?.cancel();
     const client = clientRef.current;
     clientRef.current = null;
     agentLineRef.current = null;
@@ -250,16 +255,53 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     setSecondsLeft(null);
   }, [finalizeTrackedCall, teardown]);
 
-  const speak = useCallback((text: string) => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.98;
-    utterance.pitch = 1;
-    utterance.onstart = () => setIsAgentSpeaking(true);
-    utterance.onend = () => setIsAgentSpeaking(false);
-    utterance.onerror = () => setIsAgentSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+  const speak = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (trimmed === '') return;
+
+    const element = ensureAudioElement();
+    const previousUrl = fallbackVoiceUrlRef.current;
+    fallbackVoiceUrlRef.current = null;
+    if (previousUrl !== null) URL.revokeObjectURL(previousUrl);
+    element.pause();
+    element.srcObject = null;
+    element.removeAttribute('src');
+
+    try {
+      const response = await fetch('/api/widget-voice/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: trimmed }),
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(data.message ?? 'ElevenLabs voice is unavailable right now.');
+      }
+      const audioUrl = URL.createObjectURL(await response.blob());
+      fallbackVoiceUrlRef.current = audioUrl;
+      element.src = audioUrl;
+      element.onplay = () => setIsAgentSpeaking(true);
+      element.onended = () => {
+        setIsAgentSpeaking(false);
+        if (fallbackVoiceUrlRef.current === audioUrl) {
+          fallbackVoiceUrlRef.current = null;
+        }
+        URL.revokeObjectURL(audioUrl);
+      };
+      element.onerror = () => {
+        setIsAgentSpeaking(false);
+        if (fallbackVoiceUrlRef.current === audioUrl) {
+          fallbackVoiceUrlRef.current = null;
+        }
+        URL.revokeObjectURL(audioUrl);
+        setError('ElevenLabs voice is unavailable right now.');
+      };
+      await element.play();
+    } catch (voiceError) {
+      setIsAgentSpeaking(false);
+      setError(voiceError instanceof Error ? voiceError.message : 'ElevenLabs voice is unavailable right now.');
+    }
   }, []);
 
   const sendDemoTurn = useCallback(async (text: string) => {
