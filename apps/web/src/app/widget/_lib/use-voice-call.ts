@@ -390,7 +390,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       return;
     }
 
-    const greeting = 'Voice demo is ready. Speak now, or type below and I will read the answer aloud.';
+    const greeting = 'Assalamu alaikum. Voice demo ready. Apnar proshno bolun, ba niche type korun.';
     demoActiveRef.current = true;
     demoHelpShownRef.current = false;
     setStatus('live');

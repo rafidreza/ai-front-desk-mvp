@@ -25,10 +25,13 @@ export class AiService {
     const runtime = this.getRuntimeConfig(input.promptProfile);
 
     if (runtime.provider !== 'local' && runtime.apiKey !== undefined && input.knowledgeEntries.length > 0) {
-      const reply =
+      const generatedReply =
         runtime.provider === 'openrouter'
           ? await this.generateOpenRouterReply(input, runtime)
           : await this.generateClaudeReply(input, new Anthropic({ apiKey: runtime.apiKey }), runtime.model);
+      const reply = this.isGenericHandoff(generatedReply)
+        ? this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile, input.client, input.customerText)
+        : generatedReply;
       return {
         text: reply,
         confidence: input.retrievalConfidence,
@@ -39,7 +42,7 @@ export class AiService {
     }
 
     return {
-      text: this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile),
+      text: this.generateLocalFallback(input.knowledgeEntries, escalationReason, input.promptProfile, input.client, input.customerText),
       confidence: input.retrievalConfidence,
       matchedKnowledgeIds: input.knowledgeEntries.map((entry) => entry.id),
       shouldEscalate: escalationReason !== null,
@@ -89,9 +92,20 @@ export class AiService {
       `Forbidden claims: ${input.promptProfile?.forbiddenClaims ?? 'Do not invent prices, stock, delivery promises, discounts, or policy details.'}.`,
       `Fallback behavior: ${input.promptProfile?.fallbackBehavior ?? 'If the answer is missing, politely say a team member will check.'}.`,
       'Only answer from the supplied knowledge. If the answer is missing, politely say a team member will check.',
-      'Reply in clear English only, even if the customer message uses another language or mixed language.',
+      'When supplied knowledge directly answers the customer, answer it directly. Do not say the team will check.',
+      this.languageInstruction(input.client),
       'Keep replies short enough for Messenger commerce.',
     ].join('\n');
+  }
+
+  private languageInstruction(client: ClientProfile) {
+    if (client.defaultLanguage === 'bangla') {
+      return 'Reply in natural Bangla/Banglish for Bangladeshi customers. Keep names, plan labels, and numbers clear.';
+    }
+    if (client.defaultLanguage === 'mixed') {
+      return 'Reply in the customer language. If the customer uses Bangla or Banglish, reply in natural Bangla/Banglish; otherwise use English.';
+    }
+    return 'Reply in clear English unless the customer uses Bangla or Banglish, in which case mirror them naturally.';
   }
 
   private knowledgePrompt(input: { customerText: string; knowledgeEntries: KnowledgeEntry[] }) {
@@ -159,12 +173,47 @@ export class AiService {
     return 'Thanks for your message. Our team will check and get back to you shortly.';
   }
 
-  private generateLocalFallback(entries: KnowledgeEntry[], escalationReason: string | null, promptProfile?: PromptProfile) {
+  private isGenericHandoff(text: string) {
+    return /team (will )?(check|update|get back)|checking this with the team|connect you to a colleague/i.test(text);
+  }
+
+  private generateLocalFallback(
+    entries: KnowledgeEntry[],
+    escalationReason: string | null,
+    promptProfile?: PromptProfile,
+    client?: ClientProfile,
+    customerText?: string,
+  ) {
     if (entries.length === 0) {
       return promptProfile?.fallbackBehavior ?? 'Thanks for your message. I am checking this with the team and they will update you shortly.';
     }
-    const answer = entries[0]!.answer;
-    return escalationReason === null ? answer : `${answer}\n\nI am forwarding this to the team so they can confirm the details.`;
+    const answer = this.localizeKnownAnswer(entries[0]!.answer, client, customerText);
+    const wantsBangla = this.wantsBangla(client, customerText);
+    const forwardingLine = wantsBangla
+      ? 'Eta team ke forward korchi jate tara confirm korte pare.'
+      : 'I am forwarding this to the team so they can confirm the details.';
+    return escalationReason === null ? answer : `${answer}\n\n${forwardingLine}`;
+  }
+
+  private localizeKnownAnswer(answer: string, client?: ClientProfile, customerText?: string) {
+    if (!this.wantsBangla(client, customerText)) return answer;
+    const normalized = answer.trim();
+    if (/500 Mbps is BDT 1,500 per month; 1 Gbps is BDT 2,500 per month\./i.test(normalized)) {
+      return '500 Mbps plan mash e BDT 1,500, ar 1 Gbps plan mash e BDT 2,500.';
+    }
+    if (/Installation is free this month\./i.test(normalized)) return 'Ei month e installation free.';
+    if (/Service is available in Dhaka and Chittagong city areas\./i.test(normalized)) {
+      return 'Dhaka ebong Chittagong city area te service available.';
+    }
+    if (/Support is open 9am to 9pm, 7 days a week\./i.test(normalized)) {
+      return 'Support protidin 9am theke 9pm porjonto open.';
+    }
+    return answer;
+  }
+
+  private wantsBangla(client?: ClientProfile, customerText = '') {
+    if (client?.defaultLanguage === 'bangla' || client?.defaultLanguage === 'mixed') return true;
+    return /[\u0980-\u09ff]|\b(ami|apni|apnader|koto|dam|ache|ase|kina|naki|lagbe|kothay|kokhon)\b/i.test(customerText);
   }
 
   private detectEscalation(client: ClientProfile, text: string, confidence: number) {

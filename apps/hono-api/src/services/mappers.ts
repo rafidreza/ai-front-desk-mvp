@@ -55,12 +55,17 @@ export function toClientProfile(client: {
     lifecycleStage: toLifecycleStage(client.lifecycleStage),
     conversionChecklist: toConversionChecklist(client.conversionChecklist),
     complianceProfile: toComplianceProfile(client.complianceProfile),
-    defaultLanguage: 'english',
+    defaultLanguage: normalizeClientLanguage(client.defaultLanguage),
     tone: client.tone,
     escalationKeywords: toEnglishKeywords(client.escalationKeywords),
     whatsappPoc: client.whatsappPoc ?? undefined,
     digestEmail: client.digestEmail ?? undefined,
   };
+}
+
+function normalizeClientLanguage(value: string): ClientProfile['defaultLanguage'] {
+  if (value === 'bangla' || value === 'mixed' || value === 'english') return value;
+  return 'english';
 }
 
 function toLifecycleStage(value: unknown): ClientProfile['lifecycleStage'] {

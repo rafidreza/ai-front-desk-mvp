@@ -22,6 +22,31 @@ import { toKnowledgeEntry, toKnowledgeRequest, toKnowledgeRequestEvent, toKnowle
 
 type KnowledgeAction = 'baseline' | 'created' | 'updated' | 'published' | 'archived' | 'rollback';
 
+const queryAliases: Array<[RegExp, string]> = [
+  [/\b(dam|daam|price|koto|koto taka|cost|rate|charge)\b/gi, ' price plan package taka cost bdt '],
+  [/\b(plan|package|speed|mbps|gbps|internet)\b/gi, ' plan package speed mbps gbps internet price '],
+  [/\b(install|installation|setup|lagbe|lagbe ki|free kina|free naki)\b/gi, ' install installation setup free '],
+  [/\b(coverage|area|available|ache|ase|service ache|kon area|kothay)\b/gi, ' coverage area available service city '],
+  [/\b(support|help|time|kokhon|koyta|hour|hours|open)\b/gi, ' support hours time open '],
+  [/দাম|কত|টাকা|প্রাইস|রেট/gi, ' price plan package taka cost bdt '],
+  [/প্ল্যান|প্যাকেজ|স্পিড|এমবিপিএস|জিবিপিএস|ইন্টারনেট/gi, ' plan package speed mbps gbps internet price '],
+  [/ইনস্টল|ইনস্টলেশন|সেটআপ|ফ্রি/gi, ' install installation setup free '],
+  [/কভারেজ|এলাকা|এরিয়া|আছে|সার্ভিস/gi, ' coverage area available service city '],
+  [/সাপোর্ট|সময়|কখন|খোলা/gi, ' support hours time open '],
+];
+
+export function expandSearchText(text: string) {
+  const normalized = text.toLowerCase();
+  const expansions = queryAliases
+    .filter(([pattern]) => {
+      pattern.lastIndex = 0;
+      return pattern.test(normalized);
+    })
+    .map(([, alias]) => alias)
+    .join(' ');
+  return `${normalized} ${expansions}`.replace(/\s+/g, ' ').trim();
+}
+
 export class KnowledgeService {
   private readonly embedder = new EmbeddingService();
 
@@ -37,18 +62,23 @@ export class KnowledgeService {
 
   async findRelevant(clientId: string, text: string) {
     const entries = await this.list(clientId, 'active');
-    const normalized = text.toLowerCase();
+    const normalized = expandSearchText(text);
     const scored = entries
       .map((entry) => {
+        const searchable = `${entry.title} ${entry.answer} ${entry.keywords.join(' ')}`.toLowerCase();
         const hits = entry.keywords.filter((keyword) => normalized.includes(keyword.toLowerCase())).length;
         const titleHit = normalized.includes(entry.title.toLowerCase()) ? 1 : 0;
-        const score = Math.min(1, (hits * 0.25 + titleHit * 0.2 + (entry.confidenceBoost ?? 0)));
+        const answerHits = normalized
+          .split(/\s+/)
+          .filter((token) => token.length >= 3 && searchable.includes(token))
+          .length;
+        const score = Math.min(1, (hits * 0.25 + titleHit * 0.2 + Math.min(answerHits, 3) * 0.08 + (entry.confidenceBoost ?? 0)));
         return { entry, score, hits };
       })
-      .filter((item) => item.hits > 0 || item.score > 0)
+      .filter((item) => item.hits > 0 || item.score >= 0.16)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
-    const confidence = scored.length === 0 ? 0.3 : Math.max(0.35, Math.min(0.95, scored[0]!.score + 0.55));
+    const confidence = scored.length === 0 ? 0.3 : Math.max(0.72, Math.min(0.95, scored[0]!.score + 0.55));
     return { entries: scored.map((item) => item.entry), confidence };
   }
 

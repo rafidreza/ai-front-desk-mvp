@@ -2,7 +2,7 @@
 -- CLIENT_ID for the voice agent = 'pilot-abc'.
 
 INSERT INTO "Client" (id, "businessName", "pageId", "defaultLanguage", tone, "escalationKeywords", "createdAt", "updatedAt")
-VALUES ('pilot-abc', 'ABC Telecom', 'pilot-abc-page', 'english', 'friendly', ARRAY['refund','complaint','cancel'], now(), now())
+VALUES ('pilot-abc', 'ABC Telecom', 'pilot-abc-page', 'mixed', 'friendly', ARRAY['refund','complaint','cancel'], now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO "KnowledgeEntry" (id, "clientId", title, answer, keywords, "createdAt", "updatedAt")
@@ -14,5 +14,5 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO "ClientVoiceConfig" (id, "clientId", config, "updatedAt")
-VALUES ('vcfg-abc','pilot-abc','{"languagePosture":"english","greeting":"Thank you for calling ABC Telecom. How can I help you?"}'::jsonb,now())
+VALUES ('vcfg-abc','pilot-abc','{"languagePosture":"mixed","greeting":"Assalamu alaikum, ABC Telecom e call korar jonno dhonnobad. Ki bhabe help korte pari?"}'::jsonb,now())
 ON CONFLICT ("clientId") DO NOTHING;

@@ -131,6 +131,9 @@ def build_grounded_prompt(base_persona: str, context: dict, knowledge: list) -> 
     greeting = voice_config.get("greeting")
     if greeting:
         lines.append(f"Open the call with this greeting: {greeting}")
+    language_posture = voice_config.get("languagePosture")
+    if language_posture:
+        lines.append(f"Language posture: {language_posture}. Mirror Bangla/Banglish callers naturally; otherwise use English.")
     if knowledge:
         lines.append("")
         lines.append("KNOWLEDGE BASE — answer ONLY from these facts; if it's not here, say you're not sure:")
