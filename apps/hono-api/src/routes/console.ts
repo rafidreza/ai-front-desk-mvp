@@ -46,6 +46,12 @@ export function consoleRoutes() {
   app.get('/console/:clientId/queue', async (c) =>
     c.json({ queue: await createServices(c).anchorConsole.queue(operatorFrom(c), { clientId: c.req.param('clientId') }) }),
   );
+  app.get('/console/:clientId/calls', async (c) => {
+    const services = createServices(c);
+    const ctx = { clientId: c.req.param('clientId') };
+    await services.operatorAccess.assertAccess(operatorFrom(c), ctx.clientId);
+    return c.json({ calls: await services.calls.list(ctx) });
+  });
   app.get('/console/:clientId/calls/:callId', async (c) =>
     c.json({ detail: await createServices(c).anchorConsole.callDetail(operatorFrom(c), { clientId: c.req.param('clientId') }, c.req.param('callId')) }),
   );

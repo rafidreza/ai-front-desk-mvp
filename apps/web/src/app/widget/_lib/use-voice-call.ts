@@ -57,6 +57,12 @@ type SessionGrant = {
   maxDurationS: number;
 };
 
+type TrackedCall = {
+  id: string;
+};
+
+type PersistedSpeaker = 'caller' | 'ai' | 'human';
+
 const demoConsentVersion = 'pdpa-widget-v3';
 
 /** Transport states that mean audio is actually flowing. */
@@ -95,6 +101,10 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   const demoHelpShownRef = useRef(false);
   // The bot streams a reply token by token; we append into one line until it stops speaking.
   const agentLineRef = useRef<string | null>(null);
+  const botTranscriptBufferRef = useRef('');
+  const callIdRef = useRef<string | null>(null);
+  const turnIndexRef = useRef(0);
+  const finalizedRef = useRef(false);
   /**
    * The bot's voice needs somewhere to play. Neither PipecatClient nor SmallWebRTCTransport
    * creates an audio element or calls play() — the remote track just arrives on onTrackStarted
@@ -122,7 +132,72 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     element.remove();
   }
 
+  const startTrackedCall = useCallback(async (): Promise<TrackedCall | null> => {
+    if (callIdRef.current !== null) return { id: callIdRef.current };
+    const response = await fetch('/api/widget-voice/calls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, visitorId, consent: true }),
+    });
+    const data = (await response.json()) as { call?: TrackedCall; message?: string };
+    if (!response.ok || data.call === undefined) {
+      throw new Error(data.message ?? 'Could not start tracking this voice call.');
+    }
+    callIdRef.current = data.call.id;
+    turnIndexRef.current = 0;
+    finalizedRef.current = false;
+    return data.call;
+  }, [clientId, visitorId]);
+
+  const persistVoiceTurn = useCallback(async (speaker: PersistedSpeaker, text: string, language = 'en') => {
+    const trimmed = text.trim();
+    const callId = callIdRef.current;
+    if (callId === null || trimmed === '') return;
+    const turnIndex = turnIndexRef.current;
+    turnIndexRef.current += 1;
+    try {
+      const response = await fetch(`/api/widget-voice/calls/${encodeURIComponent(callId)}/turns`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, turnIndex, speaker, text: trimmed, language }),
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(data.message ?? 'Voice turn was not saved.');
+      }
+    } catch (turnError) {
+      console.warn('voice transcript tracking failed', turnError);
+    }
+  }, [clientId]);
+
+  const finalizeTrackedCall = useCallback(async (
+    status: 'ended' | 'failed' = 'ended',
+    endReason = 'visitor_ended',
+    outcome?: string,
+  ) => {
+    const callId = callIdRef.current;
+    if (callId === null || finalizedRef.current) return;
+    finalizedRef.current = true;
+    try {
+      const response = await fetch(`/api/widget-voice/calls/${encodeURIComponent(callId)}/finalize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, status, endReason, outcome }),
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(data.message ?? 'Voice call was not closed.');
+      }
+    } catch (finalizeError) {
+      console.warn('voice call finalization failed', finalizeError);
+    } finally {
+      callIdRef.current = null;
+      botTranscriptBufferRef.current = '';
+    }
+  }, [clientId]);
+
   const teardown = useCallback(async () => {
+    await finalizeTrackedCall('ended', 'widget_closed');
     demoActiveRef.current = false;
     demoHelpShownRef.current = false;
     const recognition = demoRecognitionRef.current;
@@ -139,6 +214,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     const client = clientRef.current;
     clientRef.current = null;
     agentLineRef.current = null;
+    botTranscriptBufferRef.current = '';
     releaseAudioElement();
     if (client !== null) {
       try {
@@ -147,7 +223,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
         // Already gone — nothing to clean up.
       }
     }
-  }, []);
+  }, [finalizeTrackedCall]);
 
   // Hanging up on unmount matters: a widget closed mid-call would otherwise keep burning
   // STT/LLM/TTS spend until the runtime's own duration cap fires.
@@ -167,11 +243,12 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
 
   const endCall = useCallback(async () => {
     setStatus('ending');
+    await finalizeTrackedCall('ended', 'visitor_ended');
     await teardown();
     setStatus('idle');
     setIsAgentSpeaking(false);
     setSecondsLeft(null);
-  }, [teardown]);
+  }, [finalizeTrackedCall, teardown]);
 
   const speak = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) return;
@@ -188,6 +265,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   const sendDemoTurn = useCallback(async (text: string) => {
     if (visitorId === null) return;
     const messageId = `voice-demo:${visitorId}:${Date.now()}`;
+    void persistVoiceTurn('caller', text);
     setTranscript((current) => [
       ...current,
       { id: `${messageId}:customer`, role: 'customer', text },
@@ -206,11 +284,12 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
         ...current,
         { id: `${messageId}:agent`, role: 'agent', text: data.reply.text },
       ]);
+      void persistVoiceTurn('ai', data.reply.text);
       speak(data.reply.text);
     } catch (demoError) {
       setError(demoError instanceof Error ? demoError.message : 'The voice demo could not answer.');
     }
-  }, [clientId, speak, visitorId]);
+  }, [clientId, persistVoiceTurn, speak, visitorId]);
 
   const showDemoFallbackHelp = useCallback(() => {
     if (demoHelpShownRef.current) return;
@@ -225,8 +304,17 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
   }, [speak]);
 
   const startBrowserVoiceDemo = useCallback(async () => {
+    try {
+      await startTrackedCall();
+    } catch (trackError) {
+      setStatus('error');
+      setError(trackError instanceof Error ? trackError.message : 'Could not start tracking this voice call.');
+      return;
+    }
+
     const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (SpeechRecognition === undefined) {
+      await finalizeTrackedCall('failed', 'speech_recognition_unavailable');
       setStatus('error');
       setError('This browser cannot run the instant voice demo. Try Chrome, or use the text chat below.');
       return;
@@ -239,6 +327,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     setError(null);
     setSecondsLeft(120);
     setTranscript([{ id: `demo-agent-${Date.now()}`, role: 'agent', text: greeting }]);
+    void persistVoiceTurn('ai', greeting);
     speak(greeting);
 
     const recognition = new SpeechRecognition();
@@ -259,6 +348,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       if (event.error === 'no-speech') return;
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         demoActiveRef.current = false;
+        void finalizeTrackedCall('failed', 'microphone_blocked');
         setStatus('error');
         setError('Microphone access is blocked. Allow it in your browser, then try again.');
         return;
@@ -277,10 +367,11 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     try {
       recognition.start();
     } catch {
+      await finalizeTrackedCall('failed', 'speech_recognition_start_failed');
       setStatus('error');
       setError('The browser voice demo could not start. Try refreshing the page.');
     }
-  }, [sendDemoTurn, showDemoFallbackHelp, speak]);
+  }, [finalizeTrackedCall, persistVoiceTurn, sendDemoTurn, showDemoFallbackHelp, speak, startTrackedCall]);
 
   const startCall = useCallback(async () => {
     if (visitorId === null || clientRef.current !== null) return;
@@ -300,6 +391,14 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     }
 
     setStatus('connecting');
+    try {
+      await startTrackedCall();
+    } catch (trackError) {
+      setStatus('error');
+      setError(trackError instanceof Error ? trackError.message : 'Could not start tracking this voice call.');
+      return;
+    }
+
     let grant: SessionGrant;
     try {
       const response = await fetch('/api/widget-voice/session', {
@@ -317,6 +416,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       }
       grant = data as SessionGrant;
     } catch (startError) {
+      await finalizeTrackedCall('failed', 'session_mint_failed');
       setStatus('error');
       setError(startError instanceof Error ? startError.message : 'Could not start the call.');
       return;
@@ -327,6 +427,7 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
     try {
       ({ PipecatClient: PipecatClientCtor, SmallWebRTCTransport: SmallWebRTCTransportCtor } = await loadVoiceSdk());
     } catch {
+      await finalizeTrackedCall('failed', 'voice_sdk_load_failed');
       setStatus('error');
       setError('Could not load the calling tools. Check your connection and try again.');
       return;
@@ -359,8 +460,10 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
             ...current,
             { id: `user-${Date.now()}-${current.length}`, role: 'customer', text: data.text },
           ]);
+          void persistVoiceTurn('caller', data.text);
         },
         onBotTranscript: (data) => {
+          botTranscriptBufferRef.current = `${botTranscriptBufferRef.current}${data.text}`;
           setTranscript((current) => {
             const lineId = agentLineRef.current;
             if (lineId !== null) {
@@ -389,15 +492,19 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
         onBotStartedSpeaking: () => setIsAgentSpeaking(true),
         onBotStoppedSpeaking: () => {
           setIsAgentSpeaking(false);
+          void persistVoiceTurn('ai', botTranscriptBufferRef.current);
+          botTranscriptBufferRef.current = '';
           agentLineRef.current = null; // next reply starts a fresh line
         },
         onDisconnected: () => {
+          void finalizeTrackedCall('ended', 'runtime_disconnected');
           clientRef.current = null;
           setStatus('idle');
           setIsAgentSpeaking(false);
           setSecondsLeft(null);
         },
         onError: (message) => {
+          void finalizeTrackedCall('failed', 'runtime_error');
           setStatus('error');
           setError('The call dropped. Please try again.');
           console.error('voice call error', message);
@@ -410,12 +517,23 @@ export function useVoiceCall(clientId: string, visitorId: string | null) {
       await client.connect();
     } catch (connectError) {
       clientRef.current = null;
+      await finalizeTrackedCall('failed', 'connect_failed');
       setStatus('error');
       // Almost always ICE failure on a restrictive network — i.e. TURN is missing or unreachable.
       setError('Could not connect the call. Check your network and try again.');
       console.error('voice connect failed', connectError);
     }
-  }, [clientId, startBrowserVoiceDemo, visitorId]);
+  }, [clientId, finalizeTrackedCall, persistVoiceTurn, startBrowserVoiceDemo, startTrackedCall, visitorId]);
 
-  return { status, error, transcript, isAgentSpeaking, secondsLeft, startCall, endCall, speakText: speak };
+  return {
+    status,
+    error,
+    transcript,
+    isAgentSpeaking,
+    secondsLeft,
+    startCall,
+    endCall,
+    speakText: speak,
+    recordTurn: persistVoiceTurn,
+  };
 }

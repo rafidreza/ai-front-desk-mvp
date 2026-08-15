@@ -89,6 +89,9 @@ export default function WebChatWidgetPage() {
     setError(null);
     setIsSending(true);
     setMessages((current) => [...current, { id: messageId, role: 'customer', text }]);
+    if (isCallActive) {
+      void call.recordTurn('caller', text);
+    }
 
     try {
       const response = await fetch('/api/web-chat/messages', {
@@ -110,6 +113,7 @@ export default function WebChatWidgetPage() {
         },
       ]);
       if (isCallActive) {
+        void call.recordTurn('ai', replyText);
         call.speakText(replyText);
       }
     } catch (sendError) {

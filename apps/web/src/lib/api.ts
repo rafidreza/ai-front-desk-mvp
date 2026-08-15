@@ -865,6 +865,39 @@ export async function getVoiceQueue(clientId: string): Promise<VoiceEscalation[]
   return (await apiFetch<{ queue: VoiceEscalation[] }>(`/console/${clientId}/queue`)).queue;
 }
 
+export interface VoiceCallSummary {
+  id: string;
+  clientId: string;
+  status: string;
+  callerIdMasked: string | null;
+  direction: string;
+  durationS: number | null;
+  outcome: string | null;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export interface VoiceTranscriptSegment {
+  id: string;
+  callId: string;
+  turnIndex: number;
+  speaker: 'caller' | 'ai' | 'human';
+  text: string;
+  language: string | null;
+  latencyMs: number | null;
+  createdAt: string;
+}
+
+export interface VoiceCallDetail {
+  call: VoiceCallSummary;
+  transcript: VoiceTranscriptSegment[];
+  actions: unknown[];
+}
+
+export async function getVoiceCalls(clientId: string): Promise<VoiceCallSummary[]> {
+  return (await apiFetch<{ calls: VoiceCallSummary[] }>(`/console/${clientId}/calls`)).calls;
+}
+
 export async function getVoiceApprovals(clientId: string): Promise<unknown[]> {
   return (await apiFetch<{ approvals: unknown[] }>(`/console/${clientId}/approvals`)).approvals;
 }
@@ -884,8 +917,8 @@ export async function resolveVoiceEscalation(clientId: string, escalationId: str
   return (await apiFetch<{ escalation: VoiceEscalation }>(`/console/${clientId}/escalations/${escalationId}/resolve`, { method: 'POST' })).escalation;
 }
 
-export async function getVoiceCallDetail(clientId: string, callId: string): Promise<unknown> {
-  return (await apiFetch<{ detail: unknown }>(`/console/${clientId}/calls/${callId}`)).detail;
+export async function getVoiceCallDetail(clientId: string, callId: string): Promise<VoiceCallDetail | null> {
+  return (await apiFetch<{ detail: VoiceCallDetail | null }>(`/console/${clientId}/calls/${callId}`)).detail;
 }
 
 export async function getFlaggedVoiceCalls(clientId: string): Promise<unknown[]> {
