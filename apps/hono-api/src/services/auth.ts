@@ -2,7 +2,7 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 import type { AppDb } from '../db/client';
 import { clientAuthChallenges, clients } from '../db/schema';
 import type { Env } from '../env';
-import { authCodeSecret, shouldReturnDevCode } from '../env';
+import { authCodeSecret, isPreviewEnv, shouldReturnDevCode } from '../env';
 import { BadRequestError, UnauthorizedError } from '../errors';
 import { hmacSha256Hex, randomId, randomSixDigitCode, timingSafeStringEqual } from '../utils/crypto';
 import { ClientService } from './clients';
@@ -77,7 +77,10 @@ export class ClientAuthService {
     }
 
     const channel = input.channel ?? (client.ownerEmail !== null || client.digestEmail !== null ? 'email' : 'whatsapp');
-    const destination = channel === 'email' ? client.ownerEmail ?? client.digestEmail : client.ownerPhone ?? client.whatsappPoc;
+    let destination = channel === 'email' ? client.ownerEmail ?? client.digestEmail : client.ownerPhone ?? client.whatsappPoc;
+    if ((destination === null || destination === undefined || destination.trim() === '') && isPreviewEnv(this.env) && client.id === 'pilot-abc' && channel === 'email') {
+      destination = 'abc-demo@daemion.local';
+    }
     if (destination === null || destination === undefined || destination.trim() === '') {
       throw new BadRequestError(`Client does not have a ${channel} destination configured.`);
     }
