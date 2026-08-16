@@ -205,7 +205,17 @@ export default function SignupPage() {
               {challenge?.devCode !== undefined && <div className="inline-alert">Dev code: {challenge.devCode}</div>}
               <label>
                 6-digit code
-                <input name="code" inputMode="numeric" maxLength={6} minLength={6} required />
+                <input
+                  name="code"
+                  autoComplete="one-time-code"
+                  disabled={challenge === null}
+                  inputMode="numeric"
+                  maxLength={6}
+                  minLength={6}
+                  pattern="[0-9]*"
+                  placeholder={challenge === null ? 'Code unavailable' : '123456'}
+                  required
+                />
               </label>
               <label>
                 Resend to
@@ -216,7 +226,7 @@ export default function SignupPage() {
               {error !== null && <div className="inline-alert">{error}</div>}
               <div className="form-actions">
                 <button className="icon-button" disabled={isSubmitting || challenge === null} type="submit">
-                  {isSubmitting ? 'Verifying...' : 'Continue to onboarding'}
+                  {isSubmitting ? 'Verifying...' : challenge === null ? 'Waiting for code' : 'Continue to onboarding'}
                 </button>
                 <button className="icon-button" disabled={isSubmitting} type="button" onClick={() => void resendCode()}>
                   <RefreshCw size={15} />
