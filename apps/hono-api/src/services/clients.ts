@@ -16,14 +16,14 @@ import { randomId } from '../utils/crypto';
 import { toClientProfile, toConversation, toTicket, toTicketComment, toTicketEvent } from './mappers';
 
 export const pilotClientFallback: ClientProfile = {
-  id: 'pilot-client',
-  businessName: 'Pilot F-Commerce Seller',
-  pageId: 'pilot-page',
+  id: 'pilot-abc',
+  businessName: 'ABC Telecom',
+  pageId: 'pilot-abc-page',
   status: 'active',
   lifecycleStage: 'live',
-  defaultLanguage: 'english',
-  tone: 'friendly, concise, helpful, and natural for Bangladeshi Messenger commerce',
-  escalationKeywords: ['refund', 'complaint', 'wrong product', 'cancel', 'human'],
+  defaultLanguage: 'mixed',
+  tone: 'friendly, concise, helpful, and natural for Bangladeshi telecom support',
+  escalationKeywords: ['refund', 'complaint', 'cancel', 'human'],
   onboardingStatus: 'live',
 };
 

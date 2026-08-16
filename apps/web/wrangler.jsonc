@@ -13,8 +13,19 @@
     "not_found_handling": "none",
     "binding": "ASSETS"
   },
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "app.daemion.io",
+      "custom_domain": true
+    }
+  ],
   "images": {
     "binding": "IMAGES"
+  },
+  "vars": {
+    "NODE_ENV": "production",
+    "WEB_APP_URL": "https://app.daemion.io"
   },
   "env": {
     "staging": {
@@ -22,10 +33,6 @@
       "account_id": "637d1f18381f36341614d22b989d6d25",
       "workers_dev": true,
       "routes": [
-        {
-          "pattern": "app.daemion.io",
-          "custom_domain": true
-        },
         {
           "pattern": "dev.daemion.io",
           "custom_domain": true

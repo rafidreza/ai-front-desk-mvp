@@ -38,8 +38,8 @@ export default function WebChatWidgetPage() {
   const [isSending, setIsSending] = useState(false);
 
   const clientId = useMemo(() => {
-    if (typeof window === 'undefined') return 'pilot-client';
-    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
+    if (typeof window === 'undefined') return 'pilot-abc';
+    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-abc';
   }, []);
   const call = useVoiceCall(clientId, visitorId);
   const isCallActive = call.status !== 'idle' && call.status !== 'error';

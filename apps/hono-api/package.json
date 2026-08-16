@@ -9,6 +9,7 @@
     "deploy": "wrangler deploy",
     "deploy:staging": "wrangler deploy --env staging",
     "deploy:dry-run": "wrangler deploy --dry-run",
+    "deploy:dry-run:production": "wrangler deploy --dry-run",
     "deploy:dry-run:staging": "wrangler deploy --dry-run --env staging",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",

@@ -60,7 +60,7 @@ export default function LandingPage() {
           <span className="landing-widget-tag">Live demo</span>
           <div className="landing-widget-frame">
             <iframe
-              src="/widget?clientId=pilot-client"
+              src="/widget?clientId=pilot-abc"
               title="Daemion customer chat widget — live demo"
             />
           </div>
@@ -111,7 +111,7 @@ export default function LandingPage() {
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
             <span className="landing-mock-dot" />
-            <span className="landing-mock-url">dev.daemion.io/client/tickets</span>
+            <span className="landing-mock-url">app.daemion.io/client/tickets</span>
           </div>
           <div className="landing-mock-body">
             <aside className="landing-mock-sidebar">

@@ -30,8 +30,8 @@ export default function ClientTicketsPage() {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const clientId = useMemo(() => {
-    if (typeof window === 'undefined') return 'pilot-client';
-    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
+    if (typeof window === 'undefined') return 'pilot-abc';
+    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-abc';
   }, []);
   const copy = getClientPortalCopy(language);
 

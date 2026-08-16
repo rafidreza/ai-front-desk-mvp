@@ -22,7 +22,7 @@ type CodeRequest = {
   channel: 'email';
 };
 
-const identifierExamples = 'Examples: client ID pilot-client or owner email owner@example.com.';
+const identifierExamples = 'Examples: client ID pilot-abc or owner email owner@example.com.';
 
 function channelLabel(channel: CodeRequest['channel']) {
   return channel;

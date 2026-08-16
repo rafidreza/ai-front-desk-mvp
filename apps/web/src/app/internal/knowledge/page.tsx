@@ -94,7 +94,7 @@ function fileToBase64(file: File) {
 
 export default function KnowledgePage() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState('pilot-client');
+  const [selectedClientId, setSelectedClientId] = useState('pilot-abc');
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<KnowledgeEntry | null>(null);
   const [versions, setVersions] = useState<KnowledgeEntryVersion[]>([]);
@@ -150,7 +150,7 @@ export default function KnowledgePage() {
         const initialClientId =
           clientData.find((client) => client.id === requestedClientId)?.id ??
           clientData[0]?.id ??
-          'pilot-client';
+          'pilot-abc';
         setClients(clientData);
         setSelectedClientId(initialClientId);
         await loadEntries(status, undefined, initialClientId);

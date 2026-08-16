@@ -18,6 +18,8 @@
     "smoke:web": "npm run test:smoke -w @ai-front-desk/web",
     "deploy:staging:hono": "npm run deploy:staging -w @ai-front-desk/hono-api",
     "deploy:staging:web": "npm run deploy:vinext:staging -w @ai-front-desk/web",
+    "deploy:production:hono": "npm run deploy -w @ai-front-desk/hono-api",
+    "deploy:production:web": "npm run deploy:vinext:production -w @ai-front-desk/web",
     "test": "npm run test -w @ai-front-desk/api",
     "test:hono": "npm run test -w @ai-front-desk/hono-api",
     "lint": "npm run lint -w @ai-front-desk/api && npm run lint -w @ai-front-desk/web",

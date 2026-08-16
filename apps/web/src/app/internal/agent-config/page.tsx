@@ -60,7 +60,7 @@ function profileFromForm(form: FormData): Omit<PromptProfile, 'id' | 'clientId' 
 
 export default function AgentConfigPage() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState('pilot-client');
+  const [selectedClientId, setSelectedClientId] = useState('pilot-abc');
   const [profiles, setProfiles] = useState<PromptProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<PromptProfile | null>(null);
   const [versions, setVersions] = useState<PromptProfileVersion[]>([]);
@@ -114,7 +114,7 @@ export default function AgentConfigPage() {
         const initialClientId =
           clientData.find((client) => client.id === requestedClientId)?.id ??
           clientData[0]?.id ??
-          'pilot-client';
+          'pilot-abc';
         setClients(clientData);
         setSelectedClientId(initialClientId);
         await loadProfiles(status, undefined, initialClientId);

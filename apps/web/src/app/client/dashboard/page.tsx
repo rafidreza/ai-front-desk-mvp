@@ -28,8 +28,8 @@ export default function ClientDashboardPage() {
   const [origin, setOrigin] = useState('');
 
   const clientId = useMemo(() => {
-    if (typeof window === 'undefined') return 'pilot-client';
-    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-client';
+    if (typeof window === 'undefined') return 'pilot-abc';
+    return new URLSearchParams(window.location.search).get('clientId') ?? 'pilot-abc';
   }, []);
 
   const channels = dashboard?.channels ?? [];

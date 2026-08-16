@@ -10,16 +10,31 @@
   },
   "vars": {
     "PORT": "8787",
-    "NODE_ENV": "development",
+    "NODE_ENV": "production",
+    "DAEMION_ENV": "production",
+    "WEB_APP_URL": "https://app.daemion.io",
+    "API_BASE_URL": "https://api.daemion.io",
     "ENABLE_MESSENGER": "false",
     "ENABLE_WHATSAPP": "false",
     "ENABLE_P1_WHATSAPP_PINGS": "false",
     "ENABLE_WIDGET_VOICE": "false",
     "POSTMARK_MESSAGE_STREAM": "outbound",
+    "AI_PROVIDER": "openrouter",
+    "OPENROUTER_MODEL": "qwen/qwen3.7-plus",
+    "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1",
+    "OPENROUTER_SITE_URL": "https://app.daemion.io",
+    "OPENROUTER_APP_NAME": "Daemion",
     "ANTHROPIC_MODEL": "claude-3-5-haiku-latest",
-    "ENABLE_DEV_INTERNAL_USERS": "true",
+    "ENABLE_DEV_INTERNAL_USERS": "false",
     "DEV_RETURN_AUTH_CODE": "false"
   },
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "api.daemion.io",
+      "custom_domain": true
+    }
+  ],
   "env": {
     "staging": {
       "name": "ai-front-desk-hono-api-staging",
