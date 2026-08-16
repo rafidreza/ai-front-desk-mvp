@@ -29,6 +29,10 @@ function signupErrorMessage(error: unknown, fallback: string) {
   return `${fallback} Detail: ${detail}`;
 }
 
+function deliveryIssueMessage(channel: AuthChannel) {
+  return `No live verification code was sent by ${channel}. Email delivery is not configured for production yet. Ask the internal team to finish Postmark setup, then resend the code.`;
+}
+
 export default function SignupPage() {
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -46,6 +50,9 @@ export default function SignupPage() {
     if (!response.ok || data.challenge === undefined) {
       throw new Error(data.error ?? 'Verification code could not be sent.');
     }
+    if (data.challenge.deliveryMode === 'dry-run' && data.challenge.devCode === undefined) {
+      throw new Error(deliveryIssueMessage(channel));
+    }
     setChallenge(data.challenge);
   }
 
@@ -54,6 +61,7 @@ export default function SignupPage() {
     const form = new FormData(event.currentTarget);
     setIsSubmitting(true);
     setError(null);
+    let createdClient: ClientProfile | null = null;
     try {
       const created = await signupClient({
         businessName: String(form.get('businessName') ?? ''),
@@ -61,10 +69,16 @@ export default function SignupPage() {
         ownerEmail: String(form.get('ownerEmail') ?? ''),
         ownerPhone: String(form.get('ownerPhone') ?? ''),
       });
+      createdClient = created;
       setClient(created);
       await requestCode(created.id, deliveryChannel);
     } catch (submitError) {
-      setError(signupErrorMessage(submitError, 'Workspace was not created. Fix: verify business name, owner email, and phone number, then try again.'));
+      setError(signupErrorMessage(
+        submitError,
+        createdClient === null
+          ? 'Workspace was not created. Fix: verify business name, owner email, and phone number, then try again.'
+          : 'Workspace was created, but the verification code could not be sent.',
+      ));
     } finally {
       setIsSubmitting(false);
     }
@@ -185,7 +199,7 @@ export default function SignupPage() {
               </div>
               {challenge !== null && (
                 <div className="inline-success">
-                  Code sent to {challenge.destination}. Expires at {new Date(challenge.expiresAt).toLocaleTimeString()}.
+                  Verification code sent to {challenge.destination}. Expires at {new Date(challenge.expiresAt).toLocaleTimeString()}.
                 </div>
               )}
               {challenge?.devCode !== undefined && <div className="inline-alert">Dev code: {challenge.devCode}</div>}
