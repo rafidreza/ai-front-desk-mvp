@@ -411,3 +411,14 @@ CREATE INDEX IF NOT EXISTS "AuditEvent_clientId_idx" ON "AuditEvent" ("clientId"
 CREATE INDEX IF NOT EXISTS "AuditEvent_clientId_createdAt_idx" ON "AuditEvent" ("clientId", "createdAt");
 CREATE INDEX IF NOT EXISTS "AuditEvent_eventType_idx" ON "AuditEvent" ("eventType");
 
+-- ===== 0013_client_management_fields.sql =====
+-- Client management fields used by the Cloudflare Hono API.
+-- Older Prisma migrations already added these in shared environments; keep
+-- this idempotent so a fresh Hono-managed database can catch up safely.
+
+ALTER TABLE "Client" ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE "Client" ADD COLUMN IF NOT EXISTS "lifecycleStage" TEXT NOT NULL DEFAULT 'lead';
+ALTER TABLE "Client" ADD COLUMN IF NOT EXISTS "conversionChecklist" JSONB;
+
+CREATE INDEX IF NOT EXISTS "Client_status_idx" ON "Client" ("status");
+CREATE INDEX IF NOT EXISTS "Client_lifecycleStage_idx" ON "Client" ("lifecycleStage");

@@ -79,8 +79,108 @@ export class ClientService {
     return toClientProfile(client!);
   }
 
+  async createInternal(input: {
+    businessName: string;
+    pageId?: string;
+    ownerName?: string;
+    ownerEmail?: string;
+    ownerPhone?: string;
+    businessCategory?: string;
+    defaultLanguage?: ClientProfile['defaultLanguage'];
+    tone?: string;
+    whatsappPoc?: string;
+    digestEmail?: string;
+    onboardingStatus?: string;
+    onboardingProfile?: Record<string, unknown>;
+  }) {
+    const id = randomId('client-');
+    const now = new Date();
+    const [client] = await this.db
+      .insert(clients)
+      .values({
+        id,
+        businessName: input.businessName,
+        pageId: input.pageId?.trim() || `${id}-page-pending`,
+        ownerName: input.ownerName,
+        ownerEmail: input.ownerEmail,
+        ownerPhone: input.ownerPhone,
+        businessCategory: input.businessCategory,
+        onboardingStatus: input.onboardingStatus ?? 'signup_started',
+        onboardingProfile: input.onboardingProfile,
+        defaultLanguage: input.defaultLanguage ?? 'english',
+        tone: input.tone ?? defaultTone,
+        escalationKeywords: defaultEscalationKeywords,
+        whatsappPoc: input.whatsappPoc,
+        digestEmail: input.digestEmail ?? input.ownerEmail,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    return toClientProfile(client!);
+  }
+
   async findById(clientId: string) {
     const [client] = await this.db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+    if (client === undefined) throw new NotFoundError(`Client not found: ${clientId}`);
+    return toClientProfile(client);
+  }
+
+  async updateProfile(
+    clientId: string,
+    input: {
+      businessName?: string;
+      pageId?: string;
+      ownerName?: string;
+      ownerEmail?: string;
+      ownerPhone?: string;
+      businessCategory?: string;
+      defaultLanguage?: ClientProfile['defaultLanguage'];
+      tone?: string;
+      whatsappPoc?: string;
+      digestEmail?: string;
+      onboardingStatus?: string;
+      onboardingProfile?: Record<string, unknown>;
+    },
+  ) {
+    const [existing] = await this.db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+    if (existing === undefined) throw new NotFoundError(`Client not found: ${clientId}`);
+
+    const [client] = await this.db
+      .update(clients)
+      .set({
+        businessName: input.businessName,
+        pageId: input.pageId,
+        ownerName: input.ownerName,
+        ownerEmail: input.ownerEmail,
+        ownerPhone: input.ownerPhone,
+        businessCategory: input.businessCategory,
+        defaultLanguage: input.defaultLanguage,
+        tone: input.tone,
+        whatsappPoc: input.whatsappPoc,
+        digestEmail: input.digestEmail,
+        onboardingStatus: input.onboardingStatus,
+        onboardingProfile:
+          input.onboardingProfile === undefined
+            ? undefined
+            : {
+                ...(existing.onboardingProfile ?? {}),
+                ...input.onboardingProfile,
+              },
+        updatedAt: new Date(),
+      })
+      .where(eq(clients.id, clientId))
+      .returning();
+
+    return toClientProfile(client!);
+  }
+
+  async setStatus(clientId: string, status: ClientProfile['status']) {
+    const [client] = await this.db
+      .update(clients)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(clients.id, clientId))
+      .returning();
     if (client === undefined) throw new NotFoundError(`Client not found: ${clientId}`);
     return toClientProfile(client);
   }

@@ -32,8 +32,11 @@ export const clients = pgTable(
     ownerEmail: text('ownerEmail'),
     ownerPhone: text('ownerPhone'),
     businessCategory: text('businessCategory'),
+    status: text('status').notNull().default('active'),
     onboardingStatus: text('onboardingStatus').notNull().default('draft'),
     onboardingProfile: jsonb('onboardingProfile').$type<Record<string, unknown> | null>(),
+    lifecycleStage: text('lifecycleStage').notNull().default('lead'),
+    conversionChecklist: jsonb('conversionChecklist').$type<Record<string, unknown>[] | null>(),
     complianceProfile: jsonb('complianceProfile').$type<Record<string, unknown> | null>(),
     defaultLanguage: text('defaultLanguage').notNull(),
     tone: text('tone').notNull(),
@@ -45,6 +48,8 @@ export const clients = pgTable(
   },
   (table) => ({
     pageIdUnique: uniqueIndex('Client_pageId_key').on(table.pageId),
+    statusIdx: index('Client_status_idx').on(table.status),
+    lifecycleStageIdx: index('Client_lifecycleStage_idx').on(table.lifecycleStage),
   }),
 );
 

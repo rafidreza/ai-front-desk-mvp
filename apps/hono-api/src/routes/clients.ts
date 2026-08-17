@@ -17,6 +17,33 @@ const SignupSchema = z.object({
   digestEmail: z.string().trim().email().optional(),
 });
 
+const ClientManagementSchema = z.object({
+  businessName: z.string().trim().min(2).max(120),
+  pageId: z.string().trim().min(2).max(180).optional(),
+  ownerName: z.string().trim().min(2).max(120).optional(),
+  ownerEmail: z.string().trim().email().optional(),
+  ownerPhone: z.string().trim().min(5).max(80).optional(),
+  businessCategory: z.string().trim().min(2).max(80).optional(),
+  defaultLanguage: z.enum(['bangla', 'english', 'mixed']).optional(),
+  tone: z.string().trim().min(5).max(500).optional(),
+  whatsappPoc: z.string().trim().min(5).max(80).optional(),
+  digestEmail: z.string().trim().email().optional(),
+  onboardingStatus: z.enum(['signup_started', 'profile_complete', 'channels_complete', 'onboarding_complete', 'live']).optional(),
+  onboardingProfile: z
+    .object({
+      focusChannels: z.array(z.enum(['whatsapp', 'facebook', 'website'])).min(1).max(3).optional(),
+      websiteUrl: z.string().trim().url().optional(),
+      facebookPageUrl: z.string().trim().url().optional(),
+      whatsappSetup: z.enum(['self', 'assisted', 'skip']).optional(),
+      facebookSetup: z.enum(['oauth', 'assisted', 'skip']).optional(),
+    })
+    .optional(),
+});
+
+const ClientStatusSchema = z.object({
+  status: z.enum(['active', 'inactive']),
+});
+
 const CsatSchema = z.object({
   score: z.number().int().min(1).max(5),
   comment: z.string().trim().max(500).optional(),
@@ -86,6 +113,21 @@ export function clientRoutes() {
   app.post('/clients/signup', async (c) => {
     const parsed = SignupSchema.parse(await jsonBody(c));
     return c.json({ client: await createServices(c).clients.create(parsed) });
+  });
+
+  app.post('/clients', async (c) => {
+    const parsed = ClientManagementSchema.parse(await jsonBody(c));
+    return c.json({ client: await createServices(c).clients.createInternal(parsed) });
+  });
+
+  app.patch('/clients/:clientId', async (c) => {
+    const parsed = ClientManagementSchema.partial().parse(await jsonBody(c));
+    return c.json({ client: await createServices(c).clients.updateProfile(c.req.param('clientId'), parsed) });
+  });
+
+  app.patch('/clients/:clientId/status', async (c) => {
+    const parsed = ClientStatusSchema.parse(await jsonBody(c));
+    return c.json({ client: await createServices(c).clients.setStatus(c.req.param('clientId'), parsed.status) });
   });
 
   app.patch('/clients/:clientId/onboarding', async (c) => {

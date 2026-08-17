@@ -43,6 +43,25 @@ describe('Hono API mirror', () => {
     }
   });
 
+  it('registers the internal client status mutation route', async () => {
+    const response = await app.request(
+      '/clients/client-1/status',
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${env.INTERNAL_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'paused' }),
+      },
+      env,
+    );
+    const body = (await response.json()) as { message?: string };
+
+    expect(response.status).toBe(400);
+    expect(body.message).toBe('Validation failed.');
+  });
+
   it('authenticates explicit dev internal users for the staging portal', async () => {
     const response = await app.request(
       '/internal/auth/login',

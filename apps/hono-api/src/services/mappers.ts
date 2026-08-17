@@ -30,6 +30,7 @@ export function toClientProfile(client: {
   ownerEmail?: string | null;
   ownerPhone?: string | null;
   businessCategory?: string | null;
+  status?: string | null;
   onboardingStatus: string;
   onboardingProfile?: Record<string, unknown> | null;
   complianceProfile?: Record<string, unknown> | null;
@@ -45,7 +46,7 @@ export function toClientProfile(client: {
     id: client.id,
     businessName: client.businessName,
     pageId: client.pageId,
-    status: 'active',
+    status: client.status === 'inactive' ? 'inactive' : 'active',
     ownerName: client.ownerName ?? undefined,
     ownerEmail: client.ownerEmail ?? undefined,
     ownerPhone: client.ownerPhone ?? undefined,
