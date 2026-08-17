@@ -199,10 +199,16 @@ export default function SignupPage() {
               </div>
               {challenge !== null && (
                 <div className="inline-success">
-                  Verification code sent to {challenge.destination}. Expires at {new Date(challenge.expiresAt).toLocaleTimeString()}.
+                  {challenge.deliveryMode === 'skipped'
+                    ? `Email delivery is temporarily limited while the mail account is under approval. Use the temporary access code shown below. Expires at ${new Date(challenge.expiresAt).toLocaleTimeString()}.`
+                    : `Verification code sent to ${challenge.destination}. Expires at ${new Date(challenge.expiresAt).toLocaleTimeString()}.`}
                 </div>
               )}
-              {challenge?.devCode !== undefined && <div className="inline-alert">Dev code: {challenge.devCode}</div>}
+              {challenge?.devCode !== undefined && (
+                <div className="inline-alert">
+                  {challenge.deliveryMode === 'skipped' ? 'Temporary access code' : 'Dev code'}: {challenge.devCode}
+                </div>
+              )}
               <label>
                 6-digit code
                 <input
