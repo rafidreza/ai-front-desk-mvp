@@ -46,6 +46,7 @@ export interface Env {
   CLIENT_AUTH_CODE_SECRET?: string;
   DEV_RETURN_AUTH_CODE?: string;
   DEV_CLIENT_AUTH_CODE?: string;
+  CLIENT_AUTH_PENDING_APPROVAL_FALLBACK?: string;
   CLIENT_SESSION_SECRET?: string;
   TENANT_SECRET_ENCRYPTION_KEY?: string;
   // Web-widget voice calling (browser WebRTC -> Pipecat runtime).
@@ -171,4 +172,8 @@ export function shouldReturnDevCode(env: Env) {
     throw new Error('DEV_RETURN_AUTH_CODE must not be enabled in production.');
   }
   return true;
+}
+
+export function allowPendingApprovalAuthFallback(env: Env) {
+  return env.CLIENT_AUTH_PENDING_APPROVAL_FALLBACK === 'true';
 }

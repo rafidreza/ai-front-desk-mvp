@@ -121,7 +121,7 @@ export default function ClientLoginPage() {
       setChallenge(data.challenge);
       setNotice(
         data.challenge.deliveryMode === 'skipped'
-          ? `Code created for ${data.challenge.destination}, but ${channelLabel(data.challenge.channel)} delivery is not fully configured. Ask the team to check email delivery if you do not receive it.`
+          ? `Code created for ${data.challenge.destination}. Email delivery is temporarily limited while the mail account is under approval, so use the temporary access code shown below.`
           : data.challenge.deliveryMode === 'dry-run'
             ? `Code created for ${data.challenge.destination} in local/dev delivery mode. Use the dev code shown below.`
             : `New code sent to ${data.challenge.destination}.`,
@@ -276,7 +276,11 @@ export default function ClientLoginPage() {
                 </div>
               )}
               {notice !== null && <div className="inline-success">{notice}</div>}
-              {challenge.devCode !== undefined && <div className="inline-alert">Dev code: {challenge.devCode}</div>}
+              {challenge.devCode !== undefined && (
+                <div className="inline-alert">
+                  {challenge.deliveryMode === 'skipped' ? 'Temporary access code' : 'Dev code'}: {challenge.devCode}
+                </div>
+              )}
               <label>
                 6-digit code
                 <input name="code" inputMode="numeric" maxLength={6} minLength={6} required disabled={challengeExpired} />

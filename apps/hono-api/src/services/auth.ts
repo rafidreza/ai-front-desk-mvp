@@ -2,7 +2,7 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 import type { AppDb } from '../db/client';
 import { clientAuthChallenges, clients } from '../db/schema';
 import type { Env } from '../env';
-import { authCodeSecret, isPreviewEnv, shouldReturnDevCode } from '../env';
+import { allowPendingApprovalAuthFallback, authCodeSecret, isPreviewEnv, shouldReturnDevCode } from '../env';
 import { BadRequestError, UnauthorizedError } from '../errors';
 import { hmacSha256Hex, randomId, randomSixDigitCode, timingSafeStringEqual } from '../utils/crypto';
 import { ClientService } from './clients';
@@ -34,6 +34,10 @@ function maskRequestedIdentifier(identifier: string, channel: AuthChannel) {
   if (channel === 'email' && identifier.includes('@')) return maskEmail(identifier);
   if (channel === 'whatsapp' && /\d/.test(identifier)) return maskPhone(identifier);
   return channel === 'email' ? 'configured email address' : 'configured WhatsApp number';
+}
+
+function isPostmarkPendingApprovalError(error: unknown) {
+  return error instanceof Error && /"ErrorCode"\s*:\s*412|pending approval/i.test(error.message);
 }
 
 export class ClientAuthService {
@@ -96,21 +100,32 @@ export class ClientAuthService {
       codeHash: await this.hashCode(challengeId, code),
       expiresAt,
     });
-    const deliveryResult = await this.delivery.sendCode({
-      businessName: client.businessName,
-      channel,
-      destination,
-      code,
-      expiresInMinutes: 10,
-    });
+    let deliveryMode: 'sent' | 'dry-run' | 'skipped';
+    let fallbackCode: string | undefined;
+    try {
+      const deliveryResult = await this.delivery.sendCode({
+        businessName: client.businessName,
+        channel,
+        destination,
+        code,
+        expiresInMinutes: 10,
+      });
+      deliveryMode = deliveryResult.mode;
+    } catch (error) {
+      if (channel !== 'email' || !allowPendingApprovalAuthFallback(this.env) || !isPostmarkPendingApprovalError(error)) {
+        throw error;
+      }
+      deliveryMode = 'skipped';
+      fallbackCode = code;
+    }
     return {
       sent: true,
       challengeId,
       channel,
       destination: maskDestination(destination, channel),
       expiresAt: expiresAt.toISOString(),
-      deliveryMode: deliveryResult.mode,
-      devCode: shouldReturnDevCode(this.env) ? code : undefined,
+      deliveryMode,
+      devCode: shouldReturnDevCode(this.env) || fallbackCode !== undefined ? code : undefined,
     };
   }
 
